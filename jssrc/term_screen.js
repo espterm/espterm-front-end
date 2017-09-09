@@ -888,6 +888,10 @@ class TermScreen {
     const audioCtx = this.audioCtx;
     if (!audioCtx) return;
 
+    // prevent screeching
+    if (this._lastBeep && this._lastBeep > Date.now() - 50) return;
+    this._lastBeep = Date.now();
+
     let osc, gain;
 
     // main beep
