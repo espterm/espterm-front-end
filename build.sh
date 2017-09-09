@@ -18,4 +18,8 @@ echo "Building CSS..."
 
 npm run sass -- --output-style compressed sass/app.scss > css/app.css
 
+echo "Building HTML..."
+
+php ./build_html.php
+
 echo "ESPTerm front-end ready"

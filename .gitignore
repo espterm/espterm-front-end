@@ -1,6 +1,7 @@
 _env.php
 js/*
 css/*
+out/*
 !.gitkeep
 node_modules/
 *.~
