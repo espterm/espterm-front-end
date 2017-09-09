@@ -226,15 +226,15 @@ var Screen = (function () {
 		// console.log("Cursor at ",num, num2);
 
 		// Attributes
-		num = parse2B(str, i); i += 2; // fg bg attribs
+		num = parse3B(str, i); i += 3;
 		cursor.hidden = !(num & (1<<0)); // DEC opt "visible"
 		cursor.hanging = !!(num & (1<<1));
-		// console.log("Attributes word ",num.toString(16)+'h');
 
 		Input.setAlts(
 			!!(num & (1<<2)), // cursors alt
 			!!(num & (1<<3)), // numpad alt
-			!!(num & (1<<4)) // fn keys alt
+			!!(num & (1<<4)), // fn keys alt
+			!!(num & (1<<12)) // crlf mode
 		);
 
 		var mt_click = !!(num & (1<<5));
@@ -249,6 +249,8 @@ var Screen = (function () {
 		var show_config_links = !!(num & (1<<8));
 		$('.x-term-conf-btn').toggleClass('hidden', !show_config_links);
 		$('#action-buttons').toggleClass('hidden', !show_buttons);
+
+		// bits 9-11 are cursor shape (not implemented)
 
 		fg = 7;
 		bg = 0;

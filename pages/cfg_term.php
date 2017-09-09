@@ -108,6 +108,18 @@
 		<input class="short" type="text" name="btn5" id="btn5" value="%h:btn5%">
 	</div>
 
+	<div class="Row">
+		<label><?= tr("term.cursor_shape") ?></label>
+		<select name="cursor_shape" id="cursor_shape">
+			<option value="0"><?= tr("cursor.block_blink") ?></option>
+			<option value="2"><?= tr("cursor.block_steady") ?></option>
+			<option value="3"><?= tr("cursor.underline_blink") ?></option>
+			<option value="4"><?= tr("cursor.underline_steady") ?></option>
+			<option value="5"><?= tr("cursor.bar_blink") ?></option>
+			<option value="6"><?= tr("cursor.bar_steady") ?></option>
+		</select>
+	</div>
+
 	<div class="Row buttons">
 		<a class="button icn-ok" href="#" onclick="qs('#form-1').submit()"><?= tr('apply') ?></a>
 	</div>
@@ -154,6 +166,12 @@
 	</div>
 
 	<div class="Row checkbox" >
+		<label><?= tr('term.crlf_mode') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="crlf_mode" name="crlf_mode" value="%crlf_mode%">
+	</div>
+
+	<div class="Row checkbox" >
 		<label><?= tr('term.show_buttons') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="show_buttons" name="show_buttons" value="%show_buttons%">
@@ -179,6 +197,7 @@
 <script>
 	$('#default_fg').val(%default_fg%);
 	$('#default_bg').val(%default_bg%);
+	$('#cursor_shape').val(%cursor_shape%);
 	$('#theme').val(%theme%);
 
 	function showColor() {

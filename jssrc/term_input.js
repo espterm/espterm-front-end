@@ -22,6 +22,7 @@ var Input = (function() {
 		mt_click: false,
 		mt_move: false,
 		no_keys: false,
+		crlf_mode: false,
 	};
 
 	/** Send a literal message */
@@ -53,7 +54,7 @@ var Input = (function() {
 		var keymap = {
 			'tab': '\x09',
 			'backspace': '\x08',
-			'enter': '\x0d',
+			'enter': opts.crlf_mode ? '\x0d\x0a' : '\x0d',
 			'ctrl+enter': '\x0a',
 			'esc': '\x1b',
 			'up': ca('\x1bOA', '\x1b[A'),
@@ -205,11 +206,12 @@ var Input = (function() {
 		sendString: sendStrMsg,
 
 		/** Enable alternate key modes (cursors, numpad, fn) */
-		setAlts: function(cu, np, fn) {
-			if (opts.cu_alt != cu || opts.np_alt != np || opts.fn_alt != fn) {
+		setAlts: function(cu, np, fn, crlf) {
+			if (opts.cu_alt != cu || opts.np_alt != np || opts.fn_alt != fn || opts.crlf_mode != crlf) {
 				opts.cu_alt = cu;
 				opts.np_alt = np;
 				opts.fn_alt = fn;
+				opts.crlf_mode = crlf;
 
 				// rebind keys - codes have changed
 				_bindFnKeys();
