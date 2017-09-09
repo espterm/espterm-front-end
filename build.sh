@@ -11,12 +11,11 @@ cat jssrc/chibi.js \
 	jssrc/lang.js \
 	jssrc/wifi.js \
 	jssrc/term_* \
-	jssrc/term.js > js/app-full.js
-
-yuicompressor js/app-full.js > js/app.js
+	jssrc/term.js \
+  jssrc/soft_keyboard.js | npm run --silent minify > js/app.js
 
 echo "Building CSS..."
 
-sass --style=compressed sass/app.scss css/app.css
+npm run sass -- --output-style compressed sass/app.scss > css/app.css
 
 echo "ESPTerm front-end ready"
