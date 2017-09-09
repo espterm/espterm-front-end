@@ -1,0 +1,10 @@
+_env.php
+js/*
+css/*
+!.gitkeep
+node_modules/
+*.~
+*.bak
+.idea
+.sass-cache
+*.map
