@@ -630,8 +630,6 @@ class TermScreen {
     // Map of (cell index) -> boolean, whether or not a cell needs to be redrawn
     const updateMap = new Map();
 
-    const cursorActive = (this.cursor.blinkOn || !this.cursor.blinkEnable);
-
     for (let cell = 0; cell < screenLength; cell++) {
       let x = cell % width;
       let y = Math.floor(cell / width);
@@ -639,7 +637,8 @@ class TermScreen {
         && this.cursor.x === x
         && this.cursor.y === y;
 
-      let invertForCursor = isCursor && cursorActive && this.cursor.style === 'block';
+      let invertForCursor = isCursor && this.cursor.blinkOn
+        && this.cursor.style === 'block';
 
       let inSelection = this.isInSelection(x, y);
 
@@ -653,7 +652,7 @@ class TermScreen {
 
       if (inSelection) {
         fg = -1;
-        bg = -2
+        bg = -2;
       }
 
       let needsUpdate = text !== this.drawnScreen[cell] ||
@@ -712,7 +711,7 @@ class TermScreen {
           this.drawnScreenAttrs[cell] = attrs;
         }
 
-        if (isCursor && cursorActive && this.cursor.style !== 'block') {
+        if (isCursor && this.cursor.blinkOn && this.cursor.style !== 'block') {
           ctx.save();
           ctx.beginPath();
           if (this.cursor.style === 'bar') {
@@ -781,28 +780,25 @@ class TermScreen {
     let trackMouseClicks = !!(attributes & (1 << 5));
     let trackMouseMovement = !!(attributes & (1 << 6));
 
-    let cursorShape = (attributes >> 9 & 0b111)
-    if (cursorShape === 1) {
-      this.cursor.style = 'block'
+    // 0 - Block blink     2 - Block steady (1 is unused)
+    // 3 - Underline blink 4 - Underline steady
+    // 5 - I-bar blink     6 - I-bar steady
+    let cursorShape = (attributes >> 9) & 0x07;
 
-      if (!this.cursor.blinking) {
-        this.cursor.blinking = true;
-        this.resetCursorBlink();
-      }
-    } else {
-      if (cursorShape > 0) cursorShape--
+    // if it's not zero, decrement such that the two most significant bits
+    // are the type and the least significant bit is the blink state
+    if (cursorShape > 0) cursorShape--;
 
-      let cursorStyle = cursorShape >> 1
-      let cursorBlinking = !(cursorShape & 1)
-      if (cursorStyle === 0) this.cursor.style = 'block'
-      else if (cursorStyle === 1) this.cursor.style = 'line'
-      else if (cursorStyle === 2) this.cursor.style = 'bar'
+    let cursorStyle = cursorShape >> 1;
+    let cursorBlinking = !(cursorShape & 1);
 
-      if (this.cursor.blinking !== cursorBlinking) {
-        this.cursor.blinking = cursorBlinking;
+    if (cursorStyle === 0) this.cursor.style = 'block';
+    else if (cursorStyle === 1) this.cursor.style = 'line';
+    else if (cursorStyle === 2) this.cursor.style = 'bar';
 
-        this.resetCursorBlink();
-      }
+    if (this.cursor.blinking !== cursorBlinking) {
+      this.cursor.blinking = cursorBlinking;
+      this.resetCursorBlink();
     }
 
     Input.setMouseMode(trackMouseClicks, trackMouseMovement);
@@ -818,13 +814,6 @@ class TermScreen {
 
     $('.x-term-conf-btn').toggleClass('hidden', !showConfigLinks);
     $('#action-buttons').toggleClass('hidden', !showButtons);
-
-    let cursorStyle = (attributes >> 9) & 0x07;
-    // 0 - Block blink, 2 - Block steady
-    // 3 - Under blink, 4 - Under steady
-    // 5 - I-bar blink, 6 - I-bar steady
-    this.cursor.style = cursorStyle<3?'block':cursorStyle<5?'line':'bar';
-    this.cursor.blinkEnable = cursorStyle === 0 || cursorStyle === 3 || cursorStyle === 5;
 
     // content
     let fg = 7;
