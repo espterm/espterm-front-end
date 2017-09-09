@@ -157,7 +157,7 @@ class TermScreen {
     };
 
     this.canvas.addEventListener('mousedown', e => {
-      if (this.selection.selectable || e.altKey) {
+      if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
       } else {
         Input.onMouseDown(...this.screenToGrid(e.offsetX, e.offsetY),
@@ -275,8 +275,11 @@ class TermScreen {
       }
     });
     this.canvas.addEventListener('contextmenu', e => {
-      // prevent mouse keys getting stuck
-      e.preventDefault();
+      if (this.mouseMode.clicks) {
+        // prevent mouse keys getting stuck
+        e.preventDefault();
+      }
+      selectEnd(e.offsetX, e.offsetY);
     });
 
     // bind ctrl+shift+c to copy
@@ -902,6 +905,10 @@ class TermScreen {
   beep () {
     const audioCtx = this.audioCtx;
     if (!audioCtx) return;
+
+    // prevent screeching
+    if (this._lastBeep && this._lastBeep > Date.now() - 50) return;
+    this._lastBeep = Date.now();
 
     let osc, gain;
 
