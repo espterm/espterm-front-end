@@ -21,31 +21,46 @@ body.term {
 	padding: 6px;
 	display: inline-block;
 	border: 2px solid #3983CD;
+	position: relative;
 
 	font-size: 20px; // some font heights cause visual glitches with some font renderers. This should be configurable.
 	font-family: $screen-stack;
 
-	span {
-		white-space: pre;
+	canvas.selectable {
+		cursor: text;
 	}
 
-	> span {
-		position: relative;
-		cursor: pointer;
+	@include noselect();
 
-		&::before {
-			content: " ";
-		}
-
-		> span {
-			position:absolute;
-			left: 0;
-			z-index: 1;
-		}
+	// Dummy input field used to open soft keyboard
+	#softkb-input {
+		position: absolute;
+		// compensate for padding
+		top: 6px;
+		left: 6px;
+		width: 1em;
+		height: 1em;
+		background: none;
+		border: none;
+		resize: none;
+		overflow: hidden;
+		opacity: 0;
+		outline: 0 none !important;
+		caret-color: transparent;
+		color: transparent;
+		@include click-through;
 	}
 
-	&.noselect {
-		@include noselect();
+	#touch-select-menu {
+		display: none;
+		position: absolute;
+		// compensate for padding
+		top: 6px;
+		left: 6px;
+
+		&.open {
+			display: block;
+		}
 	}
 }
 
@@ -116,12 +131,6 @@ body.term {
 
 #term-wrap {
 	text-align: center;
-}
-
-// Dummy input field used to open android keyboard
-#softkb-input {
-	position: absolute;
-	top: -9999px;
 }
 
 #fu_modal {
