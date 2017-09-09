@@ -61,6 +61,7 @@ class TermScreen {
       bg: 0,
       attrs: 0,
       blinkOn: false,
+      blinking: true,
       visible: true,
       hanging: false,
       style: 'block',
@@ -453,7 +454,9 @@ class TermScreen {
     this.cursor.blinkOn = true;
     clearInterval(this.cursor.blinkInterval);
     this.cursor.blinkInterval = setInterval(() => {
-      this.cursor.blinkOn = !this.cursor.blinkOn;
+      this.cursor.blinkOn = this.cursor.blinking
+        ? !this.cursor.blinkOn
+        : true;
       this.scheduleDraw();
     }, 500);
   }
@@ -653,16 +656,17 @@ class TermScreen {
         bg = -2
       }
 
-      let cellDidChange = text !== this.drawnScreen[cell] ||
+      let needsUpdate = text !== this.drawnScreen[cell] ||
         fg !== this.drawnScreenFG[cell] ||
         bg !== this.drawnScreenBG[cell] ||
-        attrs !== this.drawnScreenAttrs[cell];
+        attrs !== this.drawnScreenAttrs[cell] ||
+        isCursor;
 
       let font = attrs & FONT_MASK;
       if (!fontGroups.has(font)) fontGroups.set(font, []);
 
       fontGroups.get(font).push([cell, x, y, text, fg, bg, attrs, isCursor]);
-      updateMap.set(cell, cellDidChange);
+      updateMap.set(cell, needsUpdate);
     }
 
     for (let font of fontGroups.keys()) {
@@ -776,6 +780,30 @@ class TermScreen {
 
     let trackMouseClicks = !!(attributes & (1 << 5));
     let trackMouseMovement = !!(attributes & (1 << 6));
+
+    let cursorShape = (attributes >> 9 & 0b111)
+    if (cursorShape === 1) {
+      this.cursor.style = 'block'
+
+      if (!this.cursor.blinking) {
+        this.cursor.blinking = true;
+        this.resetCursorBlink();
+      }
+    } else {
+      if (cursorShape > 0) cursorShape--
+
+      let cursorStyle = cursorShape >> 1
+      let cursorBlinking = !(cursorShape & 1)
+      if (cursorStyle === 0) this.cursor.style = 'block'
+      else if (cursorStyle === 1) this.cursor.style = 'line'
+      else if (cursorStyle === 2) this.cursor.style = 'bar'
+
+      if (this.cursor.blinking !== cursorBlinking) {
+        this.cursor.blinking = cursorBlinking;
+
+        this.resetCursorBlink();
+      }
+    }
 
     Input.setMouseMode(trackMouseClicks, trackMouseMovement);
     this.selection.selectable = !trackMouseMovement;
