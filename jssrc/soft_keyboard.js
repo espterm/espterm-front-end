@@ -1,27 +1,29 @@
 $.ready(() => {
-  const input = qs('#softkb-input')
-  let keyboardOpen = false
+  const input = qs('#softkb-input');
+  if (!input) return; // abort, we're not on the terminal page
+
+  let keyboardOpen = false;
 
   let updateInputPosition = function () {
-    if (!keyboardOpen) return
+    if (!keyboardOpen) return;
 
-    let [x, y] = Screen.gridToScreen(Screen.cursor.x, Screen.cursor.y)
+    let [x, y] = Screen.gridToScreen(Screen.cursor.x, Screen.cursor.y);
     input.style.transform = `translate(${x}px, ${y}px)`
-  }
+  };
 
   input.addEventListener('focus', () => {
-    keyboardOpen = true
+    keyboardOpen = true;
     updateInputPosition()
-  })
-  input.addEventListener('blur', () => (keyboardOpen = false))
-  Screen.on('cursor-moved', updateInputPosition)
+  });
+  input.addEventListener('blur', () => (keyboardOpen = false));
+  Screen.on('cursor-moved', updateInputPosition);
 
   window.kbOpen = function openSoftKeyboard (open) {
-    keyboardOpen = open
-    updateInputPosition()
-    if (open) input.focus()
+    keyboardOpen = open;
+    updateInputPosition();
+    if (open) input.focus();
     else input.blur()
-  }
+  };
 
   let lastCompositionString = '';
   let compositing = false;
@@ -47,7 +49,7 @@ $.ready(() => {
         newValue)
     }
     lastCompositionString = newValue;
-  }
+  };
 
   input.addEventListener('keydown', e => {
     if (e.key === 'Unidentified') return;
@@ -55,9 +57,9 @@ $.ready(() => {
     e.preventDefault();
     input.value = '';
 
-    if (e.key === 'Backspace') Input.sendString('\b')
+    if (e.key === 'Backspace') Input.sendString('\b');
     else if (e.key === 'Enter') Input.sendString('\x0d')
-  })
+  });
   input.addEventListener('input', e => {
     e.stopPropagation();
 
@@ -66,11 +68,11 @@ $.ready(() => {
     } else {
       if (e.data) Input.sendString(e.data);
       else if (e.inputType === 'deleteContentBackward') {
-        lastCompositionString
+        lastCompositionString = '';
         sendInputDelta('');
       }
     }
-  })
+  });
   input.addEventListener('compositionstart', e => {
     lastCompositionString = '';
     compositing = true;
@@ -82,4 +84,4 @@ $.ready(() => {
   });
 
   Screen.on('open-soft-keyboard', () => input.focus())
-})
+});

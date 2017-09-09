@@ -64,6 +64,7 @@ class TermScreen {
       visible: true,
       hanging: false,
       style: 'block',
+      blinkEnable: true,
       blinkInterval: 0,
     };
 
@@ -205,17 +206,17 @@ class TermScreen {
         e.preventDefault();
         selectEnd(...touchPosition);
 
-        let touchSelectMenu = qs('#touch-select-menu')
+        let touchSelectMenu = qs('#touch-select-menu');
         touchSelectMenu.classList.add('open');
-        let rect = touchSelectMenu.getBoundingClientRect()
+        let rect = touchSelectMenu.getBoundingClientRect();
 
         // use middle position for x and one line above for y
         let selectionPos = this.gridToScreen(
           (this.selection.start[0] + this.selection.end[0]) / 2,
           this.selection.start[1] - 1
         );
-        selectionPos[0] -= rect.width / 2
-        selectionPos[1] -= rect.height / 2
+        selectionPos[0] -= rect.width / 2;
+        selectionPos[1] -= rect.height / 2;
         touchSelectMenu.style.transform = `translate(${selectionPos[0]}px, ${
           selectionPos[1]}px)`
       }
@@ -242,13 +243,15 @@ class TermScreen {
         e.preventDefault();
         this.emit('open-soft-keyboard');
       }
-    })
+    });
 
     $.ready(() => {
-      let copyButton = qs('#touch-select-copy-btn')
-      copyButton.addEventListener('click', () => {
-        this.copySelectionToClipboard();
-      });
+      let copyButton = qs('#touch-select-copy-btn');
+      if (copyButton) {
+        copyButton.addEventListener('click', () => {
+          this.copySelectionToClipboard();
+        });
+      }
     });
 
     this.canvas.addEventListener('mousemove', e => {
@@ -274,7 +277,7 @@ class TermScreen {
     this.canvas.addEventListener('contextmenu', e => {
       // prevent mouse keys getting stuck
       e.preventDefault();
-    })
+    });
 
     // bind ctrl+shift+c to copy
     key('⌃+⇧+c', e => {
@@ -333,8 +336,8 @@ class TermScreen {
   }
 
   getColor (i) {
-    if (i === -1) return SELECTION_FG
-    if (i === -2) return SELECTION_BG
+    if (i === -1) return SELECTION_FG;
+    if (i === -2) return SELECTION_BG;
     return this.colors[i]
   }
 
@@ -398,29 +401,32 @@ class TermScreen {
       const cellSize = this.getCellSize();
 
       // real height of the canvas element in pixels
-      let realWidth = width * cellSize.width
-      let realHeight = height * cellSize.height
+      let realWidth = width * cellSize.width;
+      let realHeight = height * cellSize.height;
 
       if (fitIntoWidth && fitIntoHeight) {
         if (realWidth > fitIntoWidth || realHeight > fitIntoHeight) {
-          let terminalAspect = realWidth / realHeight
-          let fitAspect = fitIntoWidth / fitIntoHeight
+          let terminalAspect = realWidth / realHeight;
+          let fitAspect = fitIntoWidth / fitIntoHeight;
 
           if (terminalAspect < fitAspect) {
             // align heights
-            realHeight = fitIntoHeight
+            realHeight = fitIntoHeight;
             realWidth = realHeight * terminalAspect
-          } else {
+          }
+          else {
             // align widths
-            realWidth = fitIntoWidth
+            realWidth = fitIntoWidth;
             realHeight = realWidth / terminalAspect
           }
         }
-      } else if (fitIntoWidth && realWidth > fitIntoWidth) {
-        realHeight = fitIntoWidth / (realWidth / realHeight)
+      }
+      else if (fitIntoWidth && realWidth > fitIntoWidth) {
+        realHeight = fitIntoWidth / (realWidth / realHeight);
         realWidth = fitIntoWidth
-      } else if (fitIntoHeight && realHeight > fitIntoHeight) {
-        realWidth = fitIntoHeight * (realWidth / realHeight)
+      }
+      else if (fitIntoHeight && realHeight > fitIntoHeight) {
+        realWidth = fitIntoHeight * (realWidth / realHeight);
         realHeight = fitIntoHeight
       }
 
@@ -552,11 +558,11 @@ class TermScreen {
     let underline = false;
     let blink = false;
     let strike = false;
-    if (attrs & 1 << 1) ctx.globalAlpha = 0.5;
-    if (attrs & 1 << 3) underline = true;
-    if (attrs & 1 << 4) blink = true;
-    if (attrs & 1 << 5) text = TermScreen.alphaToFraktur(text);
-    if (attrs & 1 << 6) strike = true;
+    if (attrs & (1 << 1)) ctx.globalAlpha = 0.5;
+    if (attrs & (1 << 3)) underline = true;
+    if (attrs & (1 << 4)) blink = true;
+    if (attrs & (1 << 5)) text = TermScreen.alphaToFraktur(text);
+    if (attrs & (1 << 6)) strike = true;
 
     if (!blink || this.window.blinkStyleOn) {
       ctx.fillStyle = this.getColor(fg);
@@ -618,14 +624,18 @@ class TermScreen {
     // Map of (cell index) -> boolean, whether or not a cell needs to be redrawn
     const updateMap = new Map();
 
+    const cursorActive = (this.cursor.blinkOn || !this.cursor.blinkEnable);
+
     for (let cell = 0; cell < screenLength; cell++) {
       let x = cell % width;
       let y = Math.floor(cell / width);
-      let isCursor = this.cursor.x === x && this.cursor.y === y &&
-        !this.cursor.hanging;
-      let invertForCursor = isCursor && this.cursor.blinkOn &&
-        this.cursor.style === 'block';
-      let inSelection = this.isInSelection(x, y)
+      let isCursor = !this.cursor.hanging
+        && this.cursor.x === x
+        && this.cursor.y === y;
+
+      let invertForCursor = isCursor && cursorActive && this.cursor.style === 'block';
+
+      let inSelection = this.isInSelection(x, y);
 
       let text = this.screen[cell];
       let fg = invertForCursor ? this.screenBG[cell] : this.screenFG[cell];
@@ -636,7 +646,7 @@ class TermScreen {
       if (invertForCursor && fg === bg) bg = fg === 0 ? 7 : 0;
 
       if (inSelection) {
-        fg = -1
+        fg = -1;
         bg = -2
       }
 
@@ -695,7 +705,7 @@ class TermScreen {
           this.drawnScreenAttrs[cell] = attrs;
         }
 
-        if (isCursor && this.cursor.blinkOn && this.cursor.style !== 'block') {
+        if (isCursor && cursorActive && this.cursor.style !== 'block') {
           ctx.save();
           ctx.beginPath();
           if (this.cursor.style === 'bar') {
@@ -748,20 +758,21 @@ class TermScreen {
     }
 
     // attributes
-    let attributes = parse2B(str, i);
-    i += 2;
+    let attributes = parse3B(str, i);
+    i += 3;
 
     this.cursor.visible = !!(attributes & 1);
-    this.cursor.hanging = !!(attributes & 1 << 1);
+    this.cursor.hanging = !!(attributes & (1 << 1));
 
     Input.setAlts(
-      !!(attributes & 1 << 2), // cursors alt
-      !!(attributes & 1 << 3), // numpad alt
-      !!(attributes & 1 << 4)  // fn keys alt
+      !!(attributes & (1 << 2)), // cursors alt
+      !!(attributes & (1 << 3)), // numpad alt
+      !!(attributes & (1 << 4)), // fn keys alt
+      !!(attributes & (1 << 12)) // crlf mode
     );
 
-    let trackMouseClicks = !!(attributes & 1 << 5);
-    let trackMouseMovement = !!(attributes & 1 << 6);
+    let trackMouseClicks = !!(attributes & (1 << 5));
+    let trackMouseMovement = !!(attributes & (1 << 6));
 
     Input.setMouseMode(trackMouseClicks, trackMouseMovement);
     this.selection.selectable = !trackMouseMovement;
@@ -771,11 +782,18 @@ class TermScreen {
       movement: trackMouseMovement
     };
 
-    let showButtons = !!(attributes & 1 << 7);
-    let showConfigLinks = !!(attributes & 1 << 8);
+    let showButtons = !!(attributes & (1 << 7));
+    let showConfigLinks = !!(attributes & (1 << 8));
 
     $('.x-term-conf-btn').toggleClass('hidden', !showConfigLinks);
     $('#action-buttons').toggleClass('hidden', !showButtons);
+
+    let cursorStyle = (attributes >> 9) & 0x07;
+    // 0 - Block blink, 2 - Block steady
+    // 3 - Under blink, 4 - Under steady
+    // 5 - I-bar blink, 6 - I-bar steady
+    this.cursor.style = cursorStyle<3?'block':cursorStyle<5?'line':'bar';
+    this.cursor.blinkEnable = cursorStyle === 0 || cursorStyle === 3 || cursorStyle === 5;
 
     // content
     let fg = 7;
@@ -932,23 +950,23 @@ Screen.once('load', () => {
   }
 });
 
-let fitScreen = false
+let fitScreen = false;
 function fitScreenIfNeeded () {
-  Screen.window.fitIntoWidth = fitScreen ? window.innerWidth : 0
+  Screen.window.fitIntoWidth = fitScreen ? window.innerWidth : 0;
   Screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
 }
 fitScreenIfNeeded();
-window.addEventListener('resize', fitScreenIfNeeded)
+window.addEventListener('resize', fitScreenIfNeeded);
 
 window.toggleFitScreen = function () {
   fitScreen = !fitScreen;
-  const resizeButtonIcon = qs('#resize-button-icon')
+  const resizeButtonIcon = qs('#resize-button-icon');
   if (fitScreen) {
-    resizeButtonIcon.classList.remove('icn-resize-small')
+    resizeButtonIcon.classList.remove('icn-resize-small');
     resizeButtonIcon.classList.add('icn-resize-full')
   } else {
-    resizeButtonIcon.classList.remove('icn-resize-full')
+    resizeButtonIcon.classList.remove('icn-resize-full');
     resizeButtonIcon.classList.add('icn-resize-small')
   }
   fitScreenIfNeeded();
-}
+};

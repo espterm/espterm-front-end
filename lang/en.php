@@ -51,6 +51,7 @@ return [
 	'term.default_fg_bg' => 'Text / background',
 	'term.buttons' => 'Button labels',
 	'term.theme' => 'Color scheme',
+	'term.cursor_shape' => 'Cursor style',
 	'term.parser_tout_ms' => 'Parser timeout',
 	'term.display_tout_ms' => 'Redraw delay',
 	'term.display_cooldown_ms' => 'Redraw cooldown',
@@ -58,7 +59,15 @@ return [
 	'term.show_config_links' => 'Show nav links',
 	'term.show_buttons' => 'Show buttons',
 	'term.loopback' => 'Local Echo',
+	'term.crlf_mode' => 'Enter sends CR+LF',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
+
+	'cursor.block_blink' => 'Block, blinking',
+    'cursor.block_steady' => 'Block, steady',
+    'cursor.underline_blink' => 'Underline, blinking',
+    'cursor.underline_steady' => 'Underline, steady',
+    'cursor.bar_blink' => 'I-bar, blinking',
+    'cursor.bar_steady' => 'I-bar, steady',
 
 	// terminal color labels
 	'color.0' => 'Black',
