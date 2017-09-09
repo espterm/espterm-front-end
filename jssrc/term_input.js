@@ -143,7 +143,7 @@ var Input = (function() {
 			if (str.length>0 && str.charCodeAt(0) >= 32) {
 //				console.log("Typed ", str);
 				// prevent space from scrolling
-				if (e.which === 32) e.preventDefault();
+				if (evt.which === 32) evt.preventDefault();
 				sendStrMsg(str);
 			}
 		});
