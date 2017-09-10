@@ -909,6 +909,18 @@ class TermScreen {
     })
   }
 
+  showNotification (text) {
+    // TODO: request permission earlier
+    // the requestPermission should be user-triggered; asking upfront seems
+    // a little awkward
+    if (Notification && Notification.permission === 'granted') {
+      let notification = new Notification('ESPTerm', {
+        body: text
+      });
+      notification.addEventListener('click', () => window.focus());
+    }
+  }
+
   load (str) {
     const content = str.substr(1);
 
@@ -922,6 +934,8 @@ class TermScreen {
       case 'B':
         this.beep();
         break;
+      case 'G':
+        this.showNotification(content);
       default:
         console.warn(`Bad data message type; ignoring.\n${JSON.stringify(content)}`)
     }
