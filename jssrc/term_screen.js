@@ -994,7 +994,7 @@ class TermScreen {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let strArray = undef(Array.from) ? Array.from(str) : str.split('')
+    let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
     const MASK_BLINK = 1 << 4
