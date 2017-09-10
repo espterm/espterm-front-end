@@ -1029,7 +1029,6 @@ class TermScreen {
       let charCode = character.codePointAt(0)
 
       let data
-      // noinspection FallThroughInSwitchStatementJS
       switch (charCode) {
         case SEQ_SET_COLOR_ATTR:
           data = parse3B(strArray[i] + strArray[i + 1] + strArray[i + 2])
