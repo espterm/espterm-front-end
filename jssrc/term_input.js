@@ -153,11 +153,35 @@ window.Input = (function () {
     for (let i = 1; i <= 26; i++) {
       bind('ctrl+' + String.fromCharCode(96 + i), String.fromCharCode(i))
     }
-    bind('ctrl+]', '\x1b') // alternate way to enter ESC
+    bind('ctrl+]',  '\x1b') // alternate way to enter ESC
     bind('ctrl+\\', '\x1c')
-    bind('ctrl+[', '\x1d')
-    bind('ctrl+^', '\x1e')
-    bind('ctrl+_', '\x1f')
+    bind('ctrl+[',  '\x1d')
+    bind('ctrl+^',  '\x1e')
+    bind('ctrl+_',  '\x1f')
+
+    // extra ctrl-
+    bind('ctrl+left',  '\x1f[1;5D')
+    bind('ctrl+right', '\x1f[1;5C')
+    bind('ctrl+up',    '\x1f[1;5A')
+    bind('ctrl+down',  '\x1f[1;5B')
+    bind('ctrl+home',  '\x1f[1;5H')
+    bind('ctrl+end',   '\x1f[1;5F')
+
+    // extra shift-
+    bind('shift+left',  '\x1f[1;2D')
+    bind('shift+right', '\x1f[1;2C')
+    bind('shift+up',    '\x1f[1;2A')
+    bind('shift+down',  '\x1f[1;2B')
+    bind('shift+home',  '\x1f[1;2H')
+    bind('shift+end',   '\x1f[1;2F')
+
+    // macOS editing commands
+    bind('⌥+left',  '\x1fb')    // ⌥← to go back a word (^[b)
+    bind('⌥+right', '\x1ff')    // ⌥→ to go forward one word (^[f)
+    bind('⌘+left',  '\x01')     // ⌘← to go to the beginning of a line (^A)
+    bind('⌘+right', '\x05')     // ⌘→ to go to the end of a line (^E)
+    bind('⌥+backspace', '\x17') // ⌥⌫ to delete a word (^W, I think)
+    bind('⌘+backspace', '\x15') // ⌘⌫ to delete to the beginning of a line (possibly ^U)
 
     _bindFnKeys()
   }
