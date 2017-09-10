@@ -252,7 +252,7 @@ window.Input = (function () {
     // Mouse events
     onMouseMove: function (x, y) {
       if (!opts.mt_move) return
-      const b = mb1 ? 1 : mb2 ? 2 : mb3 ? 3 : 0;
+      const b = mb1 ? 1 : mb2 ? 2 : mb3 ? 3 : 0
       const m = packModifiersForMouse()
       Conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
     },
