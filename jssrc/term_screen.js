@@ -1043,7 +1043,7 @@ Screen.once('load', () => {
 
 let fitScreen = false
 function fitScreenIfNeeded () {
-  Screen.window.fitIntoWidth = fitScreen ? window.innerWidth : 0
+  Screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 20 : 0
   Screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
 }
 fitScreenIfNeeded()

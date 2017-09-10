@@ -43,7 +43,7 @@
 <h1><!-- Screen title gets loaded here by JS --></h1>
 
 <div id="term-wrap">
-	<div id="screen" class="theme-%theme%">
+	<div id="screen">
 		<input id="softkb-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
 		<div id="touch-select-menu">
 			<button id="touch-select-copy-btn">Copy</button>
@@ -73,7 +73,7 @@
 	try {
 		window.noAutoShow = true;
 		termInit(); // the screen will be loaded via ajax
-		Screen.load('%j:labels_seq%');
+		Screen.load('%j:labels_seq%', +'%theme%');
 	} catch(e) {
 		console.error(e);
 		<?php if (!DEBUG): ?>
