@@ -58,8 +58,8 @@ $.ready(function () {
       val -= step
     }
 
-    if (typeof min != 'undefined') val = Math.max(val, +min)
-    if (typeof max != 'undefined') val = Math.min(val, +max)
+    if (undef(min)) val = Math.max(val, +min)
+    if (undef(max)) val = Math.min(val, +max)
     $this.val(val)
 
     if ('createEvent' in document) {
