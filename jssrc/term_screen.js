@@ -106,7 +106,8 @@ class TermScreen {
       blinkStyleOn: true,
       blinkInterval: null,
       fitIntoWidth: 0,
-      fitIntoHeight: 0
+      fitIntoHeight: 0,
+      debug: false
     }
 
     // properties of this.window that require updating size and redrawing
@@ -665,20 +666,20 @@ class TermScreen {
     ctx.globalAlpha = 1
   }
 
-  getAdjacentCells (cell) {
+  getAdjacentCells (cell, radius = 1) {
     const { width, height } = this.window
     const screenLength = width * height
 
-    return [
-      cell - 1,
-      cell + 1,
-      cell - width,
-      cell + width,
-      cell - width - 1,
-      cell - width + 1,
-      cell + width - 1,
-      cell + width + 1
-    ].filter(adjacentCell => adjacentCell >= 0 && adjacentCell < screenLength)
+    let cells = []
+
+    for (let x = -radius; x <= radius; x++) {
+      for (let y = -radius; y <= radius; y++) {
+        if (x === 0 && y === 0) continue
+        cells.push(cell + x + y * width)
+      }
+    }
+
+    return cells.filter(cell => cell >= 0 && cell < screenLength)
   }
 
   draw () {
@@ -698,6 +699,12 @@ class TermScreen {
     const screenLength = width * height
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
+
+    if (this.window.debug) {
+      // differentiate static cells from updated cells
+      ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
+      ctx.fillRect(0, 0, screenWidth, screenHeight)
+    }
 
     ctx.font = this.getFont()
     ctx.textAlign = 'center'
@@ -753,16 +760,23 @@ class TermScreen {
     // Map of (cell index) -> boolean, whether or not a cell should be redrawn
     const redrawMap = new Map()
 
+    let isTextWide = text =>
+      text !== ' ' && ctx.measureText(text).width >= (cellWidth + 0.05)
+
     // decide for each cell if it should be redrawn
     let updateRedrawMapAt = cell => {
       let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell)
-      let adjacentCells = this.getAdjacentCells(cell)
+
+      // TODO: fonts (necessary?)
+      let text = this.screen[cell]
+      let isWideCell = isTextWide(text)
+      let checkRadius = isWideCell ? 2 : 1
 
       if (!shouldUpdate) {
         // check adjacent cells
         let adjacentDidUpdate = false
 
-        for (let adjacentCell of adjacentCells) {
+        for (let adjacentCell of this.getAdjacentCells(cell, checkRadius)) {
           if (updateMap.get(adjacentCell)) {
             adjacentDidUpdate = true
             break
@@ -773,14 +787,9 @@ class TermScreen {
       }
 
       if (shouldUpdate) {
-        // TODO: fonts (necessary?)
-        let text = this.screen[cell]
-        let isWideCell = ctx.measureText(text).width >= cellWidth
-        if (text === ' ') isWideCell = false
-
         if (isWideCell) {
           // set redraw for adjacent cells
-          for (let adjacentCell of adjacentCells) {
+          for (let adjacentCell of this.getAdjacentCells(cell)) {
             redrawMap.set(adjacentCell, true)
           }
 
@@ -788,7 +797,7 @@ class TermScreen {
           let index = cell - 1
           while (index > 0) {
             let text = this.screen[index]
-            let isWide = ctx.measureText(text).width >= cellWidth && text !== ' '
+            let isWide = isTextWide(text)
 
             if (redrawMap.get(index - 1)) break
 
@@ -839,6 +848,18 @@ class TermScreen {
           this.drawnScreenFG[cell] = fg
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
+
+          if (this.window.debug) {
+            // add cell data
+            ctx.save()
+            ctx.fillStyle = '#0f0'
+            ctx.font = '6px monospace'
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'top'
+            ctx.fillText(+isTextWide(text), x * cellWidth, y * cellHeight)
+            ctx.fillText(+updateMap.get(cell), x * cellWidth, y * cellHeight + 6)
+            ctx.restore()
+          }
         }
 
         if (isCursor && this.cursor.blinkOn && this.cursor.style !== 'block') {
