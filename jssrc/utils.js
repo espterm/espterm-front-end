@@ -72,42 +72,6 @@ Math.log10 = Math.log10 || function (x) {
   return Math.log(x) / Math.LN10
 }
 
-/**
- * Perform a substitution in the given string.
- *
- * Arguments - array or list of replacements.
- * Arguments numeric keys will replace {0}, {1} etc.
- * Named keys also work, ie. {foo: "bar"} -> replaces {foo} with bar.
- *
- * Braces are added to keys if missing.
- *
- * @returns {String} result
- */
-String.prototype.format = function () {
-  let out = this
-  let repl = arguments
-
-  if (arguments.length == 1 && (Array.isArray(arguments[0]) || typeof arguments[0] == 'object')) {
-    repl = arguments[0]
-  }
-
-  for (let ph in repl) {
-    if (repl.hasOwnProperty(ph)) {
-      const ph_orig = ph
-
-      if (!ph.match(/^\{.*\}$/)) {
-        ph = '{' + ph + '}'
-      }
-
-      // replace all occurrences
-      const pattern = new RegExp(rgxe(ph), 'g')
-      out = out.replace(pattern, repl[ph_orig])
-    }
-  }
-
-  return out
-}
-
 /** HTML escape */
 function e (str) {
   return $.htmlEscape(str)

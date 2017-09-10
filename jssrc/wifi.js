@@ -82,10 +82,11 @@
       }
 
       let inner = mk('div')
+      let escapedSSID = $.htmlEscape(ap.essid)
       $(inner).addClass('inner')
-        .htmlAppend('<div class="rssi">{0}</div>'.format(ap.rssi_perc))
-        .htmlAppend('<div class="essid" title="{0}">{0}</div>'.format($.htmlEscape(ap.essid)))
-        .htmlAppend('<div class="auth">{0}</div>'.format(authStr[ap.enc]))
+        .htmlAppend(`<div class="rssi">${ap.rssi_perc}</div>`)
+        .htmlAppend(`<div class="essid" title="${escapedSSID}">${escapedSSID}</div>`)
+        .htmlAppend(`<div class="auth">${authStr[ap.enc]}</div>`)
 
       $item.on('click', function () {
         let $th = $(this)
