@@ -143,7 +143,7 @@ class TermScreen {
       set (target, key, value, receiver) {
         target[key] = value
         self.scheduleSizeUpdate()
-        self.scheduleDraw()
+        self.scheduleDraw('proxy')
         return true
       }
     })
@@ -168,20 +168,20 @@ class TermScreen {
       if (selecting) return
       selecting = true
       this.selection.start = this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw()
+      this.scheduleDraw('ss')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
       this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw()
+      this.scheduleDraw('sm')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
       this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw()
+      this.scheduleDraw('se')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
@@ -274,7 +274,7 @@ class TermScreen {
         // reset selection
         this.selection.start = this.selection.end = [0, 0]
         qs('#touch-select-menu').classList.remove('open')
-        this.scheduleDraw()
+        this.scheduleDraw('tap')
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
@@ -377,7 +377,7 @@ class TermScreen {
 
   set palette (palette) {
     this._palette = palette
-    this.scheduleDraw()
+    this.scheduleDraw('palette')
   }
 
   getColor (i) {
@@ -411,9 +411,9 @@ class TermScreen {
   }
 
   // schedule a draw in the next tick
-  scheduleDraw (aggregateTime = 1) {
+  scheduleDraw (why, aggregateTime = 1) {
     clearTimeout(this._scheduledDraw)
-    this._scheduledDraw = setTimeout(() => this.draw(), aggregateTime)
+    this._scheduledDraw = setTimeout(() => this.draw(why), aggregateTime)
   }
 
   getFont (modifiers = {}) {
@@ -502,7 +502,7 @@ class TermScreen {
       this.drawnScreenAttrs = []
 
       // draw immediately; the canvas shouldn't flash
-      this.draw()
+      this.draw('init')
     }
   }
 
@@ -513,7 +513,7 @@ class TermScreen {
       this.cursor.blinkOn = this.cursor.blinking
         ? !this.cursor.blinkOn
         : true
-      this.scheduleDraw()
+      if (this.cursor.blinking) this.scheduleDraw('blink')
     }, 500)
   }
 
@@ -682,7 +682,7 @@ class TermScreen {
     return cells.filter(cell => cell >= 0 && cell < screenLength)
   }
 
-  draw () {
+  draw (why) {
     const ctx = this.ctx
     const {
       width,
@@ -704,6 +704,7 @@ class TermScreen {
       // differentiate static cells from updated cells
       ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
       ctx.fillRect(0, 0, screenWidth, screenHeight)
+      console.log(`draw: ${why}`)
     }
 
     ctx.font = this.getFont()
@@ -1035,7 +1036,7 @@ class TermScreen {
       }
     }
 
-    this.scheduleDraw(16)
+    this.scheduleDraw('load', 16)
     this.emit('load')
   }
 
