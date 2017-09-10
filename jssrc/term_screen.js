@@ -910,6 +910,7 @@ class TermScreen {
   }
 
   showNotification (text) {
+    console.log(`Notification: ${text}`);
     // TODO: request permission earlier
     // the requestPermission should be user-triggered; asking upfront seems
     // a little awkward
@@ -918,6 +919,8 @@ class TermScreen {
         body: text
       });
       notification.addEventListener('click', () => window.focus());
+    } else {
+      Notify.show(text);
     }
   }
 
