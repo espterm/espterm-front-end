@@ -1,7 +1,7 @@
 {
-  "name": "html_orig",
+  "name": "espterm-front-end",
   "version": "1.0.0",
-  "description": "ESPTerm HTML",
+  "description": "ESPTerm web interface",
   "license": "UNLICENSED",
   "devDependencies": {
     "babel-minify": "^0.2.0",
