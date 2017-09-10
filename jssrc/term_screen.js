@@ -936,6 +936,7 @@ class TermScreen {
         break;
       case 'G':
         this.showNotification(content);
+        break;
       default:
         console.warn(`Bad data message type; ignoring.\n${JSON.stringify(content)}`)
     }
