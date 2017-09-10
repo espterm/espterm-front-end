@@ -13,7 +13,7 @@ PHP is used to build the HTML files and apply substitutions.
 ## Development
 
 JavaScript source files can be found in the `jssrc/` folder, SASS
-files in the `sass` folder.
+files in the `sass/` folder.
 
 Fontello (icon font) is maintained in the `fontello/` folder. To update Fontello, replace
 the `fontello.zip` file and run `unpack.sh` in the same folder. This will extract the needed CSS
@@ -32,6 +32,9 @@ causes the value to be HTML- or JS-escaped.
 
 HTML escape turns `'"<>` into HTML entities. JS escape turns `'"\<>\r\n` into the 
 corresponding JS-string escape sequences (`<>` use `\u003C` and `\u003E`).
+
+#### macOS Notes
+To run `unpack.sh` and unpack Fontello icons on macOS, you must first install the GNU `grep` and `sed` and add them to your path, instead of using the pre-installed BSD versions.
 
 ## Building
 
