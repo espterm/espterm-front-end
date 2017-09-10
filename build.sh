@@ -16,7 +16,7 @@ cat jssrc/chibi.js \
 
 echo "Building CSS..."
 
-npm run sass -- --output-style compressed sass/app.scss > css/app.css
+npm run sass -- --output-style compressed sass/app.scss css/app.css
 
 echo "Building HTML..."
 
