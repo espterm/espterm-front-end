@@ -1,3 +1,4 @@
+<?php if (!DEBUG): ?>
 <script>
 	// Workaround for badly loaded page
 	setTimeout(function() {
@@ -7,6 +8,7 @@
 		}
 	}, 3000);
 </script>
+<?php endif; ?>
 
 <div class="Modal light hidden" id="fu_modal">
 	<div id="fu_form" class="Dialog">
@@ -74,9 +76,11 @@
 		Screen.load('%j:labels_seq%');
 	} catch(e) {
 		console.error(e);
+		<?php if (!DEBUG): ?>
 		console.error("Fail, reloading in 3s…");
 		setTimeout(function() {
 			location.reload(true);
 		}, 3000);
+		<?php endif; ?>
 	}
 </script>

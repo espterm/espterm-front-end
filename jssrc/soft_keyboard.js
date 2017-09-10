@@ -1,87 +1,87 @@
 $.ready(() => {
-  const input = qs('#softkb-input');
-  if (!input) return; // abort, we're not on the terminal page
+  const input = qs('#softkb-input')
+  if (!input) return // abort, we're not on the terminal page
 
-  let keyboardOpen = false;
+  let keyboardOpen = false
 
   let updateInputPosition = function () {
-    if (!keyboardOpen) return;
+    if (!keyboardOpen) return
 
-    let [x, y] = Screen.gridToScreen(Screen.cursor.x, Screen.cursor.y);
+    let [x, y] = Screen.gridToScreen(Screen.cursor.x, Screen.cursor.y)
     input.style.transform = `translate(${x}px, ${y}px)`
-  };
+  }
 
   input.addEventListener('focus', () => {
-    keyboardOpen = true;
+    keyboardOpen = true
     updateInputPosition()
-  });
-  input.addEventListener('blur', () => (keyboardOpen = false));
-  Screen.on('cursor-moved', updateInputPosition);
+  })
+  input.addEventListener('blur', () => (keyboardOpen = false))
+  Screen.on('cursor-moved', updateInputPosition)
 
   window.kbOpen = function openSoftKeyboard (open) {
-    keyboardOpen = open;
-    updateInputPosition();
-    if (open) input.focus();
+    keyboardOpen = open
+    updateInputPosition()
+    if (open) input.focus()
     else input.blur()
-  };
+  }
 
-  let lastCompositionString = '';
-  let compositing = false;
+  let lastCompositionString = ''
+  let compositing = false
 
   let sendInputDelta = function (newValue) {
-    let resend = false;
+    let resend = false
     if (newValue.length > lastCompositionString.length) {
       if (newValue.startsWith(lastCompositionString)) {
         // characters have been added at the end
         Input.sendString(newValue.substr(lastCompositionString.length))
-      } else resend = true;
+      } else resend = true
     } else if (newValue.length < lastCompositionString.length) {
       if (lastCompositionString.startsWith(newValue)) {
         // characters have been removed at the end
         Input.sendString('\b'.repeat(lastCompositionString.length -
           newValue.length))
-      } else resend = true;
-    } else if (newValue !== lastCompositionString) resend = true;
+      } else resend = true
+    } else if (newValue !== lastCompositionString) resend = true
 
     if (resend) {
       // the entire string changed; resend everything
       Input.sendString('\b'.repeat(lastCompositionString.length) +
         newValue)
     }
-    lastCompositionString = newValue;
-  };
+    lastCompositionString = newValue
+  }
 
   input.addEventListener('keydown', e => {
-    if (e.key === 'Unidentified') return;
+    if (e.key === 'Unidentified') return
 
-    e.preventDefault();
-    input.value = '';
+    e.preventDefault()
+    input.value = ''
 
-    if (e.key === 'Backspace') Input.sendString('\b');
+    if (e.key === 'Backspace') Input.sendString('\b')
     else if (e.key === 'Enter') Input.sendString('\x0d')
-  });
+  })
   input.addEventListener('input', e => {
-    e.stopPropagation();
+    e.stopPropagation()
 
     if (e.isComposing) {
-      sendInputDelta(e.data);
+      sendInputDelta(e.data)
     } else {
-      if (e.data) Input.sendString(e.data);
+      if (e.data) Input.sendString(e.data)
       else if (e.inputType === 'deleteContentBackward') {
-        lastCompositionString = '';
-        sendInputDelta('');
+        lastCompositionString = ''
+        sendInputDelta('')
       }
     }
-  });
+  })
   input.addEventListener('compositionstart', e => {
-    lastCompositionString = '';
-    compositing = true;
-  });
+    lastCompositionString = ''
+    compositing = true
+  })
   input.addEventListener('compositionend', e => {
-    lastCompositionString = '';
-    compositing = false;
-    input.value = '';
-  });
+    lastCompositionString = ''
+    compositing = false
+    input.value = ''
+  })
 
   Screen.on('open-soft-keyboard', () => input.focus())
-});
+})
