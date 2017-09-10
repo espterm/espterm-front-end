@@ -48,7 +48,7 @@ function extend (defaults, options) {
 
 /** Escape string for use as literal in RegExp */
 function rgxe (str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&')
+  return str.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')
 }
 
 /** Format number to N decimal places, output as string */

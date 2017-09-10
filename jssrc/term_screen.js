@@ -47,26 +47,22 @@ const themes = [
 // should not be used to look up 0-15 (will return transparent)
 const colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)')
 
-{
-  // fill color table
-
-  // colors 16-231 are a 6x6x6 color cube
-  for (let red = 0; red < 6; red++) {
-    for (let green = 0; green < 6; green++) {
-      for (let blue = 0; blue < 6; blue++) {
-        let redValue = red * 40 + (red ? 55 : 0)
-        let greenValue = green * 40 + (green ? 55 : 0)
-        let blueValue = blue * 40 + (blue ? 55 : 0)
-        colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
-      }
+// fill color table
+// colors 16-231 are a 6x6x6 color cube
+for (let red = 0; red < 6; red++) {
+  for (let green = 0; green < 6; green++) {
+    for (let blue = 0; blue < 6; blue++) {
+      let redValue = red * 40 + (red ? 55 : 0)
+      let greenValue = green * 40 + (green ? 55 : 0)
+      let blueValue = blue * 40 + (blue ? 55 : 0)
+      colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
     }
   }
-
-  // colors 232-255 are a grayscale ramp, sans black and white
-  for (let gray = 0; gray < 24; gray++) {
-    let value = gray * 10 + 8
-    colorTable256.push(`rgb(${value}, ${value}, ${value})`)
-  }
+}
+// colors 232-255 are a grayscale ramp, sans black and white
+for (let gray = 0; gray < 24; gray++) {
+  let value = gray * 10 + 8
+  colorTable256.push(`rgb(${value}, ${value}, ${value})`)
 }
 
 class TermScreen {
