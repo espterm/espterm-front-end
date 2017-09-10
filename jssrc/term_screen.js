@@ -564,17 +564,19 @@ class TermScreen {
     let underline = false;
     let blink = false;
     let strike = false;
+    let overline = false;
     if (attrs & (1 << 1)) ctx.globalAlpha = 0.5;
     if (attrs & (1 << 3)) underline = true;
     if (attrs & (1 << 4)) blink = true;
     if (attrs & (1 << 5)) text = TermScreen.alphaToFraktur(text);
     if (attrs & (1 << 6)) strike = true;
+    if (attrs & (1 << 7)) overline = true;
 
     if (!blink || this.window.blinkStyleOn) {
       ctx.fillStyle = this.getColor(fg);
       ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight);
 
-      if (underline || strike) {
+      if (underline || strike || overline) {
         ctx.strokeStyle = this.getColor(fg);
         ctx.lineWidth = 1;
         ctx.lineCap = 'round';
@@ -588,6 +590,12 @@ class TermScreen {
 
         if (strike) {
           let lineY = Math.round((y + 0.5) * cellHeight) + 0.5;
+          ctx.moveTo(x * cellWidth, lineY);
+          ctx.lineTo((x + 1) * cellWidth, lineY);
+        }
+
+        if (overline) {
+          let lineY = Math.round(y * cellHeight) + 0.5;
           ctx.moveTo(x * cellWidth, lineY);
           ctx.lineTo((x + 1) * cellWidth, lineY);
         }
