@@ -15,7 +15,9 @@ $.ready(() => {
     keyboardOpen = true
     updateInputPosition()
   })
+
   input.addEventListener('blur', () => (keyboardOpen = false))
+
   Screen.on('cursor-moved', updateInputPosition)
 
   window.kbOpen = function openSoftKeyboard (open) {
@@ -60,6 +62,7 @@ $.ready(() => {
     if (e.key === 'Backspace') Input.sendString('\b')
     else if (e.key === 'Enter') Input.sendString('\x0d')
   })
+
   input.addEventListener('input', e => {
     e.stopPropagation()
 
@@ -73,10 +76,12 @@ $.ready(() => {
       }
     }
   })
+
   input.addEventListener('compositionstart', e => {
     lastCompositionString = ''
     compositing = true
   })
+
   input.addEventListener('compositionend', e => {
     lastCompositionString = ''
     compositing = false

@@ -27,7 +27,7 @@ $.ready(function () {
 
   $('form').forEach(function (x) {
     $(x).on('keypress', function (e) {
-      if ((e.keyCode == 10 || e.keyCode == 13) && e.ctrlKey) {
+      if ((e.keyCode === 10 || e.keyCode === 13) && e.ctrlKey) {
         x.submit()
       }
     })
@@ -38,7 +38,7 @@ $.ready(function () {
     $('.anim-dots').each(function (x) {
       let $x = $(x)
       let dots = $x.html() + '.'
-      if (dots.length == 5) dots = '.'
+      if (dots.length === 5) dots = '.'
       $x.html(dots)
     })
   }, 1000)

@@ -71,7 +71,7 @@ window.TermUpl = (function () {
       return
     }
 
-    if (inline_pos == 0) {
+    if (inline_pos === 0) {
       curLine = lines[line_i++] + nl_str
     }
 

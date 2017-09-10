@@ -25,7 +25,7 @@ function bool (x) {
  */
 function cr (hdl) {
   return function (e) {
-    if (e.which == 10 || e.which == 13 || e.which == 32) {
+    if (e.which === 10 || e.which === 13 || e.which === 32) {
       hdl()
     }
   }
@@ -33,7 +33,7 @@ function cr (hdl) {
 
 /** Extend an objects with options */
 function extend (defaults, options) {
-  var target = {}
+  let target = {}
 
   Object.keys(defaults).forEach(function (k) {
     target[k] = defaults[k]
@@ -53,7 +53,7 @@ function rgxe (str) {
 
 /** Format number to N decimal places, output as string */
 function numfmt (x, places) {
-  var pow = Math.pow(10, places)
+  const pow = Math.pow(10, places)
   return Math.round(x * pow) / pow
 }
 

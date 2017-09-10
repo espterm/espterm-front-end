@@ -43,6 +43,8 @@ const themes = [
   ]
 ]
 
+// TODO move this to the initializer so it's not run on non-terminal pages
+
 // 256color lookup table
 // should not be used to look up 0-15 (will return transparent)
 const colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)')
@@ -160,17 +162,20 @@ class TermScreen {
     this.resetCursorBlink()
 
     let selecting = false
+
     let selectStart = (x, y) => {
       if (selecting) return
       selecting = true
       this.selection.start = this.selection.end = this.screenToGrid(x, y)
       this.scheduleDraw()
     }
+
     let selectMove = (x, y) => {
       if (!selecting) return
       this.selection.end = this.screenToGrid(x, y)
       this.scheduleDraw()
     }
+
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
@@ -187,9 +192,11 @@ class TermScreen {
           e.button + 1)
       }
     })
+
     window.addEventListener('mousemove', e => {
       selectMove(e.offsetX, e.offsetY)
     })
+
     window.addEventListener('mouseup', e => {
       selectEnd(e.offsetX, e.offsetY)
     })
@@ -198,15 +205,18 @@ class TermScreen {
     let touchDownTime = 0
     let touchSelectMinTime = 500
     let touchDidMove = false
+
     let getTouchPositionOffset = touch => {
       let rect = this.canvas.getBoundingClientRect()
       return [touch.clientX - rect.left, touch.clientY - rect.top]
     }
+
     this.canvas.addEventListener('touchstart', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
     })
+
     this.canvas.addEventListener('touchmove', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
 
@@ -221,10 +231,12 @@ class TermScreen {
 
       touchDidMove = true
     })
+
     this.canvas.addEventListener('touchend', e => {
       if (e.touches[0]) {
         touchPosition = getTouchPositionOffset(e.touches[0])
       }
+
       if (selecting) {
         e.preventDefault()
         selectEnd(...touchPosition)
@@ -282,12 +294,14 @@ class TermScreen {
         Input.onMouseMove(...this.screenToGrid(e.offsetX, e.offsetY))
       }
     })
+
     this.canvas.addEventListener('mouseup', e => {
       if (!selecting) {
         Input.onMouseUp(...this.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
+
     this.canvas.addEventListener('wheel', e => {
       if (this.mouseMode.clicks) {
         Input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY),
@@ -297,6 +311,7 @@ class TermScreen {
         e.preventDefault()
       }
     })
+
     this.canvas.addEventListener('contextmenu', e => {
       if (this.mouseMode.clicks) {
         // prevent mouse keys getting stuck
@@ -573,7 +588,6 @@ class TermScreen {
       Notify.show('Copied to clipboard')
     } else {
       Notify.show('Failed to copy')
-      // unsuccessful copy
     }
     document.body.removeChild(textarea)
   }
@@ -596,10 +610,8 @@ class TermScreen {
   drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
-    ctx.clearRect(x * cellWidth, y * cellHeight,
-      Math.ceil(cellWidth), Math.ceil(cellHeight))
-    ctx.fillRect(x * cellWidth, y * cellHeight,
-      Math.ceil(cellWidth), Math.ceil(cellHeight))
+    ctx.clearRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
+    ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
   }
 
   drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs }) {
@@ -1020,17 +1032,19 @@ class TermScreen {
   }
 
   showNotification (text) {
-    console.log(`Notification: ${text}`)
-    // TODO: request permission earlier
-    // the requestPermission should be user-triggered; asking upfront seems
-    // a little awkward
+    console.info(`Notification: ${text}`)
     if (Notification && Notification.permission === 'granted') {
       let notification = new Notification('ESPTerm', {
         body: text
       })
       notification.addEventListener('click', () => window.focus())
     } else {
-      Notify.show(text)
+      if (Notification && Notification.permission !== 'denied') {
+        Notification.requestPermission()
+      } else {
+        // Fallback using the built-in notification balloon
+        Notify.show(text)
+      }
     }
   }
 
@@ -1044,17 +1058,21 @@ class TermScreen {
       case 'S':
         this.loadContent(content)
         break
+
       case 'T':
         this.loadLabels(content)
         break
+
       case 'B':
         this.beep()
         break
+
       case 'G':
         this.showNotification(content)
         break
+
       default:
-        console.warn(`Bad data message type; ignoring.\n${JSON.stringify(content)}`)
+        console.warn(`Bad data message type; ignoring.\n${JSON.stringify(str)}`)
     }
   }
 

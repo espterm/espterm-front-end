@@ -29,15 +29,8 @@ window.Conn = (function () {
     try {
       // . = heartbeat
       switch (evt.data.charAt(0)) {
-        case 'B':
-        case 'T':
-        case 'S':
-        case 'G':
-          Screen.load(evt.data)
-          if (!pageShown) {
-            showPage()
-            pageShown = true
-          }
+        case '.':
+          // heartbeat, no-op message
           break
 
         case '-':
@@ -52,6 +45,14 @@ window.Conn = (function () {
           // console.log('xon');
           xoff = false
           clearTimeout(autoXoffTout)
+          break
+
+        default:
+          Screen.load(evt.data)
+          if (!pageShown) {
+            showPage()
+            pageShown = true
+          }
           break
       }
       heartbeat()
@@ -76,7 +77,7 @@ window.Conn = (function () {
     }
 
     if (!ws) return false // for dry testing
-    if (ws.readyState != 1) {
+    if (ws.readyState !== 1) {
       console.error('Socket not ready')
       return false
     }
@@ -116,7 +117,7 @@ window.Conn = (function () {
     pingIv = setInterval(function () {
       console.log('> ping')
       $.get('http://' + _root + '/system/ping', function (resp, status) {
-        if (status == 200) {
+        if (status === 200) {
           clearInterval(pingIv)
           console.info('Server ready, reloading page...')
           location.reload()

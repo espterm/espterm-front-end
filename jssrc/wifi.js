@@ -12,11 +12,11 @@
     $('#sta_ssid').val(name)
     $('#sta_password').val(password)
 
-    $('#sta-nw').toggleClass('hidden', name.length == 0)
+    $('#sta-nw').toggleClass('hidden', name.length === 0)
     $('#sta-nw-nil').toggleClass('hidden', name.length > 0)
 
     $('#sta-nw .essid').html(e(name))
-    const nopw = undef(password) || password.length == 0
+    const nopw = undef(password) || password.length === 0
     $('#sta-nw .passwd').toggleClass('hidden', nopw)
     $('#sta-nw .nopasswd').toggleClass('hidden', !nopw)
     $('#sta-nw .ip').html(ip.length > 0 ? tr('wifi.connected_ip_is') + ip : tr('wifi.not_conn'))
@@ -34,7 +34,7 @@
     //  }
     // };
 
-    if (status != 200) {
+    if (status !== 200) {
       // bad response
       rescan(5000) // wait 5sm then retry
       return
@@ -77,7 +77,7 @@
         .addClass('AP')
 
       // mark current SSID
-      if (ap.essid == curSSID) {
+      if (ap.essid === curSSID) {
         $item.addClass('selected')
       }
 

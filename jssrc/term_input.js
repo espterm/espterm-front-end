@@ -153,6 +153,7 @@ window.Input = (function () {
     for (let i = 1; i <= 26; i++) {
       bind('ctrl+' + String.fromCharCode(96 + i), String.fromCharCode(i))
     }
+    /* eslint-disable */
     bind('ctrl+]',  '\x1b') // alternate way to enter ESC
     bind('ctrl+\\', '\x1c')
     bind('ctrl+[',  '\x1d')
@@ -176,12 +177,13 @@ window.Input = (function () {
     bind('shift+end',   '\x1f[1;2F')
 
     // macOS editing commands
-    bind('⌥+left',  '\x1fb')    // ⌥← to go back a word (^[b)
-    bind('⌥+right', '\x1ff')    // ⌥→ to go forward one word (^[f)
-    bind('⌘+left',  '\x01')     // ⌘← to go to the beginning of a line (^A)
-    bind('⌘+right', '\x05')     // ⌘→ to go to the end of a line (^E)
+    bind('⌥+left',      '\x1fb')    // ⌥← to go back a word (^[b)
+    bind('⌥+right',     '\x1ff')    // ⌥→ to go forward one word (^[f)
+    bind('⌘+left',      '\x01')     // ⌘← to go to the beginning of a line (^A)
+    bind('⌘+right',     '\x05')     // ⌘→ to go to the end of a line (^E)
     bind('⌥+backspace', '\x17') // ⌥⌫ to delete a word (^W, I think)
     bind('⌘+backspace', '\x15') // ⌘⌫ to delete to the beginning of a line (possibly ^U)
+    /* eslint-enable */
 
     _bindFnKeys()
   }
@@ -204,15 +206,15 @@ window.Input = (function () {
 
     // global mouse state tracking - for motion reporting
     window.addEventListener('mousedown', function (evt) {
-      if (evt.button == 0) mb1 = 1
-      if (evt.button == 1) mb2 = 1
-      if (evt.button == 2) mb3 = 1
+      if (evt.button === 0) mb1 = 1
+      if (evt.button === 1) mb2 = 1
+      if (evt.button === 2) mb3 = 1
     })
 
     window.addEventListener('mouseup', function (evt) {
-      if (evt.button == 0) mb1 = 0
-      if (evt.button == 1) mb2 = 0
-      if (evt.button == 2) mb3 = 0
+      if (evt.button === 0) mb1 = 0
+      if (evt.button === 1) mb2 = 0
+      if (evt.button === 2) mb3 = 0
     })
   }
 
@@ -233,7 +235,7 @@ window.Input = (function () {
 
     /** Enable alternate key modes (cursors, numpad, fn) */
     setAlts: function (cu, np, fn, crlf) {
-      if (opts.cu_alt != cu || opts.np_alt != np || opts.fn_alt != fn || opts.crlf_mode != crlf) {
+      if (opts.cu_alt !== cu || opts.np_alt !== np || opts.fn_alt !== fn || opts.crlf_mode !== crlf) {
         opts.cu_alt = cu
         opts.np_alt = np
         opts.fn_alt = fn
@@ -256,6 +258,7 @@ window.Input = (function () {
       const m = packModifiersForMouse()
       Conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
     },
+
     onMouseDown: function (x, y, b) {
       if (!opts.mt_click) return
       if (b > 3 || b < 1) return
@@ -263,6 +266,7 @@ window.Input = (function () {
       Conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
+
     onMouseUp: function (x, y, b) {
       if (!opts.mt_click) return
       if (b > 3 || b < 1) return
@@ -270,6 +274,7 @@ window.Input = (function () {
       Conn.send('r' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
+
     onMouseWheel: function (x, y, dir) {
       if (!opts.mt_click) return
       // -1 ... btn 4 (away from user)
@@ -279,9 +284,11 @@ window.Input = (function () {
       Conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
+
     mouseTracksClicks: function () {
       return opts.mt_click
     },
+
     blockKeys: function (yes) {
       opts.no_keys = yes
     }

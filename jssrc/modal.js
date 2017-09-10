@@ -34,7 +34,7 @@
 
     // Hide all modals on esc
     $(window).on('keydown', function (e) {
-      if (e.which == 27) {
+      if (e.which === 27) {
         modal.hide('.Modal')
       }
     })
