@@ -32,6 +32,7 @@ var Conn = (function () {
         case 'B':
         case 'T':
         case 'S':
+        case 'G':
           Screen.load(evt.data);
           if(!pageShown) {
             showPage();
