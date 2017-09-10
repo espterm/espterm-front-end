@@ -43,6 +43,32 @@ const themes = [
   ]
 ];
 
+// 256color lookup table
+// should not be used to look up 0-15 (will return transparent)
+const colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)');
+
+{
+  // fill color table
+
+  // colors 16-231 are a 6x6x6 color cube
+  for (let red = 0; red < 6; red++) {
+    for (let green = 0; green < 6; green++) {
+      for (let blue = 0; blue < 6; blue++) {
+        let redValue = red * 40 + (red ? 55 : 0)
+        let greenValue = green * 40 + (green ? 55 : 0)
+        let blueValue = blue * 40 + (blue ? 55 : 0)
+        colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
+      }
+    }
+  }
+
+  // colors 232-255 are a grayscale ramp, sans black and white
+  for (let gray = 0; gray < 24; gray++) {
+    let value = gray * 10 + 8
+    colorTable256.push(`rgb(${value}, ${value}, ${value})`)
+  }
+}
+
 class TermScreen {
   constructor () {
     this.canvas = document.createElement('canvas');
@@ -69,7 +95,7 @@ class TermScreen {
       blinkInterval: 0,
     };
 
-    this._colors = themes[0];
+    this._palette = themes[0];
 
     this._window = {
       width: 0,
@@ -333,16 +359,34 @@ class TermScreen {
     }
   }
 
-  get colors () { return this._colors }
-  set colors (theme) {
-    this._colors = theme;
+  get palette () { return this._palette }
+  set palette (palette) {
+    this._palette = palette;
     this.scheduleDraw();
   }
 
   getColor (i) {
+    // return palette color if it exists
+    if (this.palette[i]) return this.palette[i];
+
+    // -1 for selection foreground, -2 for selection background
     if (i === -1) return SELECTION_FG;
     if (i === -2) return SELECTION_BG;
-    return this.colors[i]
+
+    // 256 color
+    if (i > 15 && i < 256) return colorTable256[i];
+
+    // true color, encoded as (hex) + 256 (such that #000 == 256)
+    if (i > 255) {
+      i -= 256;
+      let red = (i >> 16) & 0xFF;
+      let green = (i >> 8) & 0xFF;
+      let blue = i & 0xFF;
+      return `rgb(${red}, ${green}, ${blue})`;
+    }
+
+    // default to transparent
+    return 'rgba(0, 0, 0, 0)';
   }
 
   // schedule a size update in the next tick
