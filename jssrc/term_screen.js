@@ -95,7 +95,7 @@ class TermScreen {
       blinkInterval: 0
     }
 
-    this._palette = themes[0]
+    this._palette = null
 
     this._window = {
       width: 0,
@@ -359,7 +359,10 @@ class TermScreen {
     }
   }
 
-  get palette () { return this._palette }
+  get palette () {
+    return this._palette || themes[0]
+  }
+
   set palette (palette) {
     this._palette = palette
     this.scheduleDraw()
@@ -965,8 +968,11 @@ class TermScreen {
     }
   }
 
-  load (str) {
+  load (str, theme = -1) {
     const content = str.substr(1)
+    if (theme >= 0 && theme < themes.length) {
+      Screen.palette = themes[theme]
+    }
 
     switch (str[0]) {
       case 'S':
@@ -1034,11 +1040,6 @@ const Screen = new TermScreen()
 
 Screen.once('load', () => {
   qs('#screen').appendChild(Screen.canvas)
-  for (let item of qs('#screen').classList) {
-    if (item.startsWith('theme-')) {
-      Screen.colors = themes[item.substr(6)]
-    }
-  }
 })
 
 let fitScreen = false
