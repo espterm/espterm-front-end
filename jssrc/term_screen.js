@@ -143,7 +143,7 @@ class TermScreen {
       set (target, key, value, receiver) {
         target[key] = value
         self.scheduleSizeUpdate()
-        self.scheduleDraw(`proxy:${key}=${value}`)
+        self.scheduleDraw(`window:${key}=${value}`)
         return true
       }
     })
@@ -170,20 +170,20 @@ class TermScreen {
       if (selecting) return
       selecting = true
       this.selection.start = this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw('ss')
+      this.scheduleDraw('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
       this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw('sm')
+      this.scheduleDraw('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
       this.selection.end = this.screenToGrid(x, y)
-      this.scheduleDraw('se')
+      this.scheduleDraw('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
@@ -276,7 +276,7 @@ class TermScreen {
         // reset selection
         this.selection.start = this.selection.end = [0, 0]
         qs('#touch-select-menu').classList.remove('open')
-        this.scheduleDraw('tap')
+        this.scheduleDraw('select-reset')
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
@@ -378,8 +378,10 @@ class TermScreen {
   }
 
   set palette (palette) {
-    this._palette = palette
-    this.scheduleDraw('palette')
+    if (this._palette !== palette) {
+      this._palette = palette
+      this.scheduleDraw('palette')
+    }
   }
 
   getColor (i) {
@@ -515,7 +517,7 @@ class TermScreen {
       this.cursor.blinkOn = this.cursor.blinking
         ? !this.cursor.blinkOn
         : true
-      if (this.cursor.blinking) this.scheduleDraw('blink')
+      if (this.cursor.blinking) this.scheduleDraw('cursor-blink')
     }, 500)
   }
 
@@ -625,46 +627,42 @@ class TermScreen {
     const ctx = this.ctx
 
     let underline = false
-    let blink = false
     let strike = false
     let overline = false
     if (attrs & (1 << 1)) ctx.globalAlpha = 0.5
     if (attrs & (1 << 3)) underline = true
-    if (attrs & (1 << 4)) blink = true
     if (attrs & (1 << 5)) text = TermScreen.alphaToFraktur(text)
     if (attrs & (1 << 6)) strike = true
     if (attrs & (1 << 7)) overline = true
 
-    if (!blink || this.window.blinkStyleOn) {
-      ctx.fillStyle = this.getColor(fg)
-      ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
+    ctx.fillStyle = this.getColor(fg)
+    ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
 
-      if (underline || strike || overline) {
-        ctx.strokeStyle = this.getColor(fg)
-        ctx.lineWidth = 1
-        ctx.lineCap = 'round'
-        ctx.beginPath()
+    if (underline || strike || overline) {
+      ctx.strokeStyle = this.getColor(fg)
+      ctx.lineWidth = 1
+      ctx.lineCap = 'round'
+      ctx.beginPath()
 
-        if (underline) {
-          let lineY = Math.round(y * cellHeight + charSize.height) + 0.5
-          ctx.moveTo(x * cellWidth, lineY)
-          ctx.lineTo((x + 1) * cellWidth, lineY)
-        }
-
-        if (strike) {
-          let lineY = Math.round((y + 0.5) * cellHeight) + 0.5
-          ctx.moveTo(x * cellWidth, lineY)
-          ctx.lineTo((x + 1) * cellWidth, lineY)
-        }
-
-        if (overline) {
-          let lineY = Math.round(y * cellHeight) + 0.5
-          ctx.moveTo(x * cellWidth, lineY)
-          ctx.lineTo((x + 1) * cellWidth, lineY)
-        }
-
-        ctx.stroke()
+      if (underline) {
+        let lineY = Math.round(y * cellHeight + charSize.height) + 0.5
+        ctx.moveTo(x * cellWidth, lineY)
+        ctx.lineTo((x + 1) * cellWidth, lineY)
       }
+
+      if (strike) {
+        let lineY = Math.round((y + 0.5) * cellHeight) + 0.5
+        ctx.moveTo(x * cellWidth, lineY)
+        ctx.lineTo((x + 1) * cellWidth, lineY)
+      }
+
+      if (overline) {
+        let lineY = Math.round(y * cellHeight) + 0.5
+        ctx.moveTo(x * cellWidth, lineY)
+        ctx.lineTo((x + 1) * cellWidth, lineY)
+      }
+
+      ctx.stroke()
     }
 
     ctx.globalAlpha = 1
@@ -740,6 +738,12 @@ class TermScreen {
       let fg = invertForCursor ? this.screenBG[cell] : this.screenFG[cell]
       let bg = invertForCursor ? this.screenFG[cell] : this.screenBG[cell]
       let attrs = this.screenAttrs[cell]
+
+      if (attrs & (1 << 4) && !this.window.blinkStyleOn) {
+        // blinking is enabled and blink style is off
+        // set text to nothing so drawCell doesn't draw anything
+        text = ''
+      }
 
       // HACK: ensure cursor is visible
       if (invertForCursor && fg === bg) bg = fg === 0 ? 7 : 0
