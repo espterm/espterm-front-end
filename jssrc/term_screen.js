@@ -143,10 +143,12 @@ class TermScreen {
       set (target, key, value, receiver) {
         target[key] = value
         self.scheduleSizeUpdate()
-        self.scheduleDraw('proxy')
+        self.scheduleDraw(`proxy:${key}=${value}`)
         return true
       }
     })
+
+    this.blinkingCellCount = 0
 
     this.screen = []
     this.screenFG = []
@@ -522,6 +524,8 @@ class TermScreen {
     clearInterval(this.window.blinkInterval)
     let intervals = 0
     this.window.blinkInterval = setInterval(() => {
+      if (this.blinkingCellCount <= 0) return
+
       intervals++
       if (intervals >= 4 && this.window.blinkStyleOn) {
         this.window.blinkStyleOn = false
@@ -898,9 +902,11 @@ class TermScreen {
     let i = 0
 
     // window size
-    this.window.height = parse2B(str, i)
-    this.window.width = parse2B(str, i + 2)
-    this.updateSize()
+    const newHeight = parse2B(str, i)
+    const newWidth = parse2B(str, i + 2)
+    const resized = (this.window.height !== newHeight) || (this.window.width !== newWidth)
+    this.window.height = newHeight
+    this.window.width = newWidth
     i += 4
 
     // cursor position
@@ -975,20 +981,51 @@ class TermScreen {
     let lastChar = ' '
     let screenLength = this.window.width * this.window.height
 
-    this.screen = new Array(screenLength).fill(' ')
-    this.screenFG = new Array(screenLength).fill(' ')
-    this.screenBG = new Array(screenLength).fill(' ')
-    this.screenAttrs = new Array(screenLength).fill(' ')
+    if (resized) {
+      this.updateSize()
+      this.blinkingCellCount = 0
+      this.screen = new Array(screenLength).fill(' ')
+      this.screenFG = new Array(screenLength).fill(' ')
+      this.screenBG = new Array(screenLength).fill(' ')
+      this.screenAttrs = new Array(screenLength).fill(' ')
+    }
 
     let strArray = typeof Array.from !== 'undefined'
       ? Array.from(str)
       : str.split('')
 
+    const MASK_LINE_ATTR = 0xC8
+    const MASK_BLINK = 1 << 4
+
+    let setCellContent = () => {
+      // Remove blink attribute if it wouldn't have any effect
+      let myAttrs = attrs
+      if ((myAttrs & MASK_BLINK) !== 0 &&
+        ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
+          fg === bg // invisible text
+        )
+      ) {
+        myAttrs ^= MASK_BLINK
+      }
+      // update blinking cells counter if blink state changed
+      if ((this.screenAttrs[cell] & MASK_BLINK) !== (myAttrs & MASK_BLINK)) {
+        if (myAttrs & MASK_BLINK) this.blinkingCellCount++
+        else this.blinkingCellCount--
+      }
+
+      this.screen[cell] = lastChar
+      this.screenFG[cell] = fg
+      this.screenBG[cell] = bg
+      this.screenAttrs[cell] = myAttrs
+    }
+
+    let blinkAttr = 0
     while (i < strArray.length && cell < screenLength) {
       let character = strArray[i++]
       let charCode = character.codePointAt(0)
 
       let data
+      // noinspection FallThroughInSwitchStatementJS
       switch (charCode) {
         case SEQ_SET_COLOR_ATTR:
           data = parse3B(strArray[i] + strArray[i + 1] + strArray[i + 2])
@@ -996,6 +1033,7 @@ class TermScreen {
           fg = data & 0xF
           bg = data >> 4 & 0xF
           attrs = data >> 8 & 0xFF
+          blinkAttr = attrs & MASK_BLINK
           break
 
         case SEQ_SET_COLOR:
@@ -1009,32 +1047,27 @@ class TermScreen {
           data = parse2B(strArray[i] + strArray[i + 1])
           i += 2
           attrs = data & 0xFF
+          blinkAttr = attrs & MASK_BLINK
           break
 
         case SEQ_REPEAT:
           let count = parse2B(strArray[i] + strArray[i + 1])
           i += 2
           for (let j = 0; j < count; j++) {
-            this.screen[cell] = lastChar
-            this.screenFG[cell] = fg
-            this.screenBG[cell] = bg
-            this.screenAttrs[cell] = attrs
-
+            setCellContent(cell)
             if (++cell > screenLength) break
           }
           break
 
         default:
-          // safety replacement
           if (charCode < 32) character = '\ufffd'
-          // unique cell character
-          this.screen[cell] = lastChar = character
-          this.screenFG[cell] = fg
-          this.screenBG[cell] = bg
-          this.screenAttrs[cell] = attrs
+          lastChar = character
+          setCellContent(cell)
           cell++
       }
     }
+
+    if (this.window.debug) console.log(`Blinky cells = ${this.blinkingCellCount}`)
 
     this.scheduleDraw('load', 16)
     this.emit('load')

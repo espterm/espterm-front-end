@@ -119,3 +119,12 @@ $._loader = function (vis) {
 function showPage () {
   $('#content').addClass('load')
 }
+
+// Auto reveal pages other than the terminal (sets window.noAutoShow)
+$.ready(function () {
+  if (window.noAutoShow !== true) {
+    setTimeout(function () {
+      showPage()
+    }, 1)
+  }
+})

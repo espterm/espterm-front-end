@@ -71,6 +71,7 @@
 
 <script>
 	try {
+		window.noAutoShow = true;
 		termInit('%j:labels_seq%', +'%theme%');
 	} catch(e) {
 		console.error(e);
