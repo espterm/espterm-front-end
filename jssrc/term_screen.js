@@ -593,13 +593,19 @@ class TermScreen {
     return [ x * cellSize.width, y * cellSize.height ]
   }
 
-  drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs }) {
+  drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
+    ctx.clearRect(x * cellWidth, y * cellHeight,
+      Math.ceil(cellWidth), Math.ceil(cellHeight))
     ctx.fillRect(x * cellWidth, y * cellHeight,
       Math.ceil(cellWidth), Math.ceil(cellHeight))
+  }
 
+  drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs }) {
     if (!text) return
+
+    const ctx = this.ctx
 
     let underline = false
     let blink = false
@@ -647,6 +653,22 @@ class TermScreen {
     ctx.globalAlpha = 1
   }
 
+  getAdjacentCells (cell) {
+    const { width, height } = this.window
+    const screenLength = width * height
+
+    return [
+      cell - 1,
+      cell + 1,
+      cell - width,
+      cell + width,
+      cell - width - 1,
+      cell - width + 1,
+      cell + width - 1,
+      cell + width + 1
+    ].filter(adjacentCell => adjacentCell >= 0 && adjacentCell < screenLength)
+  }
+
   draw () {
     const ctx = this.ctx
     const {
@@ -675,7 +697,7 @@ class TermScreen {
     // Map of (attrs & FONT_MASK) -> Array of cell indices
     const fontGroups = new Map()
 
-    // Map of (cell index) -> boolean, whether or not a cell needs to be redrawn
+    // Map of (cell index) -> boolean, whether or not a cell has updated
     const updateMap = new Map()
 
     for (let cell = 0; cell < screenLength; cell++) {
@@ -703,7 +725,7 @@ class TermScreen {
         bg = -2
       }
 
-      let needsUpdate = text !== this.drawnScreen[cell] ||
+      let didUpdate = text !== this.drawnScreen[cell] ||
         fg !== this.drawnScreenFG[cell] ||
         bg !== this.drawnScreenBG[cell] ||
         attrs !== this.drawnScreenAttrs[cell] ||
@@ -713,9 +735,78 @@ class TermScreen {
       if (!fontGroups.has(font)) fontGroups.set(font, [])
 
       fontGroups.get(font).push([cell, x, y, text, fg, bg, attrs, isCursor])
-      updateMap.set(cell, needsUpdate)
+      updateMap.set(cell, didUpdate)
     }
 
+    // Map of (cell index) -> boolean, whether or not a cell should be redrawn
+    const redrawMap = new Map()
+
+    // decide for each cell if it should be redrawn
+    let updateRedrawMapAt = cell => {
+      let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell)
+      let adjacentCells = this.getAdjacentCells(cell)
+
+      if (!shouldUpdate) {
+        // check adjacent cells
+        let adjacentDidUpdate = false
+
+        for (let adjacentCell of adjacentCells) {
+          if (updateMap.get(adjacentCell)) {
+            adjacentDidUpdate = true
+            break
+          }
+        }
+
+        if (adjacentDidUpdate) shouldUpdate = true
+      }
+
+      if (shouldUpdate) {
+        // TODO: fonts (necessary?)
+        let text = this.screen[cell]
+        let isWideCell = ctx.measureText(text).width >= cellWidth
+        if (text === ' ') isWideCell = false
+
+        if (isWideCell) {
+          // set redraw for adjacent cells
+          for (let adjacentCell of adjacentCells) {
+            redrawMap.set(adjacentCell, true)
+          }
+
+          // update previous wide cells as well
+          let index = cell - 1
+          while (index > 0) {
+            let text = this.screen[index]
+            let isWide = ctx.measureText(text).width >= cellWidth && text !== ' '
+
+            if (redrawMap.get(index - 1)) break
+
+            // might be out of bounds but that doesn't matter
+            redrawMap.set(index - width, true)
+            redrawMap.set(index + width, true)
+            redrawMap.set(index--, true)
+
+            if (!isWide) break
+          }
+        }
+      }
+
+      redrawMap.set(cell, shouldUpdate)
+    }
+
+    for (let cell of updateMap.keys()) updateRedrawMapAt(cell)
+
+    // pass 1: backgrounds
+    for (let font of fontGroups.keys()) {
+      for (let data of fontGroups.get(font)) {
+        let [cell, x, y, text, fg, bg, attrs, isCursor] = data
+
+        if (redrawMap.get(cell)) {
+          this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
+        }
+      }
+    }
+
+    // pass 2: characters
     for (let font of fontGroups.keys()) {
       // set font once because in Firefox, this is a really slow action for some
       // reason
@@ -727,28 +818,7 @@ class TermScreen {
       for (let data of fontGroups.get(font)) {
         let [cell, x, y, text, fg, bg, attrs, isCursor] = data
 
-        // check if this cell or any adjacent cells updated
-        let needsUpdate = false
-        let updateCells = [
-          cell,
-          cell - 1,
-          cell + 1,
-          cell - width,
-          cell + width,
-          // diagonal box drawing characters exist, too
-          cell - width - 1,
-          cell - width + 1,
-          cell + width - 1,
-          cell + width + 1
-        ]
-        for (let index of updateCells) {
-          if (updateMap.has(index) && updateMap.get(index)) {
-            needsUpdate = true
-            break
-          }
-        }
-
-        if (needsUpdate) {
+        if (redrawMap.get(cell)) {
           this.drawCell({
             x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs
           })
