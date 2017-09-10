@@ -15,7 +15,7 @@
     $('#sta-nw').toggleClass('hidden', name.length === 0)
     $('#sta-nw-nil').toggleClass('hidden', name.length > 0)
 
-    $('#sta-nw .essid').html(e(name))
+    $('#sta-nw .essid').html(esc(name))
     const nopw = undef(password) || password.length === 0
     $('#sta-nw .passwd').toggleClass('hidden', nopw)
     $('#sta-nw .nopasswd').toggleClass('hidden', !nopw)

@@ -69,7 +69,7 @@ for (let gray = 0; gray < 24; gray++) {
 
 class TermScreen {
   constructor () {
-    this.canvas = document.createElement('canvas')
+    this.canvas = mk('canvas')
     this.ctx = this.canvas.getContext('2d')
 
     if ('AudioContext' in window || 'webkitAudioContext' in window) {
@@ -587,7 +587,7 @@ class TermScreen {
     let selectedText = this.getSelectedText()
     // don't copy anything if nothing is selected
     if (!selectedText) return
-    let textarea = document.createElement('textarea')
+    let textarea = mk('textarea')
     document.body.appendChild(textarea)
     textarea.value = selectedText
     textarea.select()
@@ -717,10 +717,10 @@ class TermScreen {
     const FONT_MASK = 0b101
 
     // Map of (attrs & FONT_MASK) -> Array of cell indices
-    const fontGroups = new Map()
+    let fontGroups = new Map()
 
     // Map of (cell index) -> boolean, whether or not a cell has updated
-    const updateMap = new Map()
+    let updateMap = new Map()
 
     for (let cell = 0; cell < screenLength; cell++) {
       let x = cell % width
@@ -994,9 +994,7 @@ class TermScreen {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let strArray = typeof Array.from !== 'undefined'
-      ? Array.from(str)
-      : str.split('')
+    let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
     const MASK_BLINK = 1 << 4
@@ -1084,7 +1082,7 @@ class TermScreen {
       let label = pieces[i + 1].trim()
       // if empty string, use the "dim" effect and put nbsp instead to
       // stretch the button vertically
-      button.innerHTML = label ? e(label) : '&nbsp;'
+      button.innerHTML = label ? esc(label) : '&nbsp;'
       button.style.opacity = label ? 1 : 0.2
     })
   }

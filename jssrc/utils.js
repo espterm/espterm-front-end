@@ -73,7 +73,7 @@ Math.log10 = Math.log10 || function (x) {
 }
 
 /** HTML escape */
-function e (str) {
+function esc (str) {
   return $.htmlEscape(str)
 }
 
