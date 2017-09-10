@@ -46,7 +46,7 @@ to save file size and substitutions would not be possible.
 
 If the env variable ESP_DEMO is set when running `build.sh`, those static HTML
 files will be altered for use in the ESPTerm web demo (i.e. the JS will make
-no attempts to communicate with the back-end and use dummy values instead.
+no attempts to communicate with the back-end and use dummy values instead).
 
 All files use the `.html` suffix in a demo build and have replacements applied using 
 `_debug_replacements.php`.
