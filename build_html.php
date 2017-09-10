@@ -16,7 +16,7 @@ function process_html($s) {
 
 $no_tpl_files = ['help', 'cfg_wifi_conn'];
 
-$dest = ESP_DEMO ? __DIR__ . '/../html_demo/' : __DIR__ . '/../html/';
+$dest = __DIR__ . '/out/';
 
 ob_start();
 foreach($_pages as $_k => $p) {
