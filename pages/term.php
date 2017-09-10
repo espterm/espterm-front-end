@@ -71,9 +71,7 @@
 
 <script>
 	try {
-		window.noAutoShow = true;
-		termInit(); // the screen will be loaded via ajax
-		Screen.load('%j:labels_seq%', +'%theme%');
+		termInit('%j:labels_seq%', +'%theme%');
 	} catch(e) {
 		console.error(e);
 		<?php if (!DEBUG): ?>

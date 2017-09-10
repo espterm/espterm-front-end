@@ -73,6 +73,8 @@ $.ready(function () {
     e.preventDefault()
   })
 
+  // populate the form errors box from GET arg ?err=...
+  // (a way to pass errors back from server via redirect)
   let errAt = location.search.indexOf('err=')
   if (errAt !== -1 && qs('.Box.errors')) {
     let errs = location.search.substr(errAt + 4).split(',')
@@ -108,18 +110,12 @@ $.ready(function () {
   }
 })
 
+// setup the ajax loader
 $._loader = function (vis) {
   $('#loader').toggleClass('show', vis)
 }
 
+// reveal content on load
 function showPage () {
   $('#content').addClass('load')
 }
-
-$.ready(function () {
-  if (window.noAutoShow !== true) {
-    setTimeout(function () {
-      showPage()
-    }, 1)
-  }
-})
