@@ -67,6 +67,10 @@ window.initSoftKeyboard = function (screen) {
     }
   })
 
+  input.addEventListener('keypress', e => {
+    e.stopPropagation()
+  })
+
   input.addEventListener('input', e => {
     e.stopPropagation()
 
@@ -78,7 +82,7 @@ window.initSoftKeyboard = function (screen) {
         lastCompositionString = ''
         sendInputDelta('')
       } else if (e.inputType === 'insertText') {
-        // this is a sane event, which means the keypress handler will get it
+        Input.sendString(e.data)
       }
     }
   })
