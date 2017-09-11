@@ -419,7 +419,7 @@ window.TermScreen = class TermScreen {
   get palette () {
     return this._palette || themes[0]
   }
-
+  /** @type {number[]} */
   set palette (palette) {
     if (this._palette !== palette) {
       this._palette = palette
