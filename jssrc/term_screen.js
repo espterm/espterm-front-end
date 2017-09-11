@@ -108,7 +108,8 @@ class TermScreen {
       blinkInterval: null,
       fitIntoWidth: 0,
       fitIntoHeight: 0,
-      debug: false
+      debug: false,
+      graphics: 0
     }
 
     // properties of this.window that require updating size and redrawing
@@ -791,35 +792,32 @@ class TermScreen {
         if (adjacentDidUpdate) shouldUpdate = true
       }
 
-      if (shouldUpdate) {
-        if (isWideCell) {
-          // set redraw for adjacent cells
-          for (let adjacentCell of this.getAdjacentCells(cell)) {
-            redrawMap.set(adjacentCell, true)
-          }
-
-          // update previous wide cells as well
-          let index = cell - 1
-          while (index > 0) {
-            let text = this.screen[index]
-            let isWide = isTextWide(text)
-
-            if (redrawMap.get(index - 1)) break
-
-            // might be out of bounds but that doesn't matter
-            redrawMap.set(index - width, true)
-            redrawMap.set(index + width, true)
-            redrawMap.set(index--, true)
-
-            if (!isWide) break
-          }
-        }
-      }
-
       redrawMap.set(cell, shouldUpdate)
     }
 
     for (let cell of updateMap.keys()) updateRedrawMapAt(cell)
+
+    // mask to redrawing regions only
+    if (this.window.graphics > 1) {
+      ctx.save()
+      ctx.beginPath()
+      for (let y = 0; y < height; y++) {
+        let regionStart = null
+        for (let x = 0; x < width; x++) {
+          let cell = y * width + x
+          let redrawing = redrawMap.get(cell)
+          if (redrawing && regionStart === null) regionStart = x
+          if (!redrawing && regionStart !== null) {
+            ctx.rect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            regionStart = null
+          }
+        }
+        if (regionStart !== null) {
+          ctx.rect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+        }
+      }
+      ctx.clip()
+    }
 
     // pass 1: backgrounds
     for (let font of fontGroups.keys()) {
@@ -892,6 +890,8 @@ class TermScreen {
         }
       }
     }
+
+    if (this.window.graphics > 1) ctx.restore()
 
     if (this.window.debug && this._debug) this._debug.drawEnd()
   }

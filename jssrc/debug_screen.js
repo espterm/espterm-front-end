@@ -6,6 +6,7 @@ if (Screen) {
   // hackity hack should probably set this in CSS
   debugCanvas.style.top = '6px'
   debugCanvas.style.left = '6px'
+  debugCanvas.style.pointerEvents = 'none'
 
   let addCanvas = function () {
     if (!debugCanvas.parentNode) qs('#screen').appendChild(debugCanvas)
@@ -22,17 +23,19 @@ if (Screen) {
     debugCanvas.style.height = `${height * cellSize.height}px`
   }
 
-  let startTime, endTime
+  let startTime, endTime, lastReason
   let cells = new Map()
 
   let startDrawing
 
   Screen._debug = {
     drawStart (reason) {
+      lastReason = reason
       startTime = Date.now()
     },
     drawEnd () {
       endTime = Date.now()
+      console.log(`Draw: ${lastReason} (${(endTime - startTime)} ms) with fancy graphics: ${Screen.window.graphics}`)
       startDrawing()
     },
     setCell (cell, flags) {
