@@ -325,7 +325,7 @@ let demoshIndex = {
   clear: class Clear extends Process {
     run () {
       this.emit('write', '\x1b[2J\x1b[1;1H')
-      this.emit('exit')
+      this.destroy()
     }
   },
   screenfetch: class Screenfetch extends Process {
@@ -357,6 +357,11 @@ let demoshIndex = {
         this.emit('write', lines.shift() + '\r\n')
       }
       loop()
+    }
+  },
+  'local-echo': class LocalEcho extends Process {
+    write (data) {
+      this.emit('write', data)
     }
   }
 }
@@ -414,8 +419,12 @@ class DemoShell {
 
     if (action === 'return') {
       this.terminal.write('\r\n')
-      this.run(this.input)
+      this.parse(this.input)
     }
+  }
+  parse (input) {
+    // TODO: basic chaining (i.e. semicolon)
+    this.run(input)
   }
   run (command) {
     let parts = ['']
@@ -451,7 +460,7 @@ class DemoShell {
       this.child = null
       this.prompt(!code)
     })
-    this.child.run()
+    this.child.run(...args)
   }
 }
 
