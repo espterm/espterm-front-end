@@ -56,11 +56,15 @@ window.initSoftKeyboard = function (screen) {
   input.addEventListener('keydown', e => {
     if (e.key === 'Unidentified') return
 
-    e.preventDefault()
     input.value = ''
 
-    if (e.key === 'Backspace') Input.sendString('\b')
-    else if (e.key === 'Enter') Input.sendString('\x0d')
+    if (e.key === 'Backspace') {
+      e.preventDefault()
+      Input.sendString('\b')
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      Input.sendString('\x0d')
+    }
   })
 
   input.addEventListener('input', e => {
@@ -69,10 +73,12 @@ window.initSoftKeyboard = function (screen) {
     if (e.isComposing) {
       sendInputDelta(e.data)
     } else {
-      if (e.data) Input.sendString(e.data)
+      if (e.inputType === 'insertCompositionText') Input.sendString(e.data)
       else if (e.inputType === 'deleteContentBackward') {
         lastCompositionString = ''
         sendInputDelta('')
+      } else if (e.inputType === 'insertText') {
+        // this is a sane event, which means the keypress handler will get it
       }
     }
   })
@@ -80,12 +86,14 @@ window.initSoftKeyboard = function (screen) {
   input.addEventListener('compositionstart', e => {
     lastCompositionString = ''
     compositing = true
+    console.log('compositionstart')
   })
 
   input.addEventListener('compositionend', e => {
     lastCompositionString = ''
     compositing = false
     input.value = ''
+    console.log('compositionend')
   })
 
   screen.on('open-soft-keyboard', () => input.focus())
