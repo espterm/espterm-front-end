@@ -622,7 +622,7 @@ class TermScreen {
     ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
   }
 
-  drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs }) {
+  drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, attrs }) {
     if (!text) return
 
     const ctx = this.ctx
@@ -851,7 +851,7 @@ class TermScreen {
 
         if (redrawMap.get(cell)) {
           this.drawCell({
-            x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs
+            x, y, charSize, cellWidth, cellHeight, text, fg, attrs
           })
 
           this.drawnScreen[cell] = text
@@ -888,13 +888,14 @@ class TermScreen {
           ctx.clip()
 
           // swap foreground/background
-          fg = this.screenBG[cell]
-          bg = this.screenFG[cell]
+          ;[fg, bg] = [bg, fg]
+
           // HACK: ensure cursor is visible
           if (fg === bg) bg = fg === 0 ? 7 : 0
 
+          this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
           this.drawCell({
-            x, y, charSize, cellWidth, cellHeight, text, fg, bg, attrs
+            x, y, charSize, cellWidth, cellHeight, text, fg, attrs
           })
           ctx.restore()
         }
