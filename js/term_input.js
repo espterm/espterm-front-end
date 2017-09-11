@@ -177,8 +177,8 @@ window.Input = function (conn) {
     bind('shift+end',   '\x1f[1;2F')
 
     // macOS editing commands
-    bind('⌥+left',      '\x1fb')    // ⌥← to go back a word (^[b)
-    bind('⌥+right',     '\x1ff')    // ⌥→ to go forward one word (^[f)
+    bind('⌥+left',      '\x1bb')    // ⌥← to go back a word (^[b)
+    bind('⌥+right',     '\x1bf')    // ⌥→ to go forward one word (^[f)
     bind('⌘+left',      '\x01')     // ⌘← to go to the beginning of a line (^A)
     bind('⌘+right',     '\x05')     // ⌘→ to go to the end of a line (^E)
     bind('⌥+backspace', '\x17') // ⌥⌫ to delete a word (^W, I think)
