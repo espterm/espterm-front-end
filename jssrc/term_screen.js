@@ -795,7 +795,7 @@ window.TermScreen = class TermScreen {
     for (let cell of updateMap.keys()) updateRedrawMapAt(cell)
 
     // mask to redrawing regions only
-    if (this.window.graphics > 1) {
+    if (this.window.graphics >= 1) {
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -892,7 +892,7 @@ window.TermScreen = class TermScreen {
       }
     }
 
-    if (this.window.graphics > 1) ctx.restore()
+    if (this.window.graphics >= 1) ctx.restore()
 
     if (this.window.debug && this._debug) this._debug.drawEnd()
   }
