@@ -16,6 +16,8 @@ if (!file_exists(__DIR__ . '/_env.php')) {
 	die("Copy <b>_env.php.example</b> to <b>_env.php</b> and check the settings inside!");
 }
 
+define('GIT_HASH', trim(shell_exec('git rev-parse --short HEAD')));
+
 require_once __DIR__ . '/_env.php';
 
 $prod = defined('STDIN');

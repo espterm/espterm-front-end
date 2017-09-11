@@ -2,6 +2,8 @@
 
 cd $(dirname $0)
 
+FRONT_END_HASH=$(git rev-parse --short HEAD)
+
 rm -r out/*
 mkdir out/js
 mkdir out/css
@@ -10,7 +12,7 @@ echo 'Generating lang.js...'
 php ./dump_js_lang.php
 
 echo 'Packing JS...'
-npm run babel -- -o out/js/app.js --source-maps js/lib \
+npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" --source-maps js/lib \
     js/lib/chibi.js \
     js/lib/keymaster.js \
     js/lib/polyfills.js \
@@ -27,7 +29,7 @@ npm run babel -- -o out/js/app.js --source-maps js/lib \
 
 echo 'Building CSS...'
 
-npm run sass -- --output-style compressed sass/app.scss out/css/app.css
+npm run sass -- --output-style compressed sass/app.scss "out/css/app.$FRONT_END_HASH.css"
 
 echo 'Building HTML...'
 

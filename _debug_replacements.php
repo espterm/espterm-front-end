@@ -8,7 +8,6 @@
 
 $vers = '???';
 $versfn = __DIR__ . '/../user/version.h';
-$myHash = shell_exec('git rev-parse --short HEAD');
 $fwHash = '00000000';
 if (file_exists($versfn)) {
 	$f = file_get_contents($versfn);
@@ -64,7 +63,7 @@ return [
 	'githubrepo' => 'https://github.com/espterm/espterm-firmware',
 	'githubrepo_front' => 'https://github.com/espterm/espterm-front-end',
 	'hash_backend' => $fwHash,
-	'hash_frontend' => $myHash, // TODO actual versions?
+	'hash_frontend' => GIT_HASH, // TODO actual versions?
 
 	'ap_dhcp_time' => '120',
 	'ap_dhcp_start' => '192.168.4.100',
