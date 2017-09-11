@@ -16,7 +16,7 @@ if (file_exists($versfn)) {
 #define FW_V_MINOR 0
 #define FW_V_PATCH 0
 	$vers = $vm[1][0] . '.' . $vm[1][1] . '.' . $vm[1][2];
-	$fwHash = shell_exec('cd .. && git rev-parse --short HEAD');
+	$fwHash = trim(shell_exec('cd .. && git rev-parse --short HEAD'));
 }
 
 return [

@@ -17,10 +17,11 @@
 
 <div class="Box">
 	<h2>Version</h2>
+	<div class="tscroll">
 	<table>
 		<tr>
 			<th>ESPTerm</th>
-			<td>v%vers_fw%, built %date% at %time%</td>
+			<td>v%vers_fw%, built %date% at~%time%</td>
 		</tr>
 		<tr>
 			<th>Git hash</th>
@@ -36,6 +37,7 @@
 			<td>v%vers_sdk%</td>
 		</tr>
 	</table>
+	</div>
 </div>
 
 <div class="Box">
