@@ -162,6 +162,7 @@ window.TermScreen = class TermScreen {
     this.drawnScreenFG = []
     this.drawnScreenBG = []
     this.drawnScreenAttrs = []
+    this.drawnCursor = [-1, -1]
 
     this.resetBlink()
     this.resetCursorBlink()
@@ -726,14 +727,13 @@ window.TermScreen = class TermScreen {
         this.cursor.x === x &&
         this.cursor.y === y
 
-      let invertForCursor = isCursor && this.cursor.blinkOn &&
-        this.cursor.style === 'block'
+      let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
       let inSelection = this.isInSelection(x, y)
 
       let text = this.screen[cell]
-      let fg = invertForCursor ? this.screenBG[cell] : this.screenFG[cell]
-      let bg = invertForCursor ? this.screenFG[cell] : this.screenBG[cell]
+      let fg = this.screenFG[cell]
+      let bg = this.screenBG[cell]
       let attrs = this.screenAttrs[cell]
 
       if (attrs & (1 << 4) && !this.window.blinkStyleOn) {
@@ -741,9 +741,6 @@ window.TermScreen = class TermScreen {
         // set text to nothing so drawCell doesn't draw anything
         text = ''
       }
-
-      // HACK: ensure cursor is visible
-      if (invertForCursor && fg === bg) bg = fg === 0 ? 7 : 0
 
       if (inSelection) {
         fg = -1
@@ -754,12 +751,12 @@ window.TermScreen = class TermScreen {
         fg !== this.drawnScreenFG[cell] ||
         bg !== this.drawnScreenBG[cell] ||
         attrs !== this.drawnScreenAttrs[cell] ||
-        isCursor
+        isCursor !== wasCursor
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
 
-      fontGroups.get(font).push([cell, x, y, text, fg, bg, attrs, isCursor])
+      fontGroups.get(font).push([cell, x, y, text, fg, bg, attrs, isCursor, inSelection])
       updateMap.set(cell, didUpdate)
     }
 
@@ -840,7 +837,7 @@ window.TermScreen = class TermScreen {
       ctx.font = this.getFont(modifiers)
 
       for (let data of fontGroups.get(font)) {
-        let [cell, x, y, text, fg, bg, attrs, isCursor] = data
+        let [cell, x, y, text, fg, bg, attrs, isCursor, inSelection] = data
 
         if (redrawMap.get(cell)) {
           this.drawCell({
@@ -861,18 +858,20 @@ window.TermScreen = class TermScreen {
           }
         }
 
-        if (isCursor && this.cursor.blinkOn && this.cursor.style !== 'block') {
+        if (isCursor && this.cursor.blinkOn && !inSelection) {
           ctx.save()
           ctx.beginPath()
-          if (this.cursor.style === 'bar') {
+          if (this.cursor.style === 'block') {
+            // block
+            ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+          } else if (this.cursor.style === 'bar') {
             // vertical bar
             let barWidth = 2
             ctx.rect(x * cellWidth, y * cellHeight, barWidth, cellHeight)
           } else if (this.cursor.style === 'line') {
             // underline
             let lineHeight = 2
-            ctx.rect(x * cellWidth, y * cellHeight + charSize.height,
-              cellWidth, lineHeight)
+            ctx.rect(x * cellWidth, y * cellHeight + charSize.height, cellWidth, lineHeight)
           }
           ctx.clip()
 
