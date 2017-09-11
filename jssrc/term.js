@@ -45,5 +45,5 @@ window.termInit = function (labels, theme) {
 
   if (window.attachDebugScreen) window.attachDebugScreen(screen)
 
-  window.screen = screen // for debugging
+  window.termScreen = screen // for debugging
 }
