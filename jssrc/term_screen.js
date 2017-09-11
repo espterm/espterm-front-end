@@ -68,7 +68,7 @@ for (let gray = 0; gray < 24; gray++) {
   colorTable256.push(`rgb(${value}, ${value}, ${value})`)
 }
 
-class TermScreen {
+window.TermScreen = class TermScreen {
   constructor () {
     this.canvas = mk('canvas')
     this.ctx = this.canvas.getContext('2d')
@@ -1172,31 +1172,4 @@ class TermScreen {
     }
     return character
   }
-}
-
-const Screen = new TermScreen()
-
-Screen.once('load', () => {
-  qs('#screen').appendChild(Screen.canvas)
-})
-
-let fitScreen = false
-function fitScreenIfNeeded () {
-  Screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 20 : 0
-  Screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
-}
-fitScreenIfNeeded()
-window.addEventListener('resize', fitScreenIfNeeded)
-
-window.toggleFitScreen = function () {
-  fitScreen = !fitScreen
-  const resizeButtonIcon = qs('#resize-button-icon')
-  if (fitScreen) {
-    resizeButtonIcon.classList.remove('icn-resize-small')
-    resizeButtonIcon.classList.add('icn-resize-full')
-  } else {
-    resizeButtonIcon.classList.remove('icn-resize-full')
-    resizeButtonIcon.classList.add('icn-resize-small')
-  }
-  fitScreenIfNeeded()
 }

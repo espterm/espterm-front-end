@@ -7,7 +7,7 @@ $.ready(() => {
   let updateInputPosition = function () {
     if (!keyboardOpen) return
 
-    let [x, y] = Screen.gridToScreen(Screen.cursor.x, Screen.cursor.y)
+    let [x, y] = screen.gridToScreen(screen.cursor.x, screen.cursor.y)
     input.style.transform = `translate(${x}px, ${y}px)`
   }
 
@@ -18,7 +18,7 @@ $.ready(() => {
 
   input.addEventListener('blur', () => (keyboardOpen = false))
 
-  Screen.on('cursor-moved', updateInputPosition)
+  screen.on('cursor-moved', updateInputPosition)
 
   window.kbOpen = function openSoftKeyboard (open) {
     keyboardOpen = open
@@ -88,5 +88,5 @@ $.ready(() => {
     input.value = ''
   })
 
-  Screen.on('open-soft-keyboard', () => input.focus())
+  screen.on('open-soft-keyboard', () => input.focus())
 })

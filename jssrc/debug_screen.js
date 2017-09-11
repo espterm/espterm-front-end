@@ -1,4 +1,4 @@
-if (Screen) {
+window.attachDebugScreen = function (screen) {
   const debugCanvas = mk('canvas')
   const ctx = debugCanvas.getContext('2d')
 
@@ -9,14 +9,14 @@ if (Screen) {
   debugCanvas.style.pointerEvents = 'none'
 
   let addCanvas = function () {
-    if (!debugCanvas.parentNode) qs('#screen').appendChild(debugCanvas)
+    if (!debugCanvas.parentNode) screen.canvas.parentNode.appendChild(debugCanvas)
   }
   let removeCanvas = function () {
-    if (debugCanvas.parentNode) qs('#screen').removeChild(debugCanvas)
+    if (debugCanvas.parentNode) debugCanvas.parentNode.removeChild(debugCanvas)
   }
   let updateCanvasSize = function () {
-    let { width, height, devicePixelRatio } = Screen.window
-    let cellSize = Screen.getCellSize()
+    let { width, height, devicePixelRatio } = screen.window
+    let cellSize = screen.getCellSize()
     debugCanvas.width = width * cellSize.width * devicePixelRatio
     debugCanvas.height = height * cellSize.height * devicePixelRatio
     debugCanvas.style.width = `${width * cellSize.width}px`
@@ -28,14 +28,14 @@ if (Screen) {
 
   let startDrawing
 
-  Screen._debug = {
+  screen._debug = {
     drawStart (reason) {
       lastReason = reason
       startTime = Date.now()
     },
     drawEnd () {
       endTime = Date.now()
-      console.log(`Draw: ${lastReason} (${(endTime - startTime)} ms) with fancy graphics: ${Screen.window.graphics}`)
+      console.log(`Draw: ${lastReason} (${(endTime - startTime)} ms) with fancy graphics: ${screen.window.graphics}`)
       startDrawing()
     },
     setCell (cell, flags) {
@@ -48,8 +48,8 @@ if (Screen) {
   let drawLoop = function () {
     if (isDrawing) requestAnimationFrame(drawLoop)
 
-    let { devicePixelRatio, width, height } = Screen.window
-    let { width: cellWidth, height: cellHeight } = Screen.getCellSize()
+    let { devicePixelRatio, width, height } = screen.window
+    let { width: cellWidth, height: cellHeight } = screen.getCellSize()
     let screenLength = width * height
     let now = Date.now()
 
