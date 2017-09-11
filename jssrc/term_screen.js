@@ -82,16 +82,12 @@ window.TermScreen = class TermScreen {
     this.cursor = {
       x: 0,
       y: 0,
-      fg: 7,
-      bg: 0,
-      attrs: 0,
       blinkOn: false,
       blinking: true,
       visible: true,
       hanging: false,
       style: 'block',
-      blinkEnable: true,
-      blinkInterval: 0
+      blinkInterval: null
     }
 
     this._palette = null
@@ -131,15 +127,18 @@ window.TermScreen = class TermScreen {
       // though alt can be held to override it
       selectable: true,
 
+      // selection start and end (x, y) tuples
       start: [0, 0],
       end: [0, 0]
     }
 
+    // mouse features
     this.mouseMode = { clicks: false, movement: false }
 
     // event listeners
     this._listeners = {}
 
+    // make writing to window update size and draw
     const self = this
     this.window = new Proxy(this._window, {
       set (target, key, value, receiver) {
@@ -157,13 +156,15 @@ window.TermScreen = class TermScreen {
     this.screenBG = []
     this.screenAttrs = []
 
-    // used to determine if a cell should be redrawn
+    // used to determine if a cell should be redrawn; storing the current state
+    // as it is on screen
     this.drawnScreen = []
     this.drawnScreenFG = []
     this.drawnScreenBG = []
     this.drawnScreenAttrs = []
     this.drawnCursor = [-1, -1, '']
 
+    // start blink timers
     this.resetBlink()
     this.resetCursorBlink()
 
@@ -190,6 +191,8 @@ window.TermScreen = class TermScreen {
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
+    // bind event listeners
+
     this.canvas.addEventListener('mousedown', e => {
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
@@ -206,6 +209,8 @@ window.TermScreen = class TermScreen {
     window.addEventListener('mouseup', e => {
       selectEnd(e.offsetX, e.offsetY)
     })
+
+    // touch event listeners
 
     let touchPosition = null
     let touchDownTime = 0
@@ -247,6 +252,7 @@ window.TermScreen = class TermScreen {
         e.preventDefault()
         selectEnd(...touchPosition)
 
+        // selection ended; show touch select menu
         let touchSelectMenu = qs('#touch-select-menu')
         touchSelectMenu.classList.add('open')
         let rect = touchSelectMenu.getBoundingClientRect()
@@ -333,16 +339,31 @@ window.TermScreen = class TermScreen {
     })
   }
 
+  /**
+   * Bind an event listener to an event
+   * @param {string} event - the event name
+   * @param {Function} listener - the event listener
+   */
   on (event, listener) {
     if (!this._listeners[event]) this._listeners[event] = []
     this._listeners[event].push({ listener })
   }
 
+  /**
+   * Bind an event listener to be run only once the next time the event fires
+   * @param {string} event - the event name
+   * @param {Function} listener - the event listener
+   */
   once (event, listener) {
     if (!this._listeners[event]) this._listeners[event] = []
     this._listeners[event].push({ listener, once: true })
   }
 
+  /**
+   * Remove an event listener
+   * @param {string} event - the event name
+   * @param {Function} listener - the event listener
+   */
   off (event, listener) {
     let listeners = this._listeners[event]
     if (listeners) {
@@ -355,6 +376,11 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Emits an event
+   * @param {string} event - the event name
+   * @param {...any} args - arguments passed to all listeners
+   */
   emit (event, ...args) {
     let listeners = this._listeners[event]
     if (listeners) {
@@ -376,6 +402,10 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * The color palette. Should define 16 colors in an array.
+   * @type {number[]}
+   */
   get palette () {
     return this._palette || themes[0]
   }
@@ -387,6 +417,14 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Returns the specified color. If `i` is in the palette, it will return the
+   * palette color. If `i` is between 16 and 255, it will return the 256color
+   * value. If `i` is larger than 255, it will return an RGB color value. If `i`
+   * is -1 (foreground) or -2 (background), it will return the selection colors.
+   * @param {number} i - the color
+   * @returns {string} the CSS color
+   */
   getColor (i) {
     // return palette color if it exists
     if (this.palette[i]) return this.palette[i]
@@ -411,24 +449,44 @@ window.TermScreen = class TermScreen {
     return 'rgba(0, 0, 0, 0)'
   }
 
-  // schedule a size update in the next tick
+  /**
+   * Schedule a size update in the next millisecond
+   */
   scheduleSizeUpdate () {
     clearTimeout(this._scheduledSizeUpdate)
     this._scheduledSizeUpdate = setTimeout(() => this.updateSize(), 1)
   }
 
-  // schedule a draw in the next tick
+  /**
+   * Schedule a draw in the next millisecond
+   * @param {string} why - the reason why the draw occured (for debugging)
+   * @param {number} [aggregateTime] - time to wait for more scheduleDraw calls
+   *   to occur. 1 ms by default.
+   */
   scheduleDraw (why, aggregateTime = 1) {
     clearTimeout(this._scheduledDraw)
     this._scheduledDraw = setTimeout(() => this.draw(why), aggregateTime)
   }
 
+  /**
+   * Returns a CSS font string with this TermScreen's font settings and the
+   * font modifiers.
+   * @param {Object} modifiers
+   * @param {string} [modifiers.style] - the font style
+   * @param {string} [modifiers.weight] - the font weight
+   * @returns {string} a CSS font string
+   */
   getFont (modifiers = {}) {
     let fontStyle = modifiers.style || 'normal'
     let fontWeight = modifiers.weight || 'normal'
     return `${fontStyle} normal ${fontWeight} ${this.window.fontSize}px ${this.window.fontFamily}`
   }
 
+  /**
+   * The character size, used for calculating the cell size. The space character
+   * is used for measuring.
+   * @returns {Object} the character size with `width` and `height` in pixels
+   */
   getCharSize () {
     this.ctx.font = this.getFont()
 
@@ -438,6 +496,10 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * The cell size, which is the character size multiplied by the grid scale.
+   * @returns {Object} the cell size with `width` and `height` in pixels
+   */
   getCellSize () {
     let charSize = this.getCharSize()
 
@@ -447,6 +509,9 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Updates the canvas size if it changed
+   */
   updateSize () {
     this._window.devicePixelRatio = window.devicePixelRatio || 1
 
@@ -513,6 +578,9 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Resets the cursor blink to on and restarts the timer
+   */
   resetCursorBlink () {
     this.cursor.blinkOn = true
     clearInterval(this.cursor.blinkInterval)
@@ -524,6 +592,9 @@ window.TermScreen = class TermScreen {
     }, 500)
   }
 
+  /**
+   * Resets the blink style to on and restarts the timer
+   */
   resetBlink () {
     this.window.blinkStyleOn = true
     clearInterval(this.window.blinkInterval)
@@ -542,6 +613,11 @@ window.TermScreen = class TermScreen {
     }, 200)
   }
 
+  /**
+   * Returns a normalized version of the current selection, such that `start`
+   * is always before `end`.
+   * @returns {Object} the normalized selection, with `start` and `end`
+   */
   getNormalizedSelection () {
     let { start, end } = this.selection
     // if the start line is after the end line, or if they're both on the same
@@ -552,6 +628,12 @@ window.TermScreen = class TermScreen {
     return { start, end }
   }
 
+  /**
+   * Returns whether or not a given cell is in the current selection.
+   * @param {number} col - the column (x)
+   * @param {number} line - the line (y)
+   * @returns {boolean}
+   */
   isInSelection (col, line) {
     let { start, end } = this.getNormalizedSelection()
     let colAfterStart = start[0] <= col
@@ -565,6 +647,10 @@ window.TermScreen = class TermScreen {
     else return start[1] < line && line < end[1]
   }
 
+  /**
+   * Sweeps for selected cells and joins them in a multiline string.
+   * @returns {string} the selection
+   */
   getSelectedText () {
     const screenLength = this.window.width * this.window.height
     let lines = []
@@ -586,6 +672,9 @@ window.TermScreen = class TermScreen {
     return lines.join('\n')
   }
 
+  /**
+   * Copies the selection to clipboard and creates a notification balloon.
+   */
   copySelectionToClipboard () {
     let selectedText = this.getSelectedText()
     // don't copy anything if nothing is selected
@@ -602,6 +691,12 @@ window.TermScreen = class TermScreen {
     document.body.removeChild(textarea)
   }
 
+  /**
+   * Converts screen coordinates to grid coordinates.
+   * @param {number} x - x in pixels
+   * @param {number} y - y in pixels
+   * @returns {number[]} a tuple of (x, y) in cells
+   */
   screenToGrid (x, y) {
     let cellSize = this.getCellSize()
 
@@ -611,12 +706,27 @@ window.TermScreen = class TermScreen {
     ]
   }
 
+  /**
+   * Converts grid coordinates to screen coordinates.
+   * @param {number} x - x in cells
+   * @param {number} y - y in cells
+   * @returns {number[]} a tuple of (x, y) in pixels
+   */
   gridToScreen (x, y) {
     let cellSize = this.getCellSize()
 
-    return [ x * cellSize.width, y * cellSize.height ]
+    return [x * cellSize.width, y * cellSize.height]
   }
 
+  /**
+   * Draws a cell's background with the given parameters.
+   * @param {Object} options
+   * @param {number} options.x - x in cells
+   * @param {number} options.y - y in cells
+   * @param {number} options.cellWidth - cell width in pixels
+   * @param {number} options.cellHeight - cell height in pixels
+   * @param {number} options.bg - the background color
+   */
   drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
@@ -624,6 +734,20 @@ window.TermScreen = class TermScreen {
     ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
   }
 
+  /**
+   * Draws a cell's character with the given parameters. Won't do anything if
+   * text is an empty string.
+   * @param {Object} options
+   * @param {number} options.x - x in cells
+   * @param {number} options.y - y in cells
+   * @param {Object} options.charSize - the character size, an object with
+   *   `width` and `height` in pixels
+   * @param {number} options.cellWidth - cell width in pixels
+   * @param {number} options.cellHeight - cell height in pixels
+   * @param {string} options.text - the cell content
+   * @param {number} options.fg - the foreground color
+   * @param {number} options.attrs - the cell's attributes
+   */
   drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, attrs }) {
     if (!text) return
 
@@ -671,6 +795,12 @@ window.TermScreen = class TermScreen {
     ctx.globalAlpha = 1
   }
 
+  /**
+   * Returns all adjacent cell indices given a radius.
+   * @param {number} cell - the center cell index
+   * @param {number} [radius] - the radius. 1 by default
+   * @returns {number[]} an array of cell indices
+   */
   getAdjacentCells (cell, radius = 1) {
     const { width, height } = this.window
     const screenLength = width * height
@@ -687,6 +817,10 @@ window.TermScreen = class TermScreen {
     return cells.filter(cell => cell >= 0 && cell < screenLength)
   }
 
+  /**
+   * Updates the screen.
+   * @param {string} why - the draw reason (for debugging)
+   */
   draw (why) {
     const ctx = this.ctx
     const {
@@ -726,7 +860,8 @@ window.TermScreen = class TermScreen {
       let isCursor = !this.cursor.hanging &&
         this.cursor.x === x &&
         this.cursor.y === y &&
-        this.cursor.blinkOn
+        this.cursor.blinkOn &&
+        this.cursor.visible
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
@@ -899,6 +1034,10 @@ window.TermScreen = class TermScreen {
     if (this.window.debug && this._debug) this._debug.drawEnd()
   }
 
+  /**
+   * Parses the content of an `S` message and schedules a draw
+   * @param {string} str - the message content
+   */
   loadContent (str) {
     // current index
     let i = 0
@@ -1075,7 +1214,11 @@ window.TermScreen = class TermScreen {
     this.emit('load')
   }
 
-  /** Apply labels to buttons and screen title (leading T removed already) */
+  /**
+   * Parses the content of a `T` message and updates the screen title and button
+   * labels.
+   * @param {string} str - the message content
+   */
   loadLabels (str) {
     let pieces = str.split('\x01')
     qs('h1').textContent = pieces[0]
@@ -1088,6 +1231,10 @@ window.TermScreen = class TermScreen {
     })
   }
 
+  /**
+   * Shows an actual notification (if possible) or a notification balloon.
+   * @param {string} text - the notification content
+   */
   showNotification (text) {
     console.info(`Notification: ${text}`)
     if (Notification && Notification.permission === 'granted') {
@@ -1105,6 +1252,11 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Loads a message from the server, and optionally a theme.
+   * @param {string} str - the message
+   * @param {number} [theme] - the new theme index
+   */
   load (str, theme = -1) {
     const content = str.substr(1)
     if (theme >= 0 && theme < themes.length) {
@@ -1133,6 +1285,9 @@ window.TermScreen = class TermScreen {
     }
   }
 
+  /**
+   * Creates a beep sound.
+   */
   beep () {
     const audioCtx = this.audioCtx
     if (!audioCtx) return
@@ -1166,6 +1321,11 @@ window.TermScreen = class TermScreen {
     osc.stop(audioCtx.currentTime + 0.08)
   }
 
+  /**
+   * Converts an alphabetic character to its fraktur variant.
+   * @param {string} character - the character
+   * @returns {string} the converted character
+   */
   static alphaToFraktur (character) {
     if (character >= 'a' && character <= 'z') {
       character = String.fromCodePoint(0x1d51e - 0x61 + character.charCodeAt(0))
