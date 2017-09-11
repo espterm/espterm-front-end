@@ -47,7 +47,7 @@ window.termInit = function (labels, theme) {
   // add fullscreen mode & button
   if (Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen) {
     let checkForFullscreen = function () {
-      // document.fullscreenElement is not really support yet, so here's a hack
+      // document.fullscreenElement is not really supported yet, so here's a hack
       if (isFullscreen && (innerWidth !== window.screen.width || innerHeight !== window.screen.height)) {
         isFullscreen = false
         fitScreenIfNeeded()
