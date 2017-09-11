@@ -77,6 +77,10 @@ window.termInit = function (labels, theme) {
     qs('#term-nav').insertBefore(button, qs('#term-nav').firstChild)
   }
 
+  window.openTermUpl = () => termUpload.open()
+  window.startTermUpl = () => termUpload.start()
+  window.closeTermUpl = () => termUpload.close()
+
   // for debugging
   window.termScreen = screen
   window.conn = conn
