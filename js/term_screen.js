@@ -159,6 +159,7 @@ window.TermScreen = class TermScreen {
       }
     })
 
+    this.bracketedPaste = false
     this.blinkingCellCount = 0
 
     this.screen = []
@@ -1128,6 +1129,8 @@ window.TermScreen = class TermScreen {
 
     $('.x-term-conf-btn').toggleClass('hidden', !showConfigLinks)
     $('#action-buttons').toggleClass('hidden', !showButtons)
+
+    this.bracketedPaste = !!(attributes & (1 << 13))
 
     // content
     let fg = 7

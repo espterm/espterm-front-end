@@ -1,11 +1,11 @@
 /** Init the terminal sub-module - called from HTML */
 window.termInit = function (opts) {
   let { labels, theme, allFn } = opts
+
   const screen = new TermScreen()
   const conn = Conn(screen)
   const input = Input(conn)
-  const termUpload = TermUpl(conn, input)
-
+  const termUpload = TermUpl(conn, input, screen)
   screen.input = input
 
   conn.init()

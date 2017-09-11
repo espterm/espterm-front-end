@@ -1,5 +1,5 @@
 /** File upload utility */
-window.TermUpl = function (conn, input) {
+window.TermUpl = function (conn, input, screen) {
   let lines, // array of lines without newlines
     line_i, // current line index
     fuTout, // timeout handle for line sending
@@ -72,7 +72,20 @@ window.TermUpl = function (conn, input) {
     }
 
     if (inline_pos === 0) {
-      curLine = lines[line_i++] + nl_str
+      curLine = ''
+      if (line_i === 0) {
+        if (screen.bracketedPaste) {
+          curLine = '\x1b[200~'
+        }
+      }
+
+      curLine += lines[line_i++] + nl_str
+
+      if (line_i === lines.length) {
+        if (screen.bracketedPaste) {
+          curLine += '\x1b[201~'
+        }
+      }
     }
 
     let chunk
@@ -84,14 +97,14 @@ window.TermUpl = function (conn, input) {
       inline_pos += MAX_LINE_LEN
     }
 
+    console.log(chunk)
     if (!input.sendString(chunk)) {
       updateStatus('FAILED!')
       return
     }
 
-    let all = lines.length
-
-    updateStatus(line_i + ' / ' + all + ' (' + (Math.round((line_i / all) * 1000) / 10) + '%)')
+    let pt = Math.round((line_i / lines.length) * 1000) / 10
+    updateStatus(`${line_i} / ${lines.length} (${pt}%)`)
 
     if (lines.length > line_i || inline_pos > 0) {
       fuTout = setTimeout(uploadLine, send_delay_ms)
@@ -108,9 +121,7 @@ window.TermUpl = function (conn, input) {
     } else {
       updateStatus('Done.')
       // delay to show it
-      setTimeout(function () {
-        fuClose()
-      }, 100)
+      fuClose()
     }
   }
 
