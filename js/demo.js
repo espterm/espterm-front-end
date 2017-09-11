@@ -23,6 +23,9 @@ class ANSIParser {
         this.handler('move-cursor-line', (type === 'E' ? 1 : -1) * numOr1)
       } else if (type === 'G') {
         this.handler('set-cursor-x', numOr1 - 1)
+      } else if (type === 'J') {
+        let number = numbers.length ? numbers[0] : 2
+        if (number === 2) this.handler('clear')
       } else if (type === 'P') {
         this.handler('delete', numOr1)
       } else if (type === '@') {
@@ -175,6 +178,8 @@ class ScrollingTerminal {
       this.deleteForward(args[0])
     } else if (action === 'insert-blanks') {
       this.insertBlanks(args[0])
+    } else if (action === 'clear') {
+      this.clear()
     } else if (action === 'bell') {
       this.terminal.load('B')
     } else if (action === 'back') {
@@ -263,6 +268,99 @@ class ScrollingTerminal {
   }
 }
 
+class Process {
+  constructor (args) {
+    // event listeners
+    this._listeners = {}
+  }
+  on (event, listener) {
+    if (!this._listeners[event]) this._listeners[event] = []
+    this._listeners[event].push({ listener })
+  }
+  once (event, listener) {
+    if (!this._listeners[event]) this._listeners[event] = []
+    this._listeners[event].push({ listener, once: true })
+  }
+  off (event, listener) {
+    let listeners = this._listeners[event]
+    if (listeners) {
+      for (let i in listeners) {
+        if (listeners[i].listener === listener) {
+          listeners.splice(i, 1)
+          break
+        }
+      }
+    }
+  }
+  emit (event, ...args) {
+    let listeners = this._listeners[event]
+    if (listeners) {
+      let remove = []
+      for (let listener of listeners) {
+        try {
+          listener.listener(...args)
+          if (listener.once) remove.push(listener)
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      for (let listener of remove) {
+        listeners.splice(listeners.indexOf(listener), 1)
+      }
+    }
+  }
+  write (data) {
+    this.emit('in', data)
+  }
+  destroy () {
+    // death.
+    this.emit('exit', 0)
+  }
+  run () {
+    // noop
+  }
+}
+
+let demoshIndex = {
+  clear: class Clear extends Process {
+    run () {
+      this.emit('write', '\x1b[2J\x1b[1;1H')
+      this.emit('exit')
+    }
+  },
+  screenfetch: class Screenfetch extends Process {
+    run () {
+      let lines = [
+        '\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m+\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208mO\x1b[0m\x1b[38;5;203mS\x1b[0m\x1b[38;5;203m:\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mA\x1b[0m\x1b[38;5;198mr\x1b[0m\x1b[38;5;198mc\x1b[0m\x1b[38;5;198mh\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199mL\x1b[0m\x1b[38;5;199mi\x1b[0m\x1b[38;5;163mn\x1b[0m\x1b[38;5;164mu\x1b[0m\x1b[38;5;164mx\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128mx\x1b[0m\x1b[38;5;129m8\x1b[0m\x1b[38;5;129m6\x1b[0m\x1b[38;5;129m_\x1b[0m\x1b[38;5;93m6\x1b[0m\x1b[38;5;93m4\x1b[0m',
+        '\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m#\x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mH\x1b[0m\x1b[38;5;203mo\x1b[0m\x1b[38;5;198ms\x1b[0m\x1b[38;5;198mt\x1b[0m\x1b[38;5;198mn\x1b[0m\x1b[38;5;199ma\x1b[0m\x1b[38;5;199mm\x1b[0m\x1b[38;5;199me\x1b[0m\x1b[38;5;163m:\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164mN\x1b[0m\x1b[38;5;164m2\x1b[0m\x1b[38;5;128m0\x1b[0m\x1b[38;5;129m2\x1b[0m',
+        '\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198mK\x1b[0m\x1b[38;5;198me\x1b[0m\x1b[38;5;199mr\x1b[0m\x1b[38;5;199mn\x1b[0m\x1b[38;5;199me\x1b[0m\x1b[38;5;163ml\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164mR\x1b[0m\x1b[38;5;164me\x1b[0m\x1b[38;5;128ml\x1b[0m\x1b[38;5;129me\x1b[0m\x1b[38;5;129ma\x1b[0m\x1b[38;5;129ms\x1b[0m\x1b[38;5;93me\x1b[0m\x1b[38;5;93m:\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m4\x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;63m9\x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;33m4\x1b[0m\x1b[38;5;33m7\x1b[0m\x1b[38;5;33m-\x1b[0m\x1b[38;5;39m1\x1b[0m\x1b[38;5;39m-\x1b[0m\x1b[38;5;39ml\x1b[0m\x1b[38;5;38mt\x1b[0m\x1b[38;5;44ms\x1b[0m',
+        '\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199mU\x1b[0m\x1b[38;5;199mp\x1b[0m\x1b[38;5;163mt\x1b[0m\x1b[38;5;164mi\x1b[0m\x1b[38;5;164mm\x1b[0m\x1b[38;5;164me\x1b[0m\x1b[38;5;128m:\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m1\x1b[0m\x1b[38;5;129m9\x1b[0m\x1b[38;5;93m:\x1b[0m\x1b[38;5;93m2\x1b[0m\x1b[38;5;93m6\x1b[0m',
+        '\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164mW\x1b[0m\x1b[38;5;164mM\x1b[0m\x1b[38;5;164m:\x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129mK\x1b[0m\x1b[38;5;129mW\x1b[0m\x1b[38;5;129mi\x1b[0m\x1b[38;5;93mn\x1b[0m',
+        '\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m;\x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m;\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128mD\x1b[0m\x1b[38;5;129mE\x1b[0m\x1b[38;5;129m:\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93mK\x1b[0m\x1b[38;5;93mD\x1b[0m\x1b[38;5;93mE\x1b[0m',
+        '\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m+\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m.\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129mP\x1b[0m\x1b[38;5;93ma\x1b[0m\x1b[38;5;93mc\x1b[0m\x1b[38;5;93mk\x1b[0m\x1b[38;5;63ma\x1b[0m\x1b[38;5;63mg\x1b[0m\x1b[38;5;63me\x1b[0m\x1b[38;5;63ms\x1b[0m\x1b[38;5;33m:\x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m1\x1b[0m\x1b[38;5;39m8\x1b[0m\x1b[38;5;39m2\x1b[0m\x1b[38;5;39m1\x1b[0m',
+        '\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m+\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93mR\x1b[0m\x1b[38;5;63mA\x1b[0m\x1b[38;5;63mM\x1b[0m\x1b[38;5;63m:\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m9\x1b[0m\x1b[38;5;33m2\x1b[0m\x1b[38;5;33m5\x1b[0m\x1b[38;5;39m6\x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39mM\x1b[0m\x1b[38;5;38mB\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m/\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m1\x1b[0m\x1b[38;5;49m5\x1b[0m\x1b[38;5;49m9\x1b[0m\x1b[38;5;49m9\x1b[0m\x1b[38;5;48m9\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48mM\x1b[0m\x1b[38;5;83mB\x1b[0m',
+        '\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m;\x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63mP\x1b[0m\x1b[38;5;63mr\x1b[0m\x1b[38;5;33mo\x1b[0m\x1b[38;5;33mc\x1b[0m\x1b[38;5;33me\x1b[0m\x1b[38;5;39ms\x1b[0m\x1b[38;5;39ms\x1b[0m\x1b[38;5;39mo\x1b[0m\x1b[38;5;38mr\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44mT\x1b[0m\x1b[38;5;44my\x1b[0m\x1b[38;5;43mp\x1b[0m\x1b[38;5;49me\x1b[0m\x1b[38;5;49m:\x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48mI\x1b[0m\x1b[38;5;48mn\x1b[0m\x1b[38;5;48mt\x1b[0m\x1b[38;5;83me\x1b[0m\x1b[38;5;83ml\x1b[0m\x1b[38;5;83m(\x1b[0m\x1b[38;5;83mR\x1b[0m\x1b[38;5;118m)\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118mC\x1b[0m\x1b[38;5;154mo\x1b[0m\x1b[38;5;154mr\x1b[0m\x1b[38;5;154me\x1b[0m\x1b[38;5;148m(\x1b[0m\x1b[38;5;184mT\x1b[0m\x1b[38;5;184mM\x1b[0m\x1b[38;5;184m)\x1b[0m\x1b[38;5;178m \x1b[0m\x1b[38;5;214mi\x1b[0m\x1b[38;5;214m5\x1b[0m\x1b[38;5;214m-\x1b[0m\x1b[38;5;208m6\x1b[0m\x1b[38;5;208m4\x1b[0m\x1b[38;5;208m0\x1b[0m\x1b[38;5;203m0\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mC\x1b[0m\x1b[38;5;203mP\x1b[0m\x1b[38;5;198mU\x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m@\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m2\x1b[0m\x1b[38;5;199m.\x1b[0m\x1b[38;5;163m8\x1b[0m\x1b[38;5;164m0\x1b[0m\x1b[38;5;164mG\x1b[0m\x1b[38;5;164mH\x1b[0m\x1b[38;5;128mz\x1b[0m',
+        '\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m+\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m$\x1b[0m\x1b[38;5;33mE\x1b[0m\x1b[38;5;39mD\x1b[0m\x1b[38;5;39mI\x1b[0m\x1b[38;5;39mT\x1b[0m\x1b[38;5;38mO\x1b[0m\x1b[38;5;44mR\x1b[0m\x1b[38;5;44m:\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43mv\x1b[0m\x1b[38;5;49mi\x1b[0m\x1b[38;5;49mm\x1b[0m',
+        '\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39mR\x1b[0m\x1b[38;5;39mo\x1b[0m\x1b[38;5;38mo\x1b[0m\x1b[38;5;44mt\x1b[0m\x1b[38;5;44m:\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m1\x1b[0m\x1b[38;5;49m6\x1b[0m\x1b[38;5;49m0\x1b[0m\x1b[38;5;49mG\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m/\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m1\x1b[0m\x1b[38;5;83m9\x1b[0m\x1b[38;5;83m6\x1b[0m\x1b[38;5;83mG\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m(\x1b[0m\x1b[38;5;118m8\x1b[0m\x1b[38;5;154m1\x1b[0m\x1b[38;5;154m%\x1b[0m\x1b[38;5;154m)\x1b[0m\x1b[38;5;148m \x1b[0m\x1b[38;5;184m(\x1b[0m\x1b[38;5;184me\x1b[0m\x1b[38;5;184mx\x1b[0m\x1b[38;5;178mt\x1b[0m\x1b[38;5;214m4\x1b[0m\x1b[38;5;214m)\x1b[0m',
+        '\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m.\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m;\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m;\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m;\x1b[0m\x1b[38;5;63m`\x1b[0m\x1b[38;5;63m"\x1b[0m\x1b[38;5;33m.\x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m',
+        '\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m.\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m;\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m;\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m.\x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m',
+        '\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m.\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;38m#\x1b[0m\x1b[38;5;44m`\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m',
+        '\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m\'\x1b[0m\x1b[38;5;38m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;43m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m',
+        '\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m;\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;48m#\x1b[0m\x1b[38;5;48m;\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m',
+        '\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m\'\x1b[0m\x1b[38;5;83m#\x1b[0m\x1b[38;5;83m#\x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m',
+        '\x1b[38;5;93m \x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m`\x1b[0m\x1b[38;5;118m#\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m'
+      ]
+
+      let loop = () => {
+        if (lines.length) setTimeout(loop, 50)
+        else this.destroy()
+        this.emit('write', lines.shift() + '\r\n')
+      }
+      loop()
+    }
+  }
+}
+
 class DemoShell {
   constructor (terminal) {
     this.terminal = terminal
@@ -272,6 +370,7 @@ class DemoShell {
     this.input = ''
     this.cursorPos = 0
     this.child = null
+    this.index = demoshIndex
   }
   write (text) {
     if (this.child) {
@@ -279,9 +378,11 @@ class DemoShell {
       else this.child.write(text)
     } else this.parser.write(text)
   }
-  prompt () {
+  prompt (success = true) {
     if (this.terminal.cursor.x !== 0) this.terminal.write('\x1b[38;5;238m⏎\r\n')
-    this.terminal.write('\x1b[38;5;27mdemosh \x1b[m$ ')
+    this.terminal.write('\x1b[34;1mdemosh \x1b[m')
+    if (!success) this.terminal.write('\x1b[31m')
+    this.terminal.write('$ \x1b[m')
     this.input = ''
     this.cursorPos = 0
   }
@@ -312,8 +413,45 @@ class DemoShell {
     this.terminal.write('') // dummy. Apply the moveFoward
 
     if (action === 'return') {
-      this.prompt()
+      this.terminal.write('\r\n')
+      this.run(this.input)
     }
+  }
+  run (command) {
+    let parts = ['']
+
+    let inQuote = false
+    for (let character of command.trim()) {
+      if (inQuote && character !== inQuote) {
+        parts[parts.length - 1] += character
+      } else if (inQuote) {
+        inQuote = false
+      } else if (character === '"' || character === "'") {
+        inQuote = character
+      } else if (character.match(/\s/)) {
+        if (parts[parts.length - 1]) parts.push('')
+      } else parts[parts.length - 1] += character
+    }
+
+    let name = parts.shift()
+    if (name in this.index) {
+      this.spawn(name, parts)
+    } else {
+      this.terminal.write(`demosh: Unknown command: ${name}\r\n`)
+      this.prompt(false)
+    }
+  }
+  spawn (name, args = []) {
+    let Process = this.index[name]
+    this.child = new Process(...args)
+    let write = data => this.terminal.write(data)
+    this.child.on('write', write)
+    this.child.on('exit', code => {
+      this.child.off('write', write)
+      this.child = null
+      this.prompt(!code)
+    })
+    this.child.run()
   }
 }
 
