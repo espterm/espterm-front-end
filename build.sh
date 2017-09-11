@@ -20,6 +20,7 @@ npm run babel -- -o out/js/app.js --source-maps js/lib \
     js/appcommon.js \
     js/lang.js \
     js/wifi.js \
+    js/demo.js \
     js/term_* \
     js/debug_screen.js \
     js/soft_keyboard.js \
