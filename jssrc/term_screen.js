@@ -703,12 +703,7 @@ class TermScreen {
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
 
-    if (this.window.debug) {
-      // differentiate static cells from updated cells
-      ctx.fillStyle = 'rgba(255, 0, 255, 0.3)'
-      ctx.fillRect(0, 0, screenWidth, screenHeight)
-      console.log(`draw: ${why}`)
-    }
+    if (this.window.debug && this._debug) this._debug.drawStart(why)
 
     ctx.font = this.getFont()
     ctx.textAlign = 'center'
@@ -859,16 +854,12 @@ class TermScreen {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
-          if (this.window.debug) {
-            // add cell data
-            ctx.save()
-            ctx.fillStyle = '#0f0'
-            ctx.font = '6px monospace'
-            ctx.textAlign = 'left'
-            ctx.textBaseline = 'top'
-            ctx.fillText(+isTextWide(text), x * cellWidth, y * cellHeight)
-            ctx.fillText(+updateMap.get(cell), x * cellWidth, y * cellHeight + 6)
-            ctx.restore()
+          if (this.window.debug && this._debug) {
+            // set cell flags
+            let flags = 1 // always redrawn
+            flags |= (+updateMap.get(cell)) << 1
+            flags |= (+isTextWide(text)) << 2
+            this._debug.setCell(cell, flags)
           }
         }
 
@@ -901,6 +892,8 @@ class TermScreen {
         }
       }
     }
+
+    if (this.window.debug && this._debug) this._debug.drawEnd()
   }
 
   loadContent (str) {
