@@ -849,6 +849,8 @@ window.TermScreen = class TermScreen {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
+          if (isCursor) this.drawnCursor = [x, y]
+
           if (this.window.debug && this._debug) {
             // set cell flags
             let flags = 1 // always redrawn
