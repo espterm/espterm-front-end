@@ -1,5 +1,5 @@
 /** Handle connections */
-window.Conn = (function () {
+window.Conn = function (screen) {
   let ws
   let heartbeatTout
   let pingIv
@@ -48,7 +48,7 @@ window.Conn = (function () {
           break
 
         default:
-          Screen.load(evt.data)
+          screen.load(evt.data)
           if (!pageShown) {
             showPage()
             pageShown = true
@@ -89,9 +89,9 @@ window.Conn = (function () {
   }
 
   function init () {
-    if (_demo) {
+    if (window._demo) {
       console.log('Demo mode!')
-      Screen.load(_demo_screen)
+      screen.load(_demo_screen)
       showPage()
       return
     }
@@ -134,4 +134,4 @@ window.Conn = (function () {
     send: doSend,
     canSend: canSend // check flood control
   }
-})()
+}

@@ -1,5 +1,5 @@
 /** File upload utility */
-window.TermUpl = (function () {
+window.TermUpl = function (conn, input) {
   let lines, // array of lines without newlines
     line_i, // current line index
     fuTout, // timeout handle for line sending
@@ -16,14 +16,14 @@ window.TermUpl = (function () {
     fuStatus('Ready...')
     Modal.show('#fu_modal', onClose)
     $('#fu_form').toggleClass('busy', false)
-    Input.blockKeys(true)
+    input.blockKeys(true)
   }
 
   function onClose () {
     console.log('Upload modal closed.')
     clearTimeout(fuTout)
     line_i = 0
-    Input.blockKeys(false)
+    input.blockKeys(false)
   }
 
   function fuStatus (msg) {
@@ -65,7 +65,7 @@ window.TermUpl = (function () {
       return
     }
 
-    if (!Conn.canSend()) {
+    if (!conn.canSend()) {
       // postpone
       fuTout = setTimeout(fuSendLine, 1)
       return
@@ -84,7 +84,7 @@ window.TermUpl = (function () {
       inline_pos += MAX_LINE_LEN
     }
 
-    if (!Input.sendString(chunk)) {
+    if (!input.sendString(chunk)) {
       fuStatus('FAILED!')
       return
     }
@@ -101,7 +101,7 @@ window.TermUpl = (function () {
   }
 
   function closeWhenReady () {
-    if (!Conn.canSend()) {
+    if (!conn.canSend()) {
       // stuck in XOFF still, wait to process...
       fuStatus('Waiting for Tx buffer...')
       setTimeout(closeWhenReady, 100)
@@ -143,4 +143,4 @@ window.TermUpl = (function () {
     start: fuSend,
     open: fuOpen
   }
-})()
+}

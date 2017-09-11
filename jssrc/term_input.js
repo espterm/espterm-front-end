@@ -14,7 +14,7 @@
  * r - mb release
  * m - mouse move
  */
-window.Input = (function () {
+window.Input = function (conn) {
   let opts = {
     np_alt: false,
     cu_alt: false,
@@ -27,12 +27,12 @@ window.Input = (function () {
 
   /** Send a literal message */
   function sendStrMsg (str) {
-    return Conn.send('s' + str)
+    return conn.send('s' + str)
   }
 
   /** Send a button event */
   function sendBtnMsg (n) {
-    Conn.send('b' + Chr(n))
+    conn.send('b' + Chr(n))
   }
 
   /** Fn alt choice for key message */
@@ -256,14 +256,14 @@ window.Input = (function () {
       if (!opts.mt_move) return
       const b = mb1 ? 1 : mb2 ? 2 : mb3 ? 3 : 0
       const m = packModifiersForMouse()
-      Conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
+      conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
     },
 
     onMouseDown: function (x, y, b) {
       if (!opts.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
-      Conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
+      conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
 
@@ -271,7 +271,7 @@ window.Input = (function () {
       if (!opts.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
-      Conn.send('r' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
+      conn.send('r' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
 
@@ -281,7 +281,7 @@ window.Input = (function () {
       // +1 ... btn 5 (towards user)
       const m = packModifiersForMouse()
       const b = (dir < 0 ? 4 : 5)
-      Conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
+      conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
       // console.log("B ",b," M ",m);
     },
 
@@ -293,4 +293,4 @@ window.Input = (function () {
       opts.no_keys = yes
     }
   }
-})()
+}

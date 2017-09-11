@@ -1,6 +1,6 @@
-window.initSoftKeyboard = function (screen) {
-  const input = qs('#softkb-input')
-  if (!input) return // abort, we're not on the terminal page
+window.initSoftKeyboard = function (screen, input) {
+  const keyInput = qs('#softkb-input')
+  if (!keyInput) return // abort, we're not on the terminal page
 
   let keyboardOpen = false
 
@@ -8,97 +8,101 @@ window.initSoftKeyboard = function (screen) {
     if (!keyboardOpen) return
 
     let [x, y] = screen.gridToScreen(screen.cursor.x, screen.cursor.y, true)
-    input.style.transform = `translate(${x}px, ${y}px)`
+    keyInput.style.transform = `translate(${x}px, ${y}px)`
   }
 
-  input.addEventListener('focus', () => {
+  keyInput.addEventListener('focus', () => {
     keyboardOpen = true
     updateInputPosition()
   })
 
-  input.addEventListener('blur', () => (keyboardOpen = false))
+  keyInput.addEventListener('blur', () => (keyboardOpen = false))
 
   screen.on('cursor-moved', updateInputPosition)
 
   window.kbOpen = function openSoftKeyboard (open) {
     keyboardOpen = open
     updateInputPosition()
-    if (open) input.focus()
-    else input.blur()
+    if (open) keyInput.focus()
+    else keyInput.blur()
   }
+
+  // Chrome for Android doesn't send proper keydown/keypress events with
+  // real key values instead of 229 “Unidentified,” so here's a workaround
+  // that deals with the input composition events.
 
   let lastCompositionString = ''
   let compositing = false
 
+  // sends the difference between the last and the new composition string
   let sendInputDelta = function (newValue) {
     let resend = false
     if (newValue.length > lastCompositionString.length) {
       if (newValue.startsWith(lastCompositionString)) {
         // characters have been added at the end
-        Input.sendString(newValue.substr(lastCompositionString.length))
+        input.sendString(newValue.substr(lastCompositionString.length))
       } else resend = true
     } else if (newValue.length < lastCompositionString.length) {
       if (lastCompositionString.startsWith(newValue)) {
         // characters have been removed at the end
-        Input.sendString('\b'.repeat(lastCompositionString.length -
+        input.sendString('\b'.repeat(lastCompositionString.length -
           newValue.length))
       } else resend = true
     } else if (newValue !== lastCompositionString) resend = true
 
     if (resend) {
       // the entire string changed; resend everything
-      Input.sendString('\b'.repeat(lastCompositionString.length) +
+      input.sendString('\b'.repeat(lastCompositionString.length) +
         newValue)
     }
     lastCompositionString = newValue
   }
 
-  input.addEventListener('keydown', e => {
+  keyInput.addEventListener('keydown', e => {
     if (e.key === 'Unidentified') return
 
-    input.value = ''
+    keyInput.value = ''
 
     if (e.key === 'Backspace') {
       e.preventDefault()
-      Input.sendString('\b')
+      input.sendString('\b')
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      Input.sendString('\x0d')
+      input.sendString('\x0d')
     }
   })
 
-  input.addEventListener('keypress', e => {
+  keyInput.addEventListener('keypress', e => {
+    // prevent key duplication on iOS (because Safari *does* send proper events)
     e.stopPropagation()
   })
 
-  input.addEventListener('input', e => {
+  keyInput.addEventListener('input', e => {
     e.stopPropagation()
 
     if (e.isComposing) {
       sendInputDelta(e.data)
     } else {
-      if (e.inputType === 'insertCompositionText') Input.sendString(e.data)
+      if (e.inputType === 'insertCompositionText') input.sendString(e.data)
       else if (e.inputType === 'deleteContentBackward') {
         lastCompositionString = ''
         sendInputDelta('')
       } else if (e.inputType === 'insertText') {
-        Input.sendString(e.data)
+        input.sendString(e.data)
       }
     }
   })
 
-  input.addEventListener('compositionstart', e => {
+  keyInput.addEventListener('compositionstart', e => {
     lastCompositionString = ''
     compositing = true
-    console.log('compositionstart')
   })
 
-  input.addEventListener('compositionend', e => {
+  keyInput.addEventListener('compositionend', e => {
     lastCompositionString = ''
     compositing = false
-    input.value = ''
-    console.log('compositionend')
+    keyInput.value = ''
   })
 
-  screen.on('open-soft-keyboard', () => input.focus())
+  screen.on('open-soft-keyboard', () => keyInput.focus())
 }

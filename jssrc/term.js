@@ -1,21 +1,15 @@
 /** Init the terminal sub-module - called from HTML */
 window.termInit = function (labels, theme) {
-  Conn.init()
-  Input.init()
-  TermUpl.init()
-
   const screen = new window.TermScreen()
+  const conn = window.Conn(screen)
+  const input = window.Input(conn)
+  const termUpload = window.TermUpl(conn, input)
 
-  let didNotifyAboutScreen = false
-  Object.defineProperty(window, 'Screen', {
-    get () {
-      if (!didNotifyAboutScreen) {
-        console.warn('Use local variables instead of window.Screen')
-        didNotifyAboutScreen = true
-      }
-      return screen
-    }
-  })
+  screen.input = input
+
+  conn.init()
+  input.init()
+  termUpload.init()
 
   qs('#screen').appendChild(screen.canvas)
   screen.load(labels, theme) // load labels and theme
@@ -43,8 +37,12 @@ window.termInit = function (labels, theme) {
     }
   }
 
-  window.initSoftKeyboard(screen)
+  window.initSoftKeyboard(screen, input)
   if (window.attachDebugScreen) window.attachDebugScreen(screen)
 
-  window.termScreen = screen // for debugging
+  // for debugging
+  window.termScreen = screen
+  window.conn = conn
+  window.input = input
+  window.termUpl = termUpload
 }

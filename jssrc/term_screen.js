@@ -79,6 +79,13 @@ window.TermScreen = class TermScreen {
       console.warn('No AudioContext!')
     }
 
+    // dummy
+    this.input = new Proxy({}, {
+      get () {
+        return () => console.warn('TermScreen#input not set!')
+      }
+    })
+
     this.cursor = {
       x: 0,
       y: 0,
@@ -200,7 +207,7 @@ window.TermScreen = class TermScreen {
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
       } else {
-        Input.onMouseDown(...this.screenToGrid(e.offsetX, e.offsetY),
+        this.input.onMouseDown(...this.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
@@ -306,20 +313,20 @@ window.TermScreen = class TermScreen {
 
     this.canvas.addEventListener('mousemove', e => {
       if (!selecting) {
-        Input.onMouseMove(...this.screenToGrid(e.offsetX, e.offsetY))
+        this.input.onMouseMove(...this.screenToGrid(e.offsetX, e.offsetY))
       }
     })
 
     this.canvas.addEventListener('mouseup', e => {
       if (!selecting) {
-        Input.onMouseUp(...this.screenToGrid(e.offsetX, e.offsetY),
+        this.input.onMouseUp(...this.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
 
     this.canvas.addEventListener('wheel', e => {
       if (this.mouseMode.clicks) {
-        Input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY),
+        this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY),
           e.deltaY > 0 ? 1 : -1)
 
         // prevent page scrolling
@@ -1078,7 +1085,7 @@ window.TermScreen = class TermScreen {
     this.cursor.visible = !!(attributes & 1)
     this.cursor.hanging = !!(attributes & (1 << 1))
 
-    Input.setAlts(
+    this.input.setAlts(
       !!(attributes & (1 << 2)), // cursors alt
       !!(attributes & (1 << 3)), // numpad alt
       !!(attributes & (1 << 4)), // fn keys alt
@@ -1109,7 +1116,7 @@ window.TermScreen = class TermScreen {
       this.resetCursorBlink()
     }
 
-    Input.setMouseMode(trackMouseClicks, trackMouseMovement)
+    this.input.setMouseMode(trackMouseClicks, trackMouseMovement)
     this.selection.selectable = !trackMouseMovement
     $(this.canvas).toggleClass('selectable', !trackMouseMovement)
     this.mouseMode = {
@@ -1267,7 +1274,7 @@ window.TermScreen = class TermScreen {
   load (str, theme = -1) {
     const content = str.substr(1)
     if (theme >= 0 && theme < themes.length) {
-      Screen.palette = themes[theme]
+      this.palette = themes[theme]
     }
 
     switch (str[0]) {
