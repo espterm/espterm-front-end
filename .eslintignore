@@ -1,0 +1,9 @@
+# possibly minified output
+js
+out
+
+# libraries
+jssrc/lib
+
+# php generated file
+jssrc/lang.js
