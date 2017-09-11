@@ -55,7 +55,7 @@
 					</code>
 				</td>
 				<td>
-					Set message for button _n_ = 1-5 (code 81-85) to _m_ - e.g.`\e]94;iv\a`
+					Set message for button _n_ = 1-5 (code 91-95) to _m_ - e.g.`\e]94;iv\a`
 					sets the 3rd button to send string "iv" when pressed.
 				</td>
 			</tr>
