@@ -905,6 +905,8 @@ class TermScreen {
   loadContent (str) {
     // current index
     let i = 0
+    // Uncomment to capture screen content for the demo page
+    // console.log(JSON.stringify(`S${str}`))
 
     // window size
     const newHeight = parse2B(str, i)

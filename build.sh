@@ -21,6 +21,7 @@ npm run sass -- --output-style compressed sass/app.scss css/app.css
 
 echo 'Building HTML...'
 
+rm out/*
 php ./dump_js_lang.php
 php ./compile_html.php
 
