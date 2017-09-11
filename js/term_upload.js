@@ -12,25 +12,25 @@ window.TermUpl = function (conn, input) {
   // sending a super-ling string through the socket is not a good idea
   const MAX_LINE_LEN = 128
 
-  function fuOpen () {
-    fuStatus('Ready...')
-    Modal.show('#fu_modal', onClose)
+  function openUploadDialog () {
+    updateStatus('Ready...')
+    Modal.show('#fu_modal', onDialogClose)
     $('#fu_form').toggleClass('busy', false)
     input.blockKeys(true)
   }
 
-  function onClose () {
+  function onDialogClose () {
     console.log('Upload modal closed.')
     clearTimeout(fuTout)
     line_i = 0
     input.blockKeys(false)
   }
 
-  function fuStatus (msg) {
+  function updateStatus (msg) {
     qs('#fu_prog').textContent = msg
   }
 
-  function fuSend () {
+  function startUpload () {
     let v = qs('#fu_text').value
     if (!v.length) {
       fuClose()
@@ -55,11 +55,11 @@ window.TermUpl = function (conn, input) {
     }[qs('#fu_crlf').value]
 
     $('#fu_form').toggleClass('busy', true)
-    fuStatus('Starting...')
-    fuSendLine()
+    updateStatus('Starting...')
+    uploadLine()
   }
 
-  function fuSendLine () {
+  function uploadLine () {
     if (!$('#fu_modal').hasClass('visible')) {
       // Modal is closed, cancel
       return
@@ -67,7 +67,7 @@ window.TermUpl = function (conn, input) {
 
     if (!conn.canSend()) {
       // postpone
-      fuTout = setTimeout(fuSendLine, 1)
+      fuTout = setTimeout(uploadLine, 1)
       return
     }
 
@@ -85,16 +85,16 @@ window.TermUpl = function (conn, input) {
     }
 
     if (!input.sendString(chunk)) {
-      fuStatus('FAILED!')
+      updateStatus('FAILED!')
       return
     }
 
     let all = lines.length
 
-    fuStatus(line_i + ' / ' + all + ' (' + (Math.round((line_i / all) * 1000) / 10) + '%)')
+    updateStatus(line_i + ' / ' + all + ' (' + (Math.round((line_i / all) * 1000) / 10) + '%)')
 
     if (lines.length > line_i || inline_pos > 0) {
-      fuTout = setTimeout(fuSendLine, send_delay_ms)
+      fuTout = setTimeout(uploadLine, send_delay_ms)
     } else {
       closeWhenReady()
     }
@@ -103,10 +103,10 @@ window.TermUpl = function (conn, input) {
   function closeWhenReady () {
     if (!conn.canSend()) {
       // stuck in XOFF still, wait to process...
-      fuStatus('Waiting for Tx buffer...')
+      updateStatus('Waiting for Tx buffer...')
       setTimeout(closeWhenReady, 100)
     } else {
-      fuStatus('Done.')
+      updateStatus('Done.')
       // delay to show it
       setTimeout(function () {
         fuClose()
@@ -138,9 +138,21 @@ window.TermUpl = function (conn, input) {
         console.log('Loading file...')
         reader.readAsText(file)
       }, false)
-    },
-    close: fuClose,
-    start: fuSend,
-    open: fuOpen
+
+      qs('#term-fu-open').addEventListener('click', function () {
+        openUploadDialog()
+        return false
+      })
+
+      qs('#term-fu-start').addEventListener('click', function () {
+        startUpload()
+        return false
+      })
+
+      qs('#term-fu-close').addEventListener('click', function () {
+        fuClose()
+        return false
+      })
+    }
   }
 }

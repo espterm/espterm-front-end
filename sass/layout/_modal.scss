@@ -82,7 +82,7 @@
 	box-shadow: 0 0 6px 0 rgba(black, .6);
 	border-radius: 5px;
 
-	max-width: 80%;
+	max-width: 600px;
 
 	@include media($phone) {
 		width: calc(100% - #{dist(0)});

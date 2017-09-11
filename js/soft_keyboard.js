@@ -20,12 +20,17 @@ window.initSoftKeyboard = function (screen, input) {
 
   screen.on('cursor-moved', updateInputPosition)
 
-  window.kbOpen = function openSoftKeyboard (open) {
+  let kbOpen = function (open) {
     keyboardOpen = open
     updateInputPosition()
     if (open) keyInput.focus()
     else keyInput.blur()
   }
+
+  qs('#term-kb-open').addEventListener('click', function () {
+    kbOpen(true)
+    return false
+  })
 
   // Chrome for Android doesn't send proper keydown/keypress events with
   // real key values instead of 229 “Unidentified,” so here's a workaround

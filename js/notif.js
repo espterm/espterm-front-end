@@ -1,33 +1,63 @@
 window.Notify = (function () {
   let nt = {}
   const sel = '#notif'
+  let $balloon
 
-  let hideTmeo1 // timeout to start hiding (transition)
-  let hideTmeo2 // timeout to add the hidden class
+  let timerHideBegin // timeout to start hiding (transition)
+  let timerHideEnd // timeout to add the hidden class
+  let timerCanCancel
+  let canCancel = false
 
-  nt.show = function (message, timeout) {
-    $(sel).html(message)
-    Modal.show(sel)
+  let stopTimeouts = function () {
+    clearTimeout(timerHideBegin)
+    clearTimeout(timerHideEnd)
+  }
 
-    clearTimeout(hideTmeo1)
-    clearTimeout(hideTmeo2)
+  nt.show = function (message, timeout, isError) {
+    $balloon.toggleClass('error', isError === true)
+    $balloon.html(message)
+    Modal.show($balloon)
+    stopTimeouts()
 
-    if (undef(timeout)) timeout = 2500
+    if (undef(timeout) || timeout === null || timeout <= 0) {
+      timeout = 2500
+    }
 
-    hideTmeo1 = setTimeout(nt.hide, timeout)
+    timerHideBegin = setTimeout(nt.hide, timeout)
+
+    canCancel = false
+    timerCanCancel = setTimeout(function () {
+      canCancel = true
+    }, 500)
   }
 
   nt.hide = function () {
     let $m = $(sel)
     $m.removeClass('visible')
-    hideTmeo2 = setTimeout(function () {
+    timerHideEnd = setTimeout(function () {
       $m.addClass('hidden')
     }, 250) // transition time
   }
 
   nt.init = function () {
-    $(sel).on('click', function () {
+    $balloon = $(sel)
+
+    // close by click outside
+    $(document).on('click', function () {
+      if (!canCancel) return
       nt.hide(this)
+    })
+
+    // click caused by selecting, prevent it from bubbling
+    $balloon.on('click', function (e) {
+      e.stopImmediatePropagation()
+      return false
+    })
+
+    // stop fading if moused
+    $balloon.on('mouseenter', function () {
+      stopTimeouts()
+      $balloon.removeClass('hidden').addClass('visible')
     })
   }
 
