@@ -725,7 +725,8 @@ window.TermScreen = class TermScreen {
       let y = Math.floor(cell / width)
       let isCursor = !this.cursor.hanging &&
         this.cursor.x === x &&
-        this.cursor.y === y
+        this.cursor.y === y &&
+        this.cursor.blinkOn
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
@@ -860,7 +861,7 @@ window.TermScreen = class TermScreen {
           }
         }
 
-        if (isCursor && this.cursor.blinkOn && !inSelection) {
+        if (isCursor && !inSelection) {
           ctx.save()
           ctx.beginPath()
           if (this.cursor.style === 'block') {
