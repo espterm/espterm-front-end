@@ -78,18 +78,19 @@ $.ready(function () {
   let errAt = location.search.indexOf('err=')
   if (errAt !== -1 && qs('.Box.errors')) {
     let errs = location.search.substr(errAt + 4).split(',')
-    let hres = []
+    let humanReadableErrors = []
     errs.forEach(function (er) {
       let lbl = qs('label[for="' + er + '"]')
       if (lbl) {
         lbl.classList.add('error')
-        hres.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
-      } else {
-        hres.push(er)
+        humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
       }
+      // else {
+      //   hres.push(er)
+      // }
     })
 
-    qs('.Box.errors .list').innerHTML = hres.join(', ')
+    qs('.Box.errors .list').innerHTML = humanReadableErrors.join(', ')
     qs('.Box.errors').classList.remove('hidden')
   }
 
