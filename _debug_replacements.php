@@ -8,6 +8,8 @@
 
 $vers = '???';
 $versfn = __DIR__ . '/../user/version.h';
+$myHash = shell_exec('git rev-parse --short HEAD');
+$fwHash = '00000000';
 if (file_exists($versfn)) {
 	$f = file_get_contents($versfn);
 	preg_match_all('/#define FW_V_.*? (\d+)/', $f, $vm);
@@ -15,6 +17,7 @@ if (file_exists($versfn)) {
 #define FW_V_MINOR 0
 #define FW_V_PATCH 0
 	$vers = $vm[1][0] . '.' . $vm[1][1] . '.' . $vm[1][2];
+	$fwHash = shell_exec('cd .. && git rev-parse --short HEAD');
 }
 
 return [
@@ -59,6 +62,9 @@ return [
 	'vers_httpd' => '0.4',
 	'vers_sdk' => '010502',
 	'githubrepo' => 'https://github.com/espterm/espterm-firmware',
+	'githubrepo_front' => 'https://github.com/espterm/espterm-front-end',
+	'hash_backend' => $fwHash,
+	'hash_frontend' => $myHash, // TODO actual versions?
 
 	'ap_dhcp_time' => '120',
 	'ap_dhcp_start' => '192.168.4.100',

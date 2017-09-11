@@ -23,6 +23,11 @@
 			<td>v%vers_fw%, built %date% at %time%</td>
 		</tr>
 		<tr>
+			<th>Git hash</th>
+			<td>back-end: <a href="%githubrepo%/commit/%hash_backend%">%hash_backend%</a>,
+				front-end: <a href="%githubrepo_front%/commit/%hash_frontend%">%hash_frontend%</td>
+		</tr>
+		<tr>
 			<th>libesphttpd</th>
 			<td>v%vers_httpd%</td>
 		</tr>
