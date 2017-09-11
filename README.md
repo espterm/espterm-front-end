@@ -12,7 +12,7 @@ PHP is used to build the HTML files and apply substitutions.
 
 ## Development
 
-JavaScript source files can be found in the `jssrc/` folder, SASS
+JavaScript source files can be found in the `js/` folder, SASS
 files in the `sass/` folder.
 
 Fontello (icon font) is maintained in the `fontello/` folder. To update Fontello, replace
@@ -20,7 +20,7 @@ the `fontello.zip` file and run `unpack.sh` in the same folder. This will extrac
 from the zip file and put them into the `sass/` folder to be included with the other styles.
 
 To test you changes (after building JS and CSS), run a PHP local server in the project
-directory using the `server.sh` script or by a command like `php -S 0.0.0.0:2000`.
+directory using the `server.sh` script or by a command like `php -S 0.0.0.0:2000 _dev_router.php`.
 Template substitutions (that are normally done by the ESPTerm's webserver) applied to the 
 files fior testing can be defined in `_debug_replacements.php`.
 

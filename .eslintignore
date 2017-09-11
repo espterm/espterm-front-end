@@ -1,9 +1,8 @@
 # possibly minified output
-js
-out
+out/**/*
 
 # libraries
-jssrc/lib
+js/lib/*
 
 # php generated file
-jssrc/lang.js
+js/lang.js
