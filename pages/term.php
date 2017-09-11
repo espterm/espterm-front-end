@@ -40,7 +40,7 @@
 	</div>
 </div>
 
-<h1><!-- Screen title gets loaded here by JS --></h1>
+<h1 id="screen-title"><!-- Screen title is loaded here by JS --></h1>
 
 <div id="term-wrap">
 	<div id="screen">

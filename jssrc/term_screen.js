@@ -1228,7 +1228,7 @@ window.TermScreen = class TermScreen {
    */
   loadLabels (str) {
     let pieces = str.split('\x01')
-    qs('h1').textContent = pieces[0]
+    qs('#screen-title').textContent = pieces[0]
     $('#action-buttons button').forEach((button, i) => {
       let label = pieces[i + 1].trim()
       // if empty string, use the "dim" effect and put nbsp instead to
