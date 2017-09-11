@@ -8,10 +8,11 @@ const frakturExceptions = {
 }
 
 // constants for decoding the update blob
-const SEQ_SET_COLOR_ATTR = 1
 const SEQ_REPEAT = 2
-const SEQ_SET_COLOR = 3
-const SEQ_SET_ATTR = 4
+const SEQ_SET_COLORS = 3
+const SEQ_SET_ATTRS = 4
+const SEQ_SET_FG = 5
+const SEQ_SET_BG = 6
 
 const SELECTION_BG = '#b2d7fe'
 const SELECTION_FG = '#333'
@@ -1021,36 +1022,12 @@ class TermScreen {
       this.screenAttrs[cell] = myAttrs
     }
 
-    let blinkAttr = 0
     while (i < strArray.length && cell < screenLength) {
       let character = strArray[i++]
       let charCode = character.codePointAt(0)
 
       let data
       switch (charCode) {
-        case SEQ_SET_COLOR_ATTR:
-          data = parse3B(strArray[i] + strArray[i + 1] + strArray[i + 2])
-          i += 3
-          fg = data & 0xF
-          bg = data >> 4 & 0xF
-          attrs = data >> 8 & 0xFF
-          blinkAttr = attrs & MASK_BLINK
-          break
-
-        case SEQ_SET_COLOR:
-          data = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
-          fg = data & 0xF
-          bg = data >> 4 & 0xF
-          break
-
-        case SEQ_SET_ATTR:
-          data = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
-          attrs = data & 0xFF
-          blinkAttr = attrs & MASK_BLINK
-          break
-
         case SEQ_REPEAT:
           let count = parse2B(strArray[i] + strArray[i + 1])
           i += 2
@@ -1058,6 +1035,31 @@ class TermScreen {
             setCellContent(cell)
             if (++cell > screenLength) break
           }
+          break
+
+        case SEQ_SET_COLORS:
+          data = parse3B(strArray[i] + strArray[i + 1] + strArray[i + 2])
+          i += 3
+          fg = data & 0xFF
+          bg = (data >> 8) & 0xFF
+          break
+
+        case SEQ_SET_ATTRS:
+          data = parse2B(strArray[i] + strArray[i + 1])
+          i += 2
+          attrs = data & 0xFF
+          break
+
+        case SEQ_SET_FG:
+          data = parse2B(strArray[i] + strArray[i + 1])
+          i += 2
+          fg = data & 0xFF
+          break
+
+        case SEQ_SET_BG:
+          data = parse2B(strArray[i] + strArray[i + 1])
+          i += 2
+          bg = data & 0xFF
           break
 
         default:
