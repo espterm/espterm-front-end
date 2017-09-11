@@ -72,7 +72,11 @@
 <script>
 	try {
 		window.noAutoShow = true;
-		termInit('%j:labels_seq%', +'%theme%');
+		termInit({
+		  labels: '%j:labels_seq%',
+		  theme: +'%theme%',
+		  allFn: !!+'%want_all_fn%',
+        });
 	} catch(e) {
 		console.error(e);
 		<?php if (!DEBUG): ?>

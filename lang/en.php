@@ -60,6 +60,7 @@ return [
 	'term.show_buttons' => 'Show buttons',
 	'term.loopback' => 'Local Echo',
 	'term.crlf_mode' => 'Enter sends CR+LF',
+	'term.want_all_fn' => 'Capture all keys<br>(F5, F11, F12…)',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
 
 	'cursor.block_blink' => 'Block, blinking',

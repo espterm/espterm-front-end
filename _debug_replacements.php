@@ -7,13 +7,15 @@
  */
 
 $vers = '???';
-$f = file_get_contents(__DIR__ . '/../user/version.h');
-preg_match_all('/#define FW_V_.*? (\d+)/', $f, $vm);
+$versfn = __DIR__ . '/../user/version.h';
+if (file_exists($versfn)) {
+	$f = file_get_contents($versfn);
+	preg_match_all('/#define FW_V_.*? (\d+)/', $f, $vm);
 #define FW_V_MAJOR 1
 #define FW_V_MINOR 0
 #define FW_V_PATCH 0
-
-$vers = $vm[1][0].'.'.$vm[1][1].'.'.$vm[1][2];
+	$vers = $vm[1][0] . '.' . $vm[1][1] . '.' . $vm[1][2];
+}
 
 return [
 	'term_title' => ESP_DEMO ? 'ESPTerm Web UI Demo' : 'ESPTerm local debug',
@@ -29,6 +31,7 @@ return [
 	'bm4' => '',
 	'bm5' => '05',
 	'labels_seq' => ESP_DEMO ? 'TESPTerm Web UI DemoOKCancelHelp' : 'TESPTerm local debugOKCancelHelp',
+	'want_all_fn' => '0',
 
 	'parser_tout_ms' => 10,
 	'display_tout_ms' => 15,
@@ -55,7 +58,7 @@ return [
 	'time' => date('G:i'),
 	'vers_httpd' => '0.4',
 	'vers_sdk' => '010502',
-	'githubrepo' => 'https://github.com/MightyPork/esp-vt100-firmware',
+	'githubrepo' => 'https://github.com/espterm/espterm-firmware',
 
 	'ap_dhcp_time' => '120',
 	'ap_dhcp_start' => '192.168.4.100',

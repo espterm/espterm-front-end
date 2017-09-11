@@ -15,7 +15,7 @@
  * m - mouse move
  */
 window.Input = function (conn) {
-  let opts = {
+  let cfg = {
     np_alt: false,
     cu_alt: false,
     fn_alt: false,
@@ -37,24 +37,24 @@ window.Input = function (conn) {
 
   /** Fn alt choice for key message */
   function fa (alt, normal) {
-    return opts.fn_alt ? alt : normal
+    return cfg.fn_alt ? alt : normal
   }
 
   /** Cursor alt choice for key message */
   function ca (alt, normal) {
-    return opts.cu_alt ? alt : normal
+    return cfg.cu_alt ? alt : normal
   }
 
   /** Numpad alt choice for key message */
   function na (alt, normal) {
-    return opts.np_alt ? alt : normal
+    return cfg.np_alt ? alt : normal
   }
 
-  function _bindFnKeys () {
+  function _bindFnKeys (allFn) {
     const keymap = {
       'tab': '\x09',
       'backspace': '\x08',
-      'enter': opts.crlf_mode ? '\x0d\x0a' : '\x0d',
+      'enter': cfg.crlf_mode ? '\x0d\x0a' : '\x0d',
       'ctrl+enter': '\x0a',
       'esc': '\x1b',
       'up': ca('\x1bOA', '\x1b[A'),
@@ -109,7 +109,12 @@ window.Input = function (conn) {
       // we don't implement numlock key (should change in numpad_alt mode, but it's even more useless than the rest)
     }
 
+    const blacklist = [
+      'f5', 'f11', 'f12', 'shift+f5'
+    ]
+
     for (let k in keymap) {
+      if (!allFn && blacklist.includes(k)) continue
       if (keymap.hasOwnProperty(k)) {
         bind(k, keymap[k])
       }
@@ -127,17 +132,19 @@ window.Input = function (conn) {
     key.unbind(combo)
 
     key(combo, function (e) {
-      if (opts.no_keys) return
+      if (cfg.no_keys) return
       e.preventDefault()
       sendStrMsg(str)
     })
   }
 
   /** Bind/rebind key messages */
-  function _initKeys () {
+  function _initKeys (opts) {
+    let { allFn } = opts
+
     // This takes care of text characters typed
     window.addEventListener('keypress', function (evt) {
-      if (opts.no_keys) return
+      if (cfg.no_keys) return
       let str = ''
       if (evt.key) str = evt.key
       else if (evt.which) str = String.fromCodePoint(evt.which)
@@ -185,7 +192,7 @@ window.Input = function (conn) {
     bind('⌘+backspace', '\x15') // ⌘⌫ to delete to the beginning of a line (possibly ^U)
     /* eslint-enable */
 
-    _bindFnKeys()
+    _bindFnKeys(allFn)
   }
 
   // mouse button states
@@ -194,8 +201,8 @@ window.Input = function (conn) {
   let mb3 = 0
 
   /** Init the Input module */
-  function init () {
-    _initKeys()
+  function init (opts) {
+    _initKeys(opts)
 
     // Button presses
     $('#action-buttons button').forEach(function (s) {
@@ -235,11 +242,11 @@ window.Input = function (conn) {
 
     /** Enable alternate key modes (cursors, numpad, fn) */
     setAlts: function (cu, np, fn, crlf) {
-      if (opts.cu_alt !== cu || opts.np_alt !== np || opts.fn_alt !== fn || opts.crlf_mode !== crlf) {
-        opts.cu_alt = cu
-        opts.np_alt = np
-        opts.fn_alt = fn
-        opts.crlf_mode = crlf
+      if (cfg.cu_alt !== cu || cfg.np_alt !== np || cfg.fn_alt !== fn || cfg.crlf_mode !== crlf) {
+        cfg.cu_alt = cu
+        cfg.np_alt = np
+        cfg.fn_alt = fn
+        cfg.crlf_mode = crlf
 
         // rebind keys - codes have changed
         _bindFnKeys()
@@ -247,20 +254,20 @@ window.Input = function (conn) {
     },
 
     setMouseMode: function (click, move) {
-      opts.mt_click = click
-      opts.mt_move = move
+      cfg.mt_click = click
+      cfg.mt_move = move
     },
 
     // Mouse events
     onMouseMove: function (x, y) {
-      if (!opts.mt_move) return
+      if (!cfg.mt_move) return
       const b = mb1 ? 1 : mb2 ? 2 : mb3 ? 3 : 0
       const m = packModifiersForMouse()
       conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
     },
 
     onMouseDown: function (x, y, b) {
-      if (!opts.mt_click) return
+      if (!cfg.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
       conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
@@ -268,7 +275,7 @@ window.Input = function (conn) {
     },
 
     onMouseUp: function (x, y, b) {
-      if (!opts.mt_click) return
+      if (!cfg.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
       conn.send('r' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
@@ -276,7 +283,7 @@ window.Input = function (conn) {
     },
 
     onMouseWheel: function (x, y, dir) {
-      if (!opts.mt_click) return
+      if (!cfg.mt_click) return
       // -1 ... btn 4 (away from user)
       // +1 ... btn 5 (towards user)
       const m = packModifiersForMouse()
@@ -286,11 +293,11 @@ window.Input = function (conn) {
     },
 
     mouseTracksClicks: function () {
-      return opts.mt_click
+      return cfg.mt_click
     },
 
     blockKeys: function (yes) {
-      opts.no_keys = yes
+      cfg.no_keys = yes
     }
   }
 }
