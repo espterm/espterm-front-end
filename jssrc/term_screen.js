@@ -162,7 +162,7 @@ window.TermScreen = class TermScreen {
     this.drawnScreenFG = []
     this.drawnScreenBG = []
     this.drawnScreenAttrs = []
-    this.drawnCursor = [-1, -1]
+    this.drawnCursor = [-1, -1, '']
 
     this.resetBlink()
     this.resetCursorBlink()
@@ -752,7 +752,8 @@ window.TermScreen = class TermScreen {
         fg !== this.drawnScreenFG[cell] ||
         bg !== this.drawnScreenBG[cell] ||
         attrs !== this.drawnScreenAttrs[cell] ||
-        isCursor !== wasCursor
+        isCursor !== wasCursor ||
+        (isCursor && this.cursor.style !== this.drawnCursor[2])
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -850,7 +851,7 @@ window.TermScreen = class TermScreen {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
-          if (isCursor) this.drawnCursor = [x, y]
+          if (isCursor) this.drawnCursor = [x, y, this.cursor.style]
 
           if (this.window.debug && this._debug) {
             // set cell flags
