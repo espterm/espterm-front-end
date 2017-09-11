@@ -31,47 +31,6 @@ function cr (hdl) {
   }
 }
 
-/** Extend an objects with options */
-function extend (defaults, options) {
-  let target = {}
-
-  Object.keys(defaults).forEach(function (k) {
-    target[k] = defaults[k]
-  })
-
-  Object.keys(options).forEach(function (k) {
-    target[k] = options[k]
-  })
-
-  return target
-}
-
-/** Escape string for use as literal in RegExp */
-function rgxe (str) {
-  return str.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')
-}
-
-/** Format number to N decimal places, output as string */
-function numfmt (x, places) {
-  const pow = Math.pow(10, places)
-  return Math.round(x * pow) / pow
-}
-
-/** Get millisecond timestamp */
-function msNow () {
-  return +(new Date())
-}
-
-/** Get ms elapsed since msNow() */
-function msElapsed (start) {
-  return msNow() - start
-}
-
-/** Shim for log base 10 */
-Math.log10 = Math.log10 || function (x) {
-  return Math.log(x) / Math.LN10
-}
-
 /** HTML escape */
 function esc (str) {
   return $.htmlEscape(str)
