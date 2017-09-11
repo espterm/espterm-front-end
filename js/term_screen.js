@@ -523,7 +523,7 @@ window.TermScreen = class TermScreen {
    * Updates the canvas size if it changed
    */
   updateSize () {
-    this._window.devicePixelRatio = window.devicePixelRatio || 1
+    this._window.devicePixelRatio = this._windowScale * (window.devicePixelRatio || 1)
 
     let didChange = false
     for (let key in this.windowState) {
@@ -537,7 +537,6 @@ window.TermScreen = class TermScreen {
       const {
         width,
         height,
-        devicePixelRatio,
         gridScaleX,
         gridScaleY,
         fitIntoWidth,
@@ -550,30 +549,30 @@ window.TermScreen = class TermScreen {
       let realHeight = height * cellSize.height
 
       if (fitIntoWidth && fitIntoHeight) {
-        if (realWidth > fitIntoWidth || realHeight > fitIntoHeight) {
-          let terminalAspect = realWidth / realHeight
-          let fitAspect = fitIntoWidth / fitIntoHeight
+        let terminalAspect = realWidth / realHeight
+        let fitAspect = fitIntoWidth / fitIntoHeight
 
-          if (terminalAspect < fitAspect) {
-            // align heights
-            realHeight = fitIntoHeight
-            realWidth = realHeight * terminalAspect
-          } else {
-            // align widths
-            realWidth = fitIntoWidth
-            realHeight = realWidth / terminalAspect
-          }
+        if (terminalAspect < fitAspect) {
+          // align heights
+          realHeight = fitIntoHeight
+          realWidth = realHeight * terminalAspect
+        } else {
+          // align widths
+          realWidth = fitIntoWidth
+          realHeight = realWidth / terminalAspect
         }
-      } else if (fitIntoWidth && realWidth > fitIntoWidth) {
+      } else if (fitIntoWidth) {
         realHeight = fitIntoWidth / (realWidth / realHeight)
         realWidth = fitIntoWidth
-      } else if (fitIntoHeight && realHeight > fitIntoHeight) {
+      } else if (fitIntoHeight) {
         realWidth = fitIntoHeight * (realWidth / realHeight)
         realHeight = fitIntoHeight
       }
 
       // store new window scale
       this._windowScale = realWidth / (width * cellSize.width)
+
+      let devicePixelRatio = this._window.devicePixelRatio = this._windowScale * window.devicePixelRatio
 
       this.canvas.width = width * devicePixelRatio * cellSize.width
       this.canvas.style.width = `${realWidth}px`
