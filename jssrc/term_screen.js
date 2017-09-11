@@ -108,6 +108,9 @@ window.TermScreen = class TermScreen {
       graphics: 0
     }
 
+    // scaling caused by fitIntoWidth/fitIntoHeight
+    this._windowScale = 1
+
     // properties of this.window that require updating size and redrawing
     this.windowState = {
       width: 0,
@@ -562,6 +565,9 @@ window.TermScreen = class TermScreen {
         realHeight = fitIntoHeight
       }
 
+      // store new window scale
+      this._windowScale = realWidth / (width * cellSize.width)
+
       this.canvas.width = width * devicePixelRatio * cellSize.width
       this.canvas.style.width = `${realWidth}px`
       this.canvas.height = height * devicePixelRatio * cellSize.height
@@ -710,12 +716,13 @@ window.TermScreen = class TermScreen {
    * Converts grid coordinates to screen coordinates.
    * @param {number} x - x in cells
    * @param {number} y - y in cells
+   * @param {boolean} [withScale] - when true, will apply window scale
    * @returns {number[]} a tuple of (x, y) in pixels
    */
-  gridToScreen (x, y) {
+  gridToScreen (x, y, withScale = false) {
     let cellSize = this.getCellSize()
 
-    return [x * cellSize.width, y * cellSize.height]
+    return [x * cellSize.width, y * cellSize.height].map(v => withScale ? v * this._windowScale : v)
   }
 
   /**

@@ -49,6 +49,10 @@ body.term {
 		caret-color: transparent;
 		color: transparent;
 		@include click-through;
+
+		// iOS Safari still shows a caret regardless of the above, so set the font
+		// size as small as it can be (will show up as a blinking blue pixel)
+		font-size: 1px;
 	}
 
 	#touch-select-menu {

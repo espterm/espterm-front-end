@@ -7,7 +7,7 @@ window.initSoftKeyboard = function (screen) {
   let updateInputPosition = function () {
     if (!keyboardOpen) return
 
-    let [x, y] = screen.gridToScreen(screen.cursor.x, screen.cursor.y)
+    let [x, y] = screen.gridToScreen(screen.cursor.x, screen.cursor.y, true)
     input.style.transform = `translate(${x}px, ${y}px)`
   }
 
