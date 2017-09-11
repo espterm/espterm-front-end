@@ -22,9 +22,7 @@ body.term {
 	display: inline-block;
 	border: 2px solid #3983CD;
 	position: relative;
-
-	font-size: 20px; // some font heights cause visual glitches with some font renderers. This should be configurable.
-	font-family: $screen-stack;
+	line-height: 0;
 
 	canvas.selectable {
 		cursor: text;
@@ -142,10 +140,6 @@ body.term {
 }
 
 #fu_form {
-	//border: 1px solid #3983CD;
-	//border-radius: 2px;
-	//padding: 0 dist(0);
-	//background: #333e58;
 	padding: dist(0);
 	margin-top: 100px; // offset
 
