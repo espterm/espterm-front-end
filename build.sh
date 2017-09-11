@@ -13,8 +13,8 @@ npm run babel -- -o js/app.js --source-maps jssrc/lib \
     jssrc/wifi.js \
     jssrc/term_* \
     jssrc/debug_screen.js \
-    jssrc/term.js \
-    jssrc/soft_keyboard.js
+    jssrc/soft_keyboard.js \
+    jssrc/term.js
 
 echo 'Building CSS...'
 

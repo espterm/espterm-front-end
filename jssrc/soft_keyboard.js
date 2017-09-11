@@ -1,4 +1,4 @@
-$.ready(() => {
+window.initSoftKeyboard = function (screen) {
   const input = qs('#softkb-input')
   if (!input) return // abort, we're not on the terminal page
 
@@ -89,4 +89,4 @@ $.ready(() => {
   })
 
   screen.on('open-soft-keyboard', () => input.focus())
-})
+}

@@ -43,6 +43,7 @@ window.termInit = function (labels, theme) {
     }
   }
 
+  window.initSoftKeyboard(screen)
   if (window.attachDebugScreen) window.attachDebugScreen(screen)
 
   window.termScreen = screen // for debugging
