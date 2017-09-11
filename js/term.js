@@ -1,15 +1,21 @@
 /** Init the terminal sub-module - called from HTML */
 window.termInit = function (labels, theme) {
-  const screen = new window.TermScreen()
-  const conn = window.Conn(screen)
-  const input = window.Input(conn)
-  const termUpload = window.TermUpl(conn, input)
+  const screen = new TermScreen()
+  const conn = Conn(screen)
+  const input = Input(conn)
+  const termUpload = TermUpl(conn, input)
 
   screen.input = input
 
   conn.init()
   input.init()
   termUpload.init()
+  Notify.init()
+
+  window.onerror = function (errorMsg, file, line, col) {
+    Notify.show(`<b>JS ERROR!</b><br>${errorMsg}<br>at ${file}:${line}:${col}`, 10000, true)
+    return false
+  }
 
   qs('#screen').appendChild(screen.canvas)
   screen.load(labels, theme) // load labels and theme
@@ -23,7 +29,7 @@ window.termInit = function (labels, theme) {
     fitScreenIfNeeded()
     window.addEventListener('resize', fitScreenIfNeeded)
 
-    window.toggleFitScreen = function () {
+    let toggleFitScreen = function () {
       fitScreen = !fitScreen
       const resizeButtonIcon = qs('#resize-button-icon')
       if (fitScreen) {
@@ -35,6 +41,11 @@ window.termInit = function (labels, theme) {
       }
       fitScreenIfNeeded()
     }
+
+    qs('#term-fit-screen').addEventListener('click', function () {
+      toggleFitScreen()
+      return false
+    })
   }
 
   window.initSoftKeyboard(screen, input)
