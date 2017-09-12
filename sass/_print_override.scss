@@ -1,0 +1,115 @@
+@media print {
+	.Row.buttons, nav {
+		display: none !important;
+	}
+	.Row.buttons .button {
+		display: none !important;
+	}
+
+	h1, h2, h3 {
+		// chrome ignores those :(
+		break-after: avoid-page!important;
+		page-break-after: avoid!important;
+		font-family: sans-serif;
+	}
+
+	html, body {
+		background: white;
+		color: black;
+		font-family: serif;
+		//font-size: 12pt;
+		line-height: 1.3em;
+	}
+
+	label, p {
+		color: black !important;
+		text-shadow: none !important;
+	}
+
+	.Box {
+		box-shadow: none;
+	}
+
+	input, select, button {
+		background: white !important;
+		color: black !important;
+		border: 1px solid black !important;
+	}
+
+	a {
+		color: #004eff !important;
+	}
+
+	a[href^="http://"]::after,
+	a[href^="https://"]::after {
+		content: attr(href);
+		padding-left: .8ex;
+		text-decoration: underline !important;
+	}
+	p a {
+		word-wrap: break-word;
+	}
+
+	.Row.checkbox .box {
+		border-color: black;
+		border-radius: 3px;
+		background: white;
+		color: black;
+	}
+
+	.button {
+		background: white; border: 1px solid black;
+		text-shadow: none !important;
+		color: black;
+		box-shadow: none;
+		text-decoration: underline !important;
+	}
+
+	[class^="icn-"], [class*=" icn-"] {
+		&::before {
+			display: none;
+		}
+	}
+
+	.Box .Row {
+		display: block !important;
+	}
+
+	.Box.fold h2::after {
+		display: none;
+	}
+
+	#outer {
+		display: block;
+		overflow: auto;
+		width: unset;
+		height: unset;
+		position: static;
+	}
+
+	html, body {
+		overflow: auto !important;
+		width: unset; height: unset;
+	}
+
+	.Box {
+		padding: 0; border: 0 none;
+	}
+
+	.charset div span:nth-child(1),
+	.charset div span:nth-child(2) {
+		color: #666;
+	}
+
+	.page-help code {
+		background: rgba(0, 215, 255, 0.31);
+	}
+
+	[noprint] {
+		display: none !important;
+	}
+
+	#content tbody th {
+		color: black !important;
+	}
+}
