@@ -5,13 +5,12 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title><?= $_GET['PAGE_TITLE'] ?></title>
-	<link href="/css/app.css" rel="stylesheet">
-	<script src="/js/app.js"></script>
+	<link href="/css/app.<?= GIT_HASH ?>.css" rel="stylesheet">
+	<script src="/js/app.<?= GIT_HASH ?>.js"></script>
 	<script>
 		var _root = <?= JS_WEB_ROOT ?>;
 		var _demo = <?= (int)ESP_DEMO ?>;
-		<?php if($_GET['page']=='term'): ?>var _demo_screen = <?= ESP_DEMO ? DEMO_SCREEN : 0 ?>;<?php endif; ?>
-		<?php if($_GET['page']=='cfg_wifi'): ?>var _demo_aps = <?= ESP_DEMO ? json_encode(DEMO_APS) : '' ?>;<?php endif; ?>
+		<?php if($_GET['page']=='cfg_wifi'): ?>var _demo_aps = <?= ESP_DEMO ? json_encode(DEMO_APS) : '""' ?>;<?php endif; ?>
 	</script>
 </head>
 <body class="<?= $_GET['BODYCLASS'] ?>">

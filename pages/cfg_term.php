@@ -166,6 +166,12 @@
 	</div>
 
 	<div class="Row checkbox" >
+		<label><?= tr('term.want_all_fn') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="want_all_fn" name="want_all_fn" value="%want_all_fn%">
+	</div>
+
+	<div class="Row checkbox" >
 		<label><?= tr('term.crlf_mode') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="crlf_mode" name="crlf_mode" value="%crlf_mode%">

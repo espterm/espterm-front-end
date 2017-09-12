@@ -2,7 +2,7 @@
 	<img src="/img/cvut.svg" id="logo" class="mq-tablet-min">
 	<h2>ESP8266 Remote Terminal</h2>
 
-	<img src="/img/cvut.svg" id="logo2" class="mq-phone">
+	<img src="/img/cvut.svg" id="logo2" class="mq-phone" noprint>
 
 	<p>
 		&copy; Ondřej Hruška, 2016-2017
@@ -17,10 +17,16 @@
 
 <div class="Box">
 	<h2>Version</h2>
+	<div class="tscroll">
 	<table>
 		<tr>
 			<th>ESPTerm</th>
-			<td>v%vers_fw%, built %date% at %time%</td>
+			<td>v%vers_fw%, built %date% at~%time%</td>
+		</tr>
+		<tr>
+			<th>Git hash</th>
+			<td>back-end: <a href="%githubrepo%/commit/%hash_backend%">%hash_backend%</a>,
+				front-end: <a href="%githubrepo_front%/commit/%hash_frontend%">%hash_frontend%</td>
 		</tr>
 		<tr>
 			<th>libesphttpd</th>
@@ -31,6 +37,7 @@
 			<td>v%vers_sdk%</td>
 		</tr>
 	</table>
+	</div>
 </div>
 
 <div class="Box">

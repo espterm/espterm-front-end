@@ -1,0 +1,8 @@
+# possibly minified output
+out/**/*
+
+# libraries
+js/lib/*
+
+# php generated file
+js/lang.js

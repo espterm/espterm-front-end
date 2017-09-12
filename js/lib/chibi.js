@@ -575,7 +575,7 @@
 
 	// Basic XHR
 	chibi.ajax = function (options) { // if options is a number, it's timeout in ms
-		var opts = extend({
+		var opts = Object.assign({
 			method: 'GET',
 			nocache: true,
 			timeout: 5000,

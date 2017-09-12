@@ -187,11 +187,29 @@
 			<tr>
 				<td>
 					<code>
+						\e[?12h \\
+						\e[?12l
+					</code>
+				</td>
+				<td>Toggle cursor blinking (`h` on, `l` off)</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
 						\e[?25h \\
 						\e[?25l
 					</code>
 				</td>
 				<td>Show (`h`) or hide (`l`) the cursor</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
+						\e[?45h \\
+						\e[?45l
+					</code>
+				</td>
+				<td>Enable (`h`) or disable (`l`) reverse wrap-around (when using "move left" or backspace)</td>
 			</tr>
 			</tbody>
 		</table>

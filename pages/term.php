@@ -1,3 +1,4 @@
+<?php if (!DEBUG): ?>
 <script>
 	// Workaround for badly loaded page
 	setTimeout(function() {
@@ -7,6 +8,7 @@
 		}
 	}, 3000);
 </script>
+<?php endif; ?>
 
 <div class="Modal light hidden" id="fu_modal">
 	<div id="fu_form" class="Dialog">
@@ -31,17 +33,22 @@
 			</p>
 		</div>
 		<div class="fu-buttons">
-			<button onclick="TermUpl.start()" class="icn-ok x-fu-go">Start</button>&nbsp;
-			<button onclick="TermUpl.close()" class="icn-cancel x-fu-cancel">Cancel</button>&nbsp;
+			<button id="term-fu-start" class="icn-ok x-fu-go">Start</button>&nbsp;
+			<button id="term-fu-close" class="icn-cancel x-fu-cancel">Cancel</button>&nbsp;
 			<i class="fu-prog-box">Upload: <span id="fu_prog"></span></i>
 		</div>
 	</div>
 </div>
 
-<h1><!-- Screen title gets loaded here by JS --></h1>
+<h1 id="screen-title"><!-- Screen title is loaded here by JS --></h1>
 
 <div id="term-wrap">
-	<div id="screen" class="theme-%theme%"></div>
+	<div id="screen">
+		<input id="softkb-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+		<div id="touch-select-menu">
+			<button id="touch-select-copy-btn">Copy</button>
+		</div>
+	</div>
 
 	<div id="action-buttons">
 		<button data-n="1"></button><!--
@@ -52,11 +59,10 @@
 	</div>
 </div>
 
-<textarea id="softkb-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-
 <nav id="term-nav">
-	<a href="#" onclick="kbOpen(true);return false" class="mq-tablet-max"><i class="icn-keyboard"></i><span><?= tr('term_nav.keybd') ?></span></a><!--
-	--><a href="#" onclick="TermUpl.open();return false"><i class="icn-download"></i><span><?= tr('term_nav.upload') ?></span></a><!--
+	<a href="#" id="term-fit-screen" class="mq-tablet-max"><i id="resize-button-icon" class="icn-resize-small"></i></a><!--
+	--><a href="#" id="term-kb-open" class="mq-tablet-max"><i class="icn-keyboard"></i><span><?= tr('term_nav.keybd') ?></span></a><!--
+	--><a href="#" id="term-fu-open"><i class="icn-download"></i><span><?= tr('term_nav.upload') ?></span></a><!--
 	--><a href="<?= url('cfg_term') ?>" class="x-term-conf-btn"><i class="icn-configure"></i><span><?= tr('term_nav.config') ?></span></a><!--
 	--><a href="<?= url('cfg_wifi') ?>" class="x-term-conf-btn"><i class="icn-wifi"></i><span><?= tr('term_nav.wifi') ?></span></a><!--
 	--><a href="<?= url('help') ?>" class="x-term-conf-btn"><i class="icn-help"></i><span><?= tr('term_nav.help') ?></span></a><!--
@@ -66,28 +72,18 @@
 <script>
 	try {
 		window.noAutoShow = true;
-		termInit(); // the screen will be loaded via ajax
-		Screen.load('%j:labels_seq%');
-
-		// auto-clear the input box
-		$('#softkb-input').on('input', function(e) {
-			setTimeout(function(){
-				var str = $('#softkb-input').val();
-				$('#softkb-input').val('');
-				Input.sendString(str);
-			}, 1);
-		});
+		termInit({
+		  labels: '%j:labels_seq%',
+		  theme: +'%theme%',
+		  allFn: !!+'%want_all_fn%',
+        });
 	} catch(e) {
 		console.error(e);
+		<?php if (!DEBUG): ?>
 		console.error("Fail, reloading in 3s…");
 		setTimeout(function() {
 			location.reload(true);
 		}, 3000);
-	}
-
-	function kbOpen(yes) {
-		var i = qs('#softkb-input');
-		if (yes) i.focus();
-		else i.blur();
+		<?php endif; ?>
 	}
 </script>
