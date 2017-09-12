@@ -18,7 +18,7 @@ else
 	smarg=--source-maps
 fi
 
-npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" ${smarg} js/lib \
+npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" ${smarg} \
     js/lib/chibi.js \
     js/lib/keymaster.js \
     js/lib/polyfills.js \
