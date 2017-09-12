@@ -1,16 +1,18 @@
 
-<div class="Box fold theme-0">
+<div class="Box fold theme-1">
 	<h2>Commands: Color SGR</h2>
 
 	<div class="Row v">
 		<p>
-			Colors are set using SGR commands (like `\e[10;20;30m`). The following tables list the SGR codes to use.
-			Selected colors are used for any new text entered, as well as for empty space when using line and screen clearing commands.
-			The configured default colors can be restored using SGR 39 for foreground and SGR 49 for background.
+			Colors are set using SGR commands (like `\e[30;47m`). The following tables list the SGR
+			codes to use. Selected colors are used for any new text entered, as well as for empty
+			space when using clearing commands (except screen reset `\ec`, which first clears all
+			style attriutes. The configured default colors can be restored using `SGR 39` for
+			foreground and `SGR 49` for background.
 		</p>
 
 		<p>
-			The actual color representation depends on a color theme which
+			The actual color representation of the basic 16 colors depends on a color theme which
 			can be selected in <a href="<?= url('cfg_term') ?>">Terminal Settings</a>.
 		</p>
 
@@ -61,5 +63,19 @@
 			<span class="bg14 fg0">106</span>
 			<span class="bg15 fg0">107</span>
 		</div>
+
+		<h3>256-color palette</h3>
+
+		<p>
+			ESPTerm supports in total 256 standard colors. The dark and bright basic colors are
+			numbered 0-7 and 8-15. To use colors higher than 15 (or 0-15 using this simpler numbering),
+			send `CSI 38 ; 5 ; <i>n</i> m`, where `n` is the color to set. Use 48 for background colors.
+		</p>
+
+		<p>
+			For a fererence of all 256 shades please refer to
+			<a href="https://jonasjacek.github.io/colors/">jonasjacek.github.io/colors</a>
+			or look it up elsewhere.
+		</p>
 	</div>
 </div>

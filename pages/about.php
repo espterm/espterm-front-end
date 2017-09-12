@@ -2,7 +2,7 @@
 	<img src="/img/cvut.svg" id="logo" class="mq-tablet-min">
 	<h2>ESP8266 Remote Terminal</h2>
 
-	<img src="/img/cvut.svg" id="logo2" class="mq-phone">
+	<img src="/img/cvut.svg" id="logo2" class="mq-phone" noprint>
 
 	<p>
 		&copy; Ondřej Hruška, 2016-2017

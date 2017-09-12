@@ -1,5 +1,10 @@
 <div class="Box">
-	<a href="#" onclick="hpfold(1);return false">Expand all</a>&nbsp;|&nbsp;<a href="#" onclick="hpfold(0);return false">Collapse all</a>
+	<div noprint><a href="#" onclick="hpfold(1);return false">Expand all</a>&nbsp;|&nbsp;<a href="#" onclick="hpfold(0);return false">Collapse all</a><br>
+	<span class="smallpad"></span>
+	</div>
+	<i>Note: This list of commands is not exhaustive. \\
+	There's a more detailed and technical
+	<a href="https://espterm.github.io/docs/espterm-xterm.html">document</a> available online.</i>
 </div>
 
 <?php require __DIR__ . "/help/troubleshooting.php"; ?>
