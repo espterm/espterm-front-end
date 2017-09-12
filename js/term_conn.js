@@ -67,7 +67,7 @@ window.Conn = function (screen) {
 
   function doSend (message) {
     if (_demo) {
-      console.log('TX: ', message)
+      window.demoInterface.input(message)
       return true // Simulate success
     }
     if (xoff) {
@@ -91,7 +91,7 @@ window.Conn = function (screen) {
   function init () {
     if (window._demo) {
       console.log('Demo mode!')
-      screen.load(_demo_screen)
+      demoInterface.init(screen)
       showPage()
       return
     }

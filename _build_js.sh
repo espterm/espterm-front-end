@@ -14,6 +14,7 @@ npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" --source-maps js/lib \
     js/modal.js \
     js/notif.js \
     js/appcommon.js \
+    js/demo.js \
     js/lang.js \
     js/wifi.js \
     js/term_* \
