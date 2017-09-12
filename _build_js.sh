@@ -5,8 +5,20 @@ mkdir -p out/js
 echo 'Generating lang.js...'
 php ./dump_js_lang.php
 
+if [[ $ESP_DEMO ]]; then
+	demofile=js/demo.js
+else
+	demofile=
+fi
+
 echo 'Processing JS...'
-npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" --source-maps js/lib \
+if [[ $ESP_PROD ]]; then
+	smarg=
+else
+	smarg=--source-maps
+fi
+
+npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" ${smarg} js/lib \
     js/lib/chibi.js \
     js/lib/keymaster.js \
     js/lib/polyfills.js \
@@ -14,7 +26,7 @@ npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" --source-maps js/lib \
     js/modal.js \
     js/notif.js \
     js/appcommon.js \
-    js/demo.js \
+    $demofile \
     js/lang.js \
     js/wifi.js \
     js/term_* \

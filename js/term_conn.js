@@ -67,7 +67,11 @@ window.Conn = function (screen) {
 
   function doSend (message) {
     if (_demo) {
-      window.demoInterface.input(message)
+      if (typeof demoInterface !== 'undefined') {
+        demoInterface.input(message)
+      } else {
+        console.log(`TX: ${JSON.stringify(message)}`)
+      }
       return true // Simulate success
     }
     if (xoff) {
@@ -90,9 +94,12 @@ window.Conn = function (screen) {
 
   function init () {
     if (window._demo) {
-      console.log('Demo mode!')
-      demoInterface.init(screen)
-      showPage()
+      if (typeof demoInterface === 'undefined') {
+        alert('Demoing non-demo demo!') // this will catch mistakes when deploying to the website
+      } else {
+        demoInterface.init(screen)
+        showPage()
+      }
       return
     }
 
