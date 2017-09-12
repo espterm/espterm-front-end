@@ -36,6 +36,13 @@
 			</tr>
 			<tr>
 				<td>
+					`\e[<i>n</i>b`</td>
+				<td>
+					Repeat last printed characters _n_ times (moving cursor and using the current style).
+				</td>
+			</tr>
+			<tr>
+				<td>
 					<code>
 						\e[<i>n</i>L \\
 						\e[<i>n</i>M

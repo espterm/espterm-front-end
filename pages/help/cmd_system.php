@@ -19,6 +19,10 @@
 				</td>
 			</tr>
 			<tr>
+				<td>`\e[8;<i>r</i>;<i>c</i>t`</td>
+				<td>Set screen size to _r_ rows and _c_ columns (this is a command borrowed from Xterm)</td>
+			</tr>
+			<tr>
 				<td>`\e[5n`</td>
 				<td>
 					Query device status, ESPTerm replies with `\e[0n` "device is OK".
@@ -34,29 +38,63 @@
 				</td>
 			</tr>
 			<tr>
+				<td>`\e[<i>n</i> q`</td>
+				<td>
+					Set cursor style: eg. `\e[3 q` (the space is part of the command!).
+					0~-~block~(blink), 1~-~default, 2~-~block~(steady), 3~-~underline~(blink),
+					4~-~underline~(steady), 5~-~I-bar~(blink), 6~-~I-bar~(steady). The default style (number 1)
+					can be configured in Terminal Settings
+				</td>
+			</tr>
+			<tr>
 				<td>`\e]0;<i>t</i>\a`</td>
 				<td>Set screen title to _t_ (this is a standard OSC command)</td>
 			</tr>
 			<tr>
 				<td>
 					<code>
-						\e]<i>80+n</i>;<i>t</i>\a
+						\e]<i>8x</i>;<i>t</i>\a
 					</code>
 				</td>
 				<td>
-					Set label for button _n_ = 1-5 (code 81-85) to _t_ - e.g.`\e]81;Yes\a`
+					Set label for button 1-5 (code 81-85) to _t_ - e.g.`\e]81;Yes\a`
 					sets the first button text to "Yes".
 				</td>
 			</tr>
 			<tr>
 				<td>
 					<code>
-						\e]<i>90+n</i>;<i>m</i>\a
+						\e]<i>9x</i>;<i>m</i>\a
 					</code>
 				</td>
 				<td>
-					Set message for button _n_ = 1-5 (code 91-95) to _m_ - e.g.`\e]94;iv\a`
-					sets the 3rd button to send string "iv" when pressed.
+					Set message for button 1-5 (code 91-95) to _m_ - e.g.`\e]94;*\a`
+					sets the 3rd button to send "*" when pressed. The message can be up to
+					10 bytes long.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
+						\e]9;<i>t</i>\a
+					</code>
+				</td>
+				<td>
+					Show a notification with text _t_. This will be either a desktop notification
+					or a pop-up balloon.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
+						\e[?<i>n</i>s \\
+						\e[?<i>n</i>r
+					</code>
+				</td>
+				<td>
+					Save (`s`) and restore (`r`) any option set using `CSI ? <i>n</i> h`.
+					This is used by some applications to back up the original state before
+					making changes.
 				</td>
 			</tr>
 			<tr>
@@ -67,7 +105,7 @@
 					</code>
 				</td>
 				<td>
-					Show (`h`) or hide (`l`) action buttons (the blue buttons under the screen).
+					Show (`h`) or hide (`l`) the action buttons (the blue buttons under the screen).
 				</td>
 			</tr>
 			<tr>
@@ -84,6 +122,33 @@
 			<tr>
 				<td>
 					<code>
+						\e[?2004h \\
+						\e[?2004l
+					</code>
+				</td>
+				<td>
+					Enable (`h`) or disable (`l`) Bracketed Paste mode.
+					This mode makes any text sent using the Upload Tool be preceded by `\e[200\~`
+					and terminated by `\e[201\~`. This is useful for distinguishing keyboard input
+					from uploads.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
+						\e[?1049h \\
+						\e[?1049l
+					</code>
+				</td>
+				<td>
+					Switch to (`h`) or from (`l`) an alternate screen.
+					ESPTerm can't implement this fully, so the original screen content is not saved,
+					but it will remember the cursor, screen size, terminal title, button labels and messages.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
 						\e[12h \\
 						\e[12l
 					</code>
@@ -92,10 +157,6 @@
 					Enable (`h`) or disable (`l`) Send-Receive Mode (SRM).
 					SRM is the opposite of Local Echo, meaning `\e[12h` disables and `\e[12l` enables Local Echo.
 				</td>
-			</tr>
-			<tr>
-				<td>`\e[8;<i>r</i>;<i>c</i>t`</td>
-				<td>Set screen size to _r_ rows and _c_ columns (this is a command borrowed from Xterm)</td>
 			</tr>
 			</tbody>
 		</table>
