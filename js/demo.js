@@ -37,14 +37,14 @@ class ANSIParser {
           return
         }
         let type = numbers[0]
-        if (type === 1) this.handler('set-attrs', 1) // bold
-        else if (type === 2) this.handler('set-attrs', 1 << 1) // faint
-        else if (type === 3) this.handler('set-attrs', 1 << 2) // italic
-        else if (type === 4) this.handler('set-attrs', 1 << 3) // underline
-        else if (type === 5 || type === 6) this.handler('set-attrs', 1 << 4) // blink
-        else if (type === 7) this.handler('set-attrs', -1) // invert
-        else if (type === 9) this.handler('set-attrs', 1 << 6) // strike
-        else if (type === 20) this.handler('set-attrs', 1 << 5) // fraktur
+        if (type === 1) this.handler('add-attrs', 1) // bold
+        else if (type === 2) this.handler('add-attrs', 1 << 1) // faint
+        else if (type === 3) this.handler('add-attrs', 1 << 2) // italic
+        else if (type === 4) this.handler('add-attrs', 1 << 3) // underline
+        else if (type === 5 || type === 6) this.handler('add-attrs', 1 << 4) // blink
+        else if (type === 7) this.handler('add-attrs', -1) // invert
+        else if (type === 9) this.handler('add-attrs', 1 << 6) // strike
+        else if (type === 20) this.handler('add-attrs', 1 << 5) // fraktur
         else if (type >= 30 && type <= 37) this.handler('set-color-fg', type % 10)
         else if (type >= 40 && type <= 47) this.handler('set-color-bg', type % 10)
         else if (type === 39) this.handler('set-color-fg', 7)
@@ -208,11 +208,11 @@ class ScrollingTerminal {
       this.cursor.style = Math.max(0, Math.min(6, args[0]))
     } else if (action === 'reset-style') {
       this.style = TERM_DEFAULT_STYLE
-    } else if (action === 'set-attrs') {
+    } else if (action === 'add-attrs') {
       if (args[0] === -1) {
         this.style = (this.style & 0xFF0000) | ((this.style >> 8) & 0xFF) | ((this.style & 0xFF) << 8)
       } else {
-        this.style = (this.style & 0x00FFFF) | (args[0] << 16)
+        this.style |= (args[0] << 16)
       }
     } else if (action === 'set-color-fg') {
       this.style = (this.style & 0xFFFF00) | args[0]
@@ -360,22 +360,139 @@ let demoshIndex = {
     }
   },
   'local-echo': class LocalEcho extends Process {
+    run (...args) {
+      if (!args.includes('--suppress-note')) {
+        this.emit('write', 'Note: not all terminal features are supported or bug-free in this demo\x1b[0m\r\n')
+      }
+    }
     write (data) {
       this.emit('write', data)
     }
-  }
+  },
+  'print-demo': class PrintDemo extends Process {
+    run () {
+      // lots of printing
+      this.emit('write', '\r\n')
+      this.emit('write', '┌ESPTerm─Demo──')
+      this.emit('write', '\x1b[31m31\x1b[32m32\x1b[33m33\x1b[34m34\x1b[35m35\x1b[36m36\x1b[37m37')
+      this.emit('write', '\x1b[90m90\x1b[91m91\x1b[92m92\x1b[93m93\x1b[94m94\x1b[95m95\x1b[96m96\x1b[97m97')
+      this.emit('write', '\x1b[0m─────────────┐\r\n')
+      this.emit('write', '│')
+      for (let i = 0; i < 57; i++) this.emit('write', ' ')
+      this.emit('write', '│')
+      this.emit('write', '    │││││││││\r\n')
+      this.emit('write', '│')
+      this.emit('write', '\x1b[1mBold \x1b[m\x1b[2mFaint \x1b[m\x1b[3mItalic \x1b[m\x1b[4mUnderline\x1b[0m \x1b[m\x1b[5mBlink')
+      this.emit('write', ' \x1b[m\x1b[7mInverse\x1b[m \x1b[9mStrike\x1b[m \x1b[20mFraktur \x1b[m')
+      this.emit('write', '│')
+      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
+      this.emit('write', '│')
+      for (let i = 0; i < 57; i++) this.emit('write', ' ')
+      this.emit('write', '│')
+      this.emit('write', '  ──\x1b[100;30m ESP8266 \x1b[m──\r\n')
+      this.emit('write', '└')
+      for (let i = 0; i < 57; i++) this.emit('write', '─')
+      this.emit('write', '┤')
+      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
+      for (let i = 0; i < 58; i++) this.emit('write', ' ')
+      this.emit('write', '│')
+      this.emit('write', '  ──\x1b[100;30m (@)#### \x1b[m──\r\n')
+      this.emit('write', ' \x1b[44;96m This is a demo of the ESPTerm Web Interface           \x1b[m  ')
+      this.emit('write', '│')
+      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
+      this.emit('write', ' \x1b[44;96m                                                       \x1b[m  ')
+      this.emit('write', '│')
+      this.emit('write', '    │││││││││\r\n')
+      this.emit('write', ' \x1b[44;96m Try the links beneath this screen to browse the menu. \x1b[m  ♦\r\n')
+      this.emit('write', ' \x1b[44;96m                                                       \x1b[m\r\n')
+      this.emit('write', ' \x1b[44;96m <°)))>< ESPTerm fully supports UTF-8 お は よ ー  ><(((°> \x1b[m\r\n')
+      this.emit('write', ' \x1b[44;96m                                                       \x1b[m\r\n')
+      this.emit('write', '\r\n')
+      this.emit('write', ' \x1b[92mOther interesting features:\x1b[m                        ↓\r\n\n')
+      this.emit('write', '   \x1b[32m- Almost full VT100 emulation  \x1b[35m() ()')
+      this.emit('write', '\x1b[0m        Funguje tu čeština!\r\n')
+      this.emit('write', '   \x1b[34m- Xterm-like mouse tracking   \x1b[37m==\x1b[100m°.°\x1b[40m==')
+      this.emit('write', ' \x1b[35m<---,\r\n')
+      this.emit('write', "   \x1b[33m- File upload utility          \x1b[0m'' ''      \x1b[35mmouse\r\n")
+      this.emit('write', '   \x1b[31m- User-friendly config interface\r\n')
+      this.emit('write', '   \x1b[95m- Advanced WiFi & network settings')
+      for (let i = 0; i < 17; i++) this.emit('write', ' ')
+      this.emit('write', '\x1b[93mTry ESPTerm today!\r\n')
+      this.emit('write', '   \x1b[37m- Built-in help page')
+      for (let i = 0; i < 26; i++) this.emit('write', ' ')
+      this.emit('write', '\x1b[36m-->  \x1b[93mPre-built binaries are\r\n')
+      for (let i = 0; i < 30; i++) this.emit('write', ' ')
+      this.emit('write', '\x1b[36mlink on the About page  \x1b[93mavailable on GitHub!\r\n')
+      this.destroy()
+    }
+  },
+  colors: class PrintColors extends Process {
+    run () {
+      this.emit('write', '\r\n')
+      let fgtext = 'foreground-color'
+      this.emit('write', '    ')
+      for (let i = 0; i < 16; i++) {
+        this.emit('write', '\x1b[' + (i < 8 ? `3${i}` : `9${i - 8}`) + 'm')
+        this.emit('write', fgtext[i] + ' ')
+      }
+      this.emit('write', '\r\n    ')
+      for (let i = 0; i < 16; i++) {
+        this.emit('write', '\x1b[' + (i < 8 ? `4${i}` : `10${i - 8}`) + 'm  ')
+      }
+      this.emit('write', '\x1b[m\r\n')
+      for (let r = 0; r < 6; r++) {
+        this.emit('write', '    ')
+        for (let g = 0; g < 6; g++) {
+          for (let b = 0; b < 6; b++) {
+            this.emit('write', `\x1b[48;5;${16 + r * 36 + g * 6 + b}m  `)
+          }
+          this.emit('write', '\x1b[m')
+        }
+        this.emit('write', '\r\n')
+      }
+      this.emit('write', '    ')
+      for (let g = 0; g < 24; g++) {
+        this.emit('write', `\x1b[48;5;${232 + g}m  `)
+      }
+      this.emit('write', '\x1b[m\r\n\n')
+      this.destroy()
+    }
+  },
+  ls: class ListCommands extends Process {
+    run () {
+      this.emit('write', '\x1b[92mList of demo commands\x1b[m\r\n')
+      for (let i in demoshIndex) {
+        if (typeof demoshIndex[i] === 'string') continue
+        this.emit('write', i + '\r\n')
+      }
+      this.destroy()
+    }
+  },
+  pwd: '/this/is/a/demo\r\n',
+  cd: '\x1b[38;5;239mNo directories to change to\r\n',
+  whoami: `${window.navigator.userAgent}\r\n`,
+  hostname: `${window.location.hostname}`,
+  uname: 'ESPTerm Demo\r\n',
+  mkdir: '\x1b[38;5;239mDid not create a directory because this is a demo.\r\n',
+  rm: '\x1b[38;5;239mDid not delete anything because this is a demo.\r\n',
+  cp: '\x1b[38;5;239mNothing to copy because this is a demo.\r\n',
+  mv: '\x1b[38;5;239mNothing to move because this is a demo.\r\n',
+  ln: '\x1b[38;5;239mNothing to link because this is a demo.\r\n',
+  touch: '\x1b[38;5;239mNothing to touch\r\n'
 }
 
 class DemoShell {
-  constructor (terminal) {
+  constructor (terminal, printDemo) {
     this.terminal = terminal
     this.terminal.reset()
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
-    this.prompt()
     this.input = ''
     this.cursorPos = 0
     this.child = null
     this.index = demoshIndex
+
+    if (printDemo) this.run('print-demo')
+    else this.prompt()
   }
   write (text) {
     if (this.child) {
@@ -384,7 +501,7 @@ class DemoShell {
     } else this.parser.write(text)
   }
   prompt (success = true) {
-    if (this.terminal.cursor.x !== 0) this.terminal.write('\x1b[38;5;238m⏎\r\n')
+    if (this.terminal.cursor.x !== 0) this.terminal.write('\x1b[m\x1b[38;5;238m⏎\r\n')
     this.terminal.write('\x1b[34;1mdemosh \x1b[m')
     if (!success) this.terminal.write('\x1b[31m')
     this.terminal.write('$ \x1b[m')
@@ -452,15 +569,20 @@ class DemoShell {
   }
   spawn (name, args = []) {
     let Process = this.index[name]
-    this.child = new Process(...args)
-    let write = data => this.terminal.write(data)
-    this.child.on('write', write)
-    this.child.on('exit', code => {
-      this.child.off('write', write)
-      this.child = null
-      this.prompt(!code)
-    })
-    this.child.run(...args)
+    if (Process instanceof Function) {
+      this.child = new Process(...args)
+      let write = data => this.terminal.write(data)
+      this.child.on('write', write)
+      this.child.on('exit', code => {
+        this.child.off('write', write)
+        this.child = null
+        this.prompt(!code)
+      })
+      this.child.run(...args)
+    } else {
+      this.terminal.write(Process)
+      this.prompt()
+    }
   }
 }
 
@@ -480,6 +602,6 @@ window.demoInterface = {
   },
   init (screen) {
     this.terminal = new ScrollingTerminal(screen)
-    this.shell = new DemoShell(this.terminal)
+    this.shell = new DemoShell(this.terminal, true)
   }
 }
