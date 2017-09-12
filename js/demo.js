@@ -321,6 +321,25 @@ class Process {
   }
 }
 
+let demoData = {
+  buttons: {
+    1: '',
+    2: '',
+    3: '',
+    4: '',
+    5: function (terminal, shell) {
+      if (shell.child) shell.child.destroy()
+      let chars = 'info\r'
+      let loop = function () {
+        shell.write(chars[0])
+        chars = chars.substr(1)
+        if (chars) setTimeout(loop, 100)
+      }
+      setTimeout(loop, 200)
+    }
+  }
+}
+
 let demoshIndex = {
   clear: class Clear extends Process {
     run () {
@@ -369,61 +388,80 @@ let demoshIndex = {
       this.emit('write', data)
     }
   },
-  'print-demo': class PrintDemo extends Process {
-    run () {
+  'info': class Info extends Process {
+    run (...args) {
       // lots of printing
-      this.emit('write', '\r\n')
-      this.emit('write', '┌ESPTerm─Demo──')
-      this.emit('write', '\x1b[31m31\x1b[32m32\x1b[33m33\x1b[34m34\x1b[35m35\x1b[36m36\x1b[37m37')
-      this.emit('write', '\x1b[90m90\x1b[91m91\x1b[92m92\x1b[93m93\x1b[94m94\x1b[95m95\x1b[96m96\x1b[97m97')
-      this.emit('write', '\x1b[0m─────────────┐\r\n')
-      this.emit('write', '│')
-      for (let i = 0; i < 57; i++) this.emit('write', ' ')
-      this.emit('write', '│')
-      this.emit('write', '    │││││││││\r\n')
-      this.emit('write', '│')
-      this.emit('write', '\x1b[1mBold \x1b[m\x1b[2mFaint \x1b[m\x1b[3mItalic \x1b[m\x1b[4mUnderline\x1b[0m \x1b[m\x1b[5mBlink')
-      this.emit('write', ' \x1b[m\x1b[7mInverse\x1b[m \x1b[9mStrike\x1b[m \x1b[20mFraktur \x1b[m')
-      this.emit('write', '│')
-      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
-      this.emit('write', '│')
-      for (let i = 0; i < 57; i++) this.emit('write', ' ')
-      this.emit('write', '│')
-      this.emit('write', '  ──\x1b[100;30m ESP8266 \x1b[m──\r\n')
-      this.emit('write', '└')
-      for (let i = 0; i < 57; i++) this.emit('write', '─')
-      this.emit('write', '┤')
-      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
-      for (let i = 0; i < 58; i++) this.emit('write', ' ')
-      this.emit('write', '│')
-      this.emit('write', '  ──\x1b[100;30m (@)#### \x1b[m──\r\n')
-      this.emit('write', ' \x1b[44;96m This is a demo of the ESPTerm Web Interface           \x1b[m  ')
-      this.emit('write', '│')
-      this.emit('write', '  ──\x1b[100m         \x1b[m──\r\n')
-      this.emit('write', ' \x1b[44;96m                                                       \x1b[m  ')
-      this.emit('write', '│')
-      this.emit('write', '    │││││││││\r\n')
-      this.emit('write', ' \x1b[44;96m Try the links beneath this screen to browse the menu. \x1b[m  ♦\r\n')
-      this.emit('write', ' \x1b[44;96m                                                       \x1b[m\r\n')
-      this.emit('write', ' \x1b[44;96m <°)))>< ESPTerm fully supports UTF-8 お は よ ー  ><(((°> \x1b[m\r\n')
-      this.emit('write', ' \x1b[44;96m                                                       \x1b[m\r\n')
-      this.emit('write', '\r\n')
-      this.emit('write', ' \x1b[92mOther interesting features:\x1b[m                        ↓\r\n\n')
-      this.emit('write', '   \x1b[32m- Almost full VT100 emulation  \x1b[35m() ()')
-      this.emit('write', '\x1b[0m        Funguje tu čeština!\r\n')
-      this.emit('write', '   \x1b[34m- Xterm-like mouse tracking   \x1b[37m==\x1b[100m°.°\x1b[40m==')
-      this.emit('write', ' \x1b[35m<---,\r\n')
-      this.emit('write', "   \x1b[33m- File upload utility          \x1b[0m'' ''      \x1b[35mmouse\r\n")
-      this.emit('write', '   \x1b[31m- User-friendly config interface\r\n')
-      this.emit('write', '   \x1b[95m- Advanced WiFi & network settings')
-      for (let i = 0; i < 17; i++) this.emit('write', ' ')
-      this.emit('write', '\x1b[93mTry ESPTerm today!\r\n')
-      this.emit('write', '   \x1b[37m- Built-in help page')
-      for (let i = 0; i < 26; i++) this.emit('write', ' ')
-      this.emit('write', '\x1b[36m-->  \x1b[93mPre-built binaries are\r\n')
-      for (let i = 0; i < 30; i++) this.emit('write', ' ')
-      this.emit('write', '\x1b[36mlink on the About page  \x1b[93mavailable on GitHub!\r\n')
-      this.destroy()
+      let parts = []
+      parts.push('\r\n')
+      parts.push('┌ESPTerm─Demo──')
+      parts.push('\x1b[31m31\x1b[32m32\x1b[33m33\x1b[34m34\x1b[35m35\x1b[36m36\x1b[37m37')
+      parts.push('\x1b[90m90\x1b[91m91\x1b[92m92\x1b[93m93\x1b[94m94\x1b[95m95\x1b[96m96\x1b[97m97')
+      parts.push('\x1b[0m─────────────┐\r\n')
+      parts.push('│')
+      for (let i = 0; i < 57; i++) parts.push(' ')
+      parts.push('│')
+      parts.push('    │││││││││\r\n')
+      parts.push('│')
+      parts.push('\x1b[1mBold \x1b[m\x1b[2mFaint \x1b[m\x1b[3mItalic \x1b[m\x1b[4mUnderline\x1b[0m \x1b[m\x1b[5mBlink')
+      parts.push(' \x1b[m\x1b[7mInverse\x1b[m \x1b[9mStrike\x1b[m \x1b[20mFraktur \x1b[m')
+      parts.push('│')
+      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
+      parts.push('│')
+      for (let i = 0; i < 57; i++) parts.push(' ')
+      parts.push('│')
+      parts.push('  ──\x1b[100;30m ESP8266 \x1b[m──\r\n')
+      parts.push('└')
+      for (let i = 0; i < 57; i++) parts.push('─')
+      parts.push('┤')
+      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
+      for (let i = 0; i < 58; i++) parts.push(' ')
+      parts.push('│')
+      parts.push('  ──\x1b[100;30m (@)#### \x1b[m──\r\n')
+      parts.push(' \x1b[44;96m This is a demo of the ESPTerm Web Interface           \x1b[m  ')
+      parts.push('│')
+      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
+      parts.push(' \x1b[44;96m                                                       \x1b[m  ')
+      parts.push('│')
+      parts.push('    │││││││││\r\n')
+      parts.push(' \x1b[44;96m Try the links beneath this screen to browse the menu. \x1b[m  ♦\r\n')
+      parts.push(' \x1b[44;96m                                                       \x1b[m\r\n')
+      parts.push(' \x1b[44;96m <°)))>< ESPTerm fully supports UTF-8 お は よ ー  ><(((°> \x1b[m\r\n')
+      parts.push(' \x1b[44;96m                                                       \x1b[m\r\n')
+      parts.push('\r\n')
+      parts.push(' \x1b[92mOther interesting features:\x1b[m                        ↓\r\n\n')
+      parts.push('   \x1b[32m- Almost full VT100 emulation  \x1b[35m() ()')
+      parts.push('\x1b[0m        Funguje tu čeština!\r\n')
+      parts.push('   \x1b[34m- Xterm-like mouse tracking   \x1b[37m==\x1b[100m°.°\x1b[40m==')
+      parts.push(' \x1b[35m<---,\r\n')
+      parts.push("   \x1b[33m- File upload utility          \x1b[0m'' ''      \x1b[35mmouse\r\n")
+      parts.push('   \x1b[31m- User-friendly config interface\r\n')
+      parts.push('   \x1b[95m- Advanced WiFi & network settings')
+      for (let i = 0; i < 17; i++) parts.push(' ')
+      parts.push('\x1b[93mTry ESPTerm today!\r\n')
+      parts.push('   \x1b[37m- Built-in help page')
+      for (let i = 0; i < 26; i++) parts.push(' ')
+      parts.push('\x1b[36m-->  \x1b[93mPre-built binaries are\r\n')
+      for (let i = 0; i < 30; i++) parts.push(' ')
+      parts.push('\x1b[36mlink on the About page  \x1b[93mavailable on GitHub!\r\n')
+
+      let chars = parts.join('')
+      if (args.includes('--fast')) {
+        this.emit('write', chars)
+        this.destroy()
+      } else {
+        const self = this
+        let loop = function () {
+          while (true) {
+            let character = chars[0]
+            chars = chars.substr(1)
+            self.emit('write', character)
+            if (character === '\n') break
+          }
+          if (chars) setTimeout(loop, 17)
+          else self.destroy()
+        }
+        loop()
+      }
     }
   },
   colors: class PrintColors extends Process {
@@ -482,7 +520,7 @@ let demoshIndex = {
 }
 
 class DemoShell {
-  constructor (terminal, printDemo) {
+  constructor (terminal, printInfo) {
     this.terminal = terminal
     this.terminal.reset()
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
@@ -491,7 +529,7 @@ class DemoShell {
     this.child = null
     this.index = demoshIndex
 
-    if (printDemo) this.run('print-demo')
+    if (printInfo) this.run('info --fast')
     else this.prompt()
   }
   write (text) {
@@ -574,7 +612,7 @@ class DemoShell {
       let write = data => this.terminal.write(data)
       this.child.on('write', write)
       this.child.on('exit', code => {
-        this.child.off('write', write)
+        if (this.child) this.child.off('write', write)
         this.child = null
         this.prompt(!code)
       })
@@ -595,7 +633,11 @@ window.demoInterface = {
       this.shell.write(content)
     } else if (type === 'b') {
       let button = content.charCodeAt(0)
-      console.log(`button ${button} pressed`)
+      let action = demoData.buttons[button]
+      if (action) {
+        if (typeof action === 'string') this.shell.write(action)
+        else if (action instanceof Function) action(this.terminal, this.shell)
+      }
     } else if (type === 'm' || type === 'p' || type === 'r') {
       console.log(JSON.stringify(data))
     }
