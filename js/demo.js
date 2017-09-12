@@ -96,6 +96,13 @@ class ANSIParser {
 const TERM_DEFAULT_STYLE = 7
 const TERM_MIN_DRAW_DELAY = 10
 
+let getRainbowColor = t => {
+  let r = Math.floor(Math.sin(t) * 2.5 + 2.5)
+  let g = Math.floor(Math.sin(t + 2 / 3 * Math.PI) * 2.5 + 2.5)
+  let b = Math.floor(Math.sin(t + 4 / 3 * Math.PI) * 2.5 + 2.5)
+  return 16 + 36 * r + 6 * g + b
+}
+
 class ScrollingTerminal {
   constructor (screen) {
     this.width = 80
@@ -113,6 +120,7 @@ class ScrollingTerminal {
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
     this.theme = 0
+    this.rainbow = false
     this.parser.reset()
     this.clear()
   }
@@ -246,28 +254,36 @@ class ScrollingTerminal {
     serialized += encode3B(attributes)
 
     let lastStyle = null
+    let index = 0
     for (let cell of this.screen) {
-      if (cell[1] !== lastStyle) {
-        let foreground = cell[1] & 0xFF
-        let background = (cell[1] >> 8) & 0xFF
-        let attributes = (cell[1] >> 16) & 0xFF
+      let style = cell[1]
+      if (this.rainbow) {
+        let x = index % this.width
+        let y = Math.floor(index / this.width)
+        style = (style & 0xFF0000) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        index++
+      }
+      if (style !== lastStyle) {
+        let foreground = style & 0xFF
+        let background = (style >> 8) & 0xFF
+        let attributes = (style >> 16) & 0xFF
         let setForeground = foreground !== (lastStyle & 0xFF)
         let setBackground = background !== ((lastStyle >> 8) & 0xFF)
         let setAttributes = attributes !== ((lastStyle >> 16) & 0xFF)
 
-        if (setForeground && setBackground) serialized += '\x03' + encode3B(cell[1] & 0xFFFF)
+        if (setForeground && setBackground) serialized += '\x03' + encode3B(style & 0xFFFF)
         else if (setForeground) serialized += '\x05' + encode2B(foreground)
         else if (setBackground) serialized += '\x06' + encode2B(background)
         if (setAttributes) serialized += '\x04' + encode2B(attributes)
 
-        lastStyle = cell[1]
+        lastStyle = style
       }
       serialized += cell[0]
     }
     return serialized
   }
   scheduleLoad () {
-    clearInterval(this._scheduledLoad)
+    clearTimeout(this._scheduledLoad)
     if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
       this.termScreen.load(this.serialize(), this.theme)
     } else {
@@ -275,6 +291,13 @@ class ScrollingTerminal {
         this.termScreen.load(this.serialize())
       }, TERM_MIN_DRAW_DELAY - this._lastLoad)
     }
+  }
+  rainbowTimer () {
+    if (!this.rainbow) return
+    clearInterval(this._rainbowTimer)
+    this._rainbowTimer = setInterval(() => {
+      if (this.rainbow) this.scheduleLoad()
+    }, 50)
   }
 }
 
@@ -359,31 +382,36 @@ let demoshIndex = {
   },
   screenfetch: class Screenfetch extends Process {
     run () {
-      let lines = [
-        '\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m+\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208mO\x1b[0m\x1b[38;5;203mS\x1b[0m\x1b[38;5;203m:\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mA\x1b[0m\x1b[38;5;198mr\x1b[0m\x1b[38;5;198mc\x1b[0m\x1b[38;5;198mh\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199mL\x1b[0m\x1b[38;5;199mi\x1b[0m\x1b[38;5;163mn\x1b[0m\x1b[38;5;164mu\x1b[0m\x1b[38;5;164mx\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128mx\x1b[0m\x1b[38;5;129m8\x1b[0m\x1b[38;5;129m6\x1b[0m\x1b[38;5;129m_\x1b[0m\x1b[38;5;93m6\x1b[0m\x1b[38;5;93m4\x1b[0m',
-        '\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m#\x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mH\x1b[0m\x1b[38;5;203mo\x1b[0m\x1b[38;5;198ms\x1b[0m\x1b[38;5;198mt\x1b[0m\x1b[38;5;198mn\x1b[0m\x1b[38;5;199ma\x1b[0m\x1b[38;5;199mm\x1b[0m\x1b[38;5;199me\x1b[0m\x1b[38;5;163m:\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164mN\x1b[0m\x1b[38;5;164m2\x1b[0m\x1b[38;5;128m0\x1b[0m\x1b[38;5;129m2\x1b[0m',
-        '\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198mK\x1b[0m\x1b[38;5;198me\x1b[0m\x1b[38;5;199mr\x1b[0m\x1b[38;5;199mn\x1b[0m\x1b[38;5;199me\x1b[0m\x1b[38;5;163ml\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164mR\x1b[0m\x1b[38;5;164me\x1b[0m\x1b[38;5;128ml\x1b[0m\x1b[38;5;129me\x1b[0m\x1b[38;5;129ma\x1b[0m\x1b[38;5;129ms\x1b[0m\x1b[38;5;93me\x1b[0m\x1b[38;5;93m:\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m4\x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;63m9\x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;33m4\x1b[0m\x1b[38;5;33m7\x1b[0m\x1b[38;5;33m-\x1b[0m\x1b[38;5;39m1\x1b[0m\x1b[38;5;39m-\x1b[0m\x1b[38;5;39ml\x1b[0m\x1b[38;5;38mt\x1b[0m\x1b[38;5;44ms\x1b[0m',
-        '\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199mU\x1b[0m\x1b[38;5;199mp\x1b[0m\x1b[38;5;163mt\x1b[0m\x1b[38;5;164mi\x1b[0m\x1b[38;5;164mm\x1b[0m\x1b[38;5;164me\x1b[0m\x1b[38;5;128m:\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m1\x1b[0m\x1b[38;5;129m9\x1b[0m\x1b[38;5;93m:\x1b[0m\x1b[38;5;93m2\x1b[0m\x1b[38;5;93m6\x1b[0m',
-        '\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;184m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164mW\x1b[0m\x1b[38;5;164mM\x1b[0m\x1b[38;5;164m:\x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129mK\x1b[0m\x1b[38;5;129mW\x1b[0m\x1b[38;5;129mi\x1b[0m\x1b[38;5;93mn\x1b[0m',
-        '\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m;\x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m;\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128mD\x1b[0m\x1b[38;5;129mE\x1b[0m\x1b[38;5;129m:\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93mK\x1b[0m\x1b[38;5;93mD\x1b[0m\x1b[38;5;93mE\x1b[0m',
-        '\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m+\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;208m.\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129mP\x1b[0m\x1b[38;5;93ma\x1b[0m\x1b[38;5;93mc\x1b[0m\x1b[38;5;93mk\x1b[0m\x1b[38;5;63ma\x1b[0m\x1b[38;5;63mg\x1b[0m\x1b[38;5;63me\x1b[0m\x1b[38;5;63ms\x1b[0m\x1b[38;5;33m:\x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m1\x1b[0m\x1b[38;5;39m8\x1b[0m\x1b[38;5;39m2\x1b[0m\x1b[38;5;39m1\x1b[0m',
-        '\x1b[38;5;154m \x1b[0m\x1b[38;5;154m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m+\x1b[0m\x1b[38;5;208m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93mR\x1b[0m\x1b[38;5;63mA\x1b[0m\x1b[38;5;63mM\x1b[0m\x1b[38;5;63m:\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m9\x1b[0m\x1b[38;5;33m2\x1b[0m\x1b[38;5;33m5\x1b[0m\x1b[38;5;39m6\x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39mM\x1b[0m\x1b[38;5;38mB\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m/\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m1\x1b[0m\x1b[38;5;49m5\x1b[0m\x1b[38;5;49m9\x1b[0m\x1b[38;5;49m9\x1b[0m\x1b[38;5;48m9\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48mM\x1b[0m\x1b[38;5;83mB\x1b[0m',
-        '\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;184m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m;\x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63mP\x1b[0m\x1b[38;5;63mr\x1b[0m\x1b[38;5;33mo\x1b[0m\x1b[38;5;33mc\x1b[0m\x1b[38;5;33me\x1b[0m\x1b[38;5;39ms\x1b[0m\x1b[38;5;39ms\x1b[0m\x1b[38;5;39mo\x1b[0m\x1b[38;5;38mr\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44mT\x1b[0m\x1b[38;5;44my\x1b[0m\x1b[38;5;43mp\x1b[0m\x1b[38;5;49me\x1b[0m\x1b[38;5;49m:\x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48mI\x1b[0m\x1b[38;5;48mn\x1b[0m\x1b[38;5;48mt\x1b[0m\x1b[38;5;83me\x1b[0m\x1b[38;5;83ml\x1b[0m\x1b[38;5;83m(\x1b[0m\x1b[38;5;83mR\x1b[0m\x1b[38;5;118m)\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118mC\x1b[0m\x1b[38;5;154mo\x1b[0m\x1b[38;5;154mr\x1b[0m\x1b[38;5;154me\x1b[0m\x1b[38;5;148m(\x1b[0m\x1b[38;5;184mT\x1b[0m\x1b[38;5;184mM\x1b[0m\x1b[38;5;184m)\x1b[0m\x1b[38;5;178m \x1b[0m\x1b[38;5;214mi\x1b[0m\x1b[38;5;214m5\x1b[0m\x1b[38;5;214m-\x1b[0m\x1b[38;5;208m6\x1b[0m\x1b[38;5;208m4\x1b[0m\x1b[38;5;208m0\x1b[0m\x1b[38;5;203m0\x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203mC\x1b[0m\x1b[38;5;203mP\x1b[0m\x1b[38;5;198mU\x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m@\x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m2\x1b[0m\x1b[38;5;199m.\x1b[0m\x1b[38;5;163m8\x1b[0m\x1b[38;5;164m0\x1b[0m\x1b[38;5;164mG\x1b[0m\x1b[38;5;164mH\x1b[0m\x1b[38;5;128mz\x1b[0m',
-        '\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;214m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;203m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m+\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m$\x1b[0m\x1b[38;5;33mE\x1b[0m\x1b[38;5;39mD\x1b[0m\x1b[38;5;39mI\x1b[0m\x1b[38;5;39mT\x1b[0m\x1b[38;5;38mO\x1b[0m\x1b[38;5;44mR\x1b[0m\x1b[38;5;44m:\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43mv\x1b[0m\x1b[38;5;49mi\x1b[0m\x1b[38;5;49mm\x1b[0m',
-        '\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;208m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39mR\x1b[0m\x1b[38;5;39mo\x1b[0m\x1b[38;5;38mo\x1b[0m\x1b[38;5;44mt\x1b[0m\x1b[38;5;44m:\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m1\x1b[0m\x1b[38;5;49m6\x1b[0m\x1b[38;5;49m0\x1b[0m\x1b[38;5;49mG\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m/\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m1\x1b[0m\x1b[38;5;83m9\x1b[0m\x1b[38;5;83m6\x1b[0m\x1b[38;5;83mG\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;118m(\x1b[0m\x1b[38;5;118m8\x1b[0m\x1b[38;5;154m1\x1b[0m\x1b[38;5;154m%\x1b[0m\x1b[38;5;154m)\x1b[0m\x1b[38;5;148m \x1b[0m\x1b[38;5;184m(\x1b[0m\x1b[38;5;184me\x1b[0m\x1b[38;5;184mx\x1b[0m\x1b[38;5;178mt\x1b[0m\x1b[38;5;214m4\x1b[0m\x1b[38;5;214m)\x1b[0m',
-        '\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m.\x1b[0m\x1b[38;5;198m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m;\x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m;\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m;\x1b[0m\x1b[38;5;63m`\x1b[0m\x1b[38;5;63m"\x1b[0m\x1b[38;5;33m.\x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m',
-        '\x1b[38;5;203m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;198m \x1b[0m\x1b[38;5;199m.\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;199m#\x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m;\x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m;\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m.\x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m',
-        '\x1b[38;5;198m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;199m \x1b[0m\x1b[38;5;163m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m.\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m.\x1b[0m\x1b[38;5;63m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;33m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;39m#\x1b[0m\x1b[38;5;38m#\x1b[0m\x1b[38;5;44m`\x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m',
-        '\x1b[38;5;199m \x1b[0m\x1b[38;5;163m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;164m#\x1b[0m\x1b[38;5;128m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m\'\x1b[0m\x1b[38;5;38m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;44m#\x1b[0m\x1b[38;5;43m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m',
-        '\x1b[38;5;164m \x1b[0m\x1b[38;5;164m \x1b[0m\x1b[38;5;128m;\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;49m#\x1b[0m\x1b[38;5;48m#\x1b[0m\x1b[38;5;48m;\x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m',
-        '\x1b[38;5;129m \x1b[0m\x1b[38;5;129m \x1b[0m\x1b[38;5;129m#\x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;93m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m\'\x1b[0m\x1b[38;5;83m#\x1b[0m\x1b[38;5;83m#\x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m \x1b[0m',
-        '\x1b[38;5;93m \x1b[0m\x1b[38;5;93m#\x1b[0m\x1b[38;5;93m\'\x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;63m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;33m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;39m \x1b[0m\x1b[38;5;38m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;44m \x1b[0m\x1b[38;5;43m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;49m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;48m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;83m \x1b[0m\x1b[38;5;118m`\x1b[0m\x1b[38;5;118m#\x1b[0m\x1b[38;5;118m \x1b[0m\x1b[38;5;154m \x1b[0m'
-      ]
+      let image = `
+ ###.                          ESPTerm Demo
+   '###.                       Hostname: ${window.location.hostname}
+     '###.                     Shell: ESPTerm Demo Shell
+       '###.                   Resolution: 80x25@${window.devicePixelRatio}x
+         :###-
+       .###'
+     .###'
+   .###'      ###############
+ ###'         ###############
+      `.split('\n').filter(line => line.trim())
 
+      let chars = ''
+      for (let y = 0; y < image.length; y++) {
+        for (let x = 0; x < 80; x++) {
+          if (image[y][x]) {
+            chars += `\x1b[38;5;${getRainbowColor((x + y) / 10)}m${image[y][x]}`
+          } else chars += ' '
+        }
+      }
+
+      this.emit('write', '\r\n\x1b[?25l')
       let loop = () => {
-        if (lines.length) setTimeout(loop, 50)
-        else this.destroy()
-        this.emit('write', lines.shift() + '\r\n')
+        this.emit('write', chars.substr(0, 80))
+        chars = chars.substr(80)
+        if (chars.length) setTimeout(loop, 50)
+        else {
+          this.emit('write', '\r\n\x1b[?25h')
+          this.destroy()
+        }
       }
       loop()
     }
@@ -410,8 +438,8 @@ let demoshIndex = {
               -#####- -###*..#####- ######-
               -#*    -#-    .## .##.  *#-
               -##### .-###*..#####-   *#-  -*##*- #*-#--#**#-*##-
-              -#*        -#-.##.      *#-  *##-#* ##.  -#* *# .#*
-              -#####--####- .##.      *#-  -*###- ##.  -#* *# .#*
+              -#*        -#-.##.      *#-  *##@#* ##.  -#* *# .#*
+              -#####--####- .##.      *#-  -*#@@- ##.  -#* *# .#*
       `.split('\n').filter(line => line.trim())
       let levels = {
         ' ': -231,
@@ -439,7 +467,11 @@ let demoshIndex = {
       }
       let drawCell = (x, y) => {
         moveTo(x, y)
-        this.emit('write', `\x1b[48;5;${231 + levels[splash[y][x]]}m \b`)
+        if (splash[y][x] === '@') {
+          this.emit('write', '\x1b[48;5;8m\x1b[38;5;255m▄\b')
+        } else {
+          this.emit('write', `\x1b[48;5;${231 + levels[splash[y][x]]}m \b`)
+        }
       }
       return new Promise((resolve, reject) => {
         const self = this
@@ -471,7 +503,8 @@ let demoshIndex = {
         '',
         '  ESPTerm is a VT100-like terminal emulator running on the ESP8266 WiFi chip.',
         '',
-        '  \x1b[93mThis is an online demo of the web user interface.\x1b[m',
+        '  \x1b[93mThis is an online demo of the web user interface, simulating a simple ',
+        '  terminal in your browser.\x1b[m',
         '',
         '  Type \x1b[92mls\x1b[m to list available commands.',
         '  Use the \x1b[94mlinks\x1b[m below this screen for a demo of the options and more info.',
@@ -565,6 +598,18 @@ let demoshIndex = {
       } else {
         this.emit('write', '\x1b[31mUsage: cursor [block|line|bar] [--steady]\r\n')
       }
+      this.destroy()
+    }
+  },
+  rainbow: class ToggleRainbow extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
+    run () {
+      this.shell.terminal.rainbow = !this.shell.terminal.rainbow
+      this.shell.terminal.rainbowTimer()
+      this.emit('write', '')
       this.destroy()
     }
   },
