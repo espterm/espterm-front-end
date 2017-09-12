@@ -58,6 +58,11 @@ class ANSIParser {
             if (type === 48) this.handler('set-color-bg', color)
           }
         }
+      } else if (type === 'h' || type === 'l') {
+        if (content === '?25') {
+          if (type === 'h') this.handler('show-cursor')
+          else if (type === 'l') this.handler('hide-cursor')
+        }
       }
     }
   }
@@ -105,8 +110,9 @@ class ScrollingTerminal {
   }
   reset () {
     this.style = TERM_DEFAULT_STYLE
-    this.cursor = { x: 0, y: 0, style: 1 }
+    this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
+    this.theme = 0
     this.parser.reset()
     this.clear()
   }
@@ -218,6 +224,10 @@ class ScrollingTerminal {
       this.style = (this.style & 0xFFFF00) | args[0]
     } else if (action === 'set-color-bg') {
       this.style = (this.style & 0xFF00FF) | (args[0] << 8)
+    } else if (action === 'hide-cursor') {
+      this.cursor.visible = false
+    } else if (action === 'show-cursor') {
+      this.cursor.visible = true
     }
   }
   write (text) {
@@ -229,7 +239,7 @@ class ScrollingTerminal {
     serialized += encode2B(this.height) + encode2B(this.width)
     serialized += encode2B(this.cursor.y) + encode2B(this.cursor.x)
 
-    let attributes = 1 // cursor always visible
+    let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
     attributes |= (this.cursor.style << 9)
@@ -259,7 +269,7 @@ class ScrollingTerminal {
   scheduleLoad () {
     clearInterval(this._scheduledLoad)
     if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
-      this.termScreen.load(this.serialize())
+      this.termScreen.load(this.serialize(), this.theme)
     } else {
       this._scheduledLoad = setTimeout(() => {
         this.termScreen.load(this.serialize())
@@ -381,7 +391,7 @@ let demoshIndex = {
   'local-echo': class LocalEcho extends Process {
     run (...args) {
       if (!args.includes('--suppress-note')) {
-        this.emit('write', 'Note: not all terminal features are supported or bug-free in this demo\x1b[0m\r\n')
+        this.emit('write', '\x1b[38;5;239mNote: not all terminal features are supported or and may not work as expected in this demo\x1b[0m\r\n')
       }
     }
     write (data) {
@@ -390,74 +400,92 @@ let demoshIndex = {
   },
   'info': class Info extends Process {
     run (...args) {
-      // lots of printing
-      let parts = []
-      parts.push('\r\n')
-      parts.push('┌ESPTerm─Demo──')
-      parts.push('\x1b[31m31\x1b[32m32\x1b[33m33\x1b[34m34\x1b[35m35\x1b[36m36\x1b[37m37')
-      parts.push('\x1b[90m90\x1b[91m91\x1b[92m92\x1b[93m93\x1b[94m94\x1b[95m95\x1b[96m96\x1b[97m97')
-      parts.push('\x1b[0m─────────────┐\r\n')
-      parts.push('│')
-      for (let i = 0; i < 57; i++) parts.push(' ')
-      parts.push('│')
-      parts.push('    │││││││││\r\n')
-      parts.push('│')
-      parts.push('\x1b[1mBold \x1b[m\x1b[2mFaint \x1b[m\x1b[3mItalic \x1b[m\x1b[4mUnderline\x1b[0m \x1b[m\x1b[5mBlink')
-      parts.push(' \x1b[m\x1b[7mInverse\x1b[m \x1b[9mStrike\x1b[m \x1b[20mFraktur \x1b[m')
-      parts.push('│')
-      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
-      parts.push('│')
-      for (let i = 0; i < 57; i++) parts.push(' ')
-      parts.push('│')
-      parts.push('  ──\x1b[100;30m ESP8266 \x1b[m──\r\n')
-      parts.push('└')
-      for (let i = 0; i < 57; i++) parts.push('─')
-      parts.push('┤')
-      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
-      for (let i = 0; i < 58; i++) parts.push(' ')
-      parts.push('│')
-      parts.push('  ──\x1b[100;30m (@)#### \x1b[m──\r\n')
-      parts.push(' \x1b[44;96m This is a demo of the ESPTerm Web Interface           \x1b[m  ')
-      parts.push('│')
-      parts.push('  ──\x1b[100m         \x1b[m──\r\n')
-      parts.push(' \x1b[44;96m                                                       \x1b[m  ')
-      parts.push('│')
-      parts.push('    │││││││││\r\n')
-      parts.push(' \x1b[44;96m Try the links beneath this screen to browse the menu. \x1b[m  ♦\r\n')
-      parts.push(' \x1b[44;96m                                                       \x1b[m\r\n')
-      parts.push(' \x1b[44;96m <°)))>< ESPTerm fully supports UTF-8 お は よ ー  ><(((°> \x1b[m\r\n')
-      parts.push(' \x1b[44;96m                                                       \x1b[m\r\n')
-      parts.push('\r\n')
-      parts.push(' \x1b[92mOther interesting features:\x1b[m                        ↓\r\n\n')
-      parts.push('   \x1b[32m- Almost full VT100 emulation  \x1b[35m() ()')
-      parts.push('\x1b[0m        Funguje tu čeština!\r\n')
-      parts.push('   \x1b[34m- Xterm-like mouse tracking   \x1b[37m==\x1b[100m°.°\x1b[40m==')
-      parts.push(' \x1b[35m<---,\r\n')
-      parts.push("   \x1b[33m- File upload utility          \x1b[0m'' ''      \x1b[35mmouse\r\n")
-      parts.push('   \x1b[31m- User-friendly config interface\r\n')
-      parts.push('   \x1b[95m- Advanced WiFi & network settings')
-      for (let i = 0; i < 17; i++) parts.push(' ')
-      parts.push('\x1b[93mTry ESPTerm today!\r\n')
-      parts.push('   \x1b[37m- Built-in help page')
-      for (let i = 0; i < 26; i++) parts.push(' ')
-      parts.push('\x1b[36m-->  \x1b[93mPre-built binaries are\r\n')
-      for (let i = 0; i < 30; i++) parts.push(' ')
-      parts.push('\x1b[36mlink on the About page  \x1b[93mavailable on GitHub!\r\n')
+      let fast = args.includes('--fast')
+      this.showSplash().then(() => {
+        this.printText(fast)
+      })
+    }
+    showSplash () {
+      let splash = `
+              -#####- -###*..#####- ######-
+              -#*    -#-    .## .##.  *#-
+              -##### .-###*..#####-   *#-  -*##*- #*-#--#**#-*##-
+              -#*        -#-.##.      *#-  *##-#* ##.  -#* *# .#*
+              -#####--####- .##.      *#-  -*###- ##.  -#* *# .#*
+      `.split('\n').filter(line => line.trim())
+      let levels = {
+        ' ': -231,
+        '.': 4,
+        '-': 8,
+        '*': 17,
+        '#': 24
+      }
+      for (let i in splash) {
+        if (splash[i].length < 79) splash[i] += ' '.repeat(79 - splash[i].length)
+      }
+      this.emit('write', '\r\n'.repeat(splash.length + 1))
+      this.emit('write', '\x1b[A'.repeat(splash.length))
+      this.emit('write', '\x1b[?25l')
 
-      let chars = parts.join('')
-      if (args.includes('--fast')) {
-        this.emit('write', chars)
+      let cursorX = 0
+      let cursorY = 0
+      let moveTo = (x, y) => {
+        let moveX = x - cursorX
+        let moveY = y - cursorY
+        this.emit('write', `\x1b[${Math.abs(moveX)}${moveX > 0 ? 'C' : 'D'}`)
+        this.emit('write', `\x1b[${Math.abs(moveY)}${moveY > 0 ? 'B' : 'A'}`)
+        cursorX = x
+        cursorY = y
+      }
+      let drawCell = (x, y) => {
+        moveTo(x, y)
+        this.emit('write', `\x1b[48;5;${231 + levels[splash[y][x]]}m \b`)
+      }
+      return new Promise((resolve, reject) => {
+        const self = this
+        let x = 14
+        let cycles = 0
+        let loop = function () {
+          for (let y = 0; y < splash.length; y++) {
+            let dx = x - y
+            if (dx > 0) drawCell(dx, y)
+          }
+
+          if (++x < 79) {
+            if (++cycles >= 3) {
+              setTimeout(loop, 20)
+              cycles = 0
+            } else loop()
+          } else {
+            moveTo(0, splash.length)
+            self.emit('write', '\x1b[m\x1b[?25h')
+            resolve()
+          }
+        }
+        loop()
+      })
+    }
+    printText (fast = false) {
+      // lots of printing
+      let parts = [
+        '',
+        '  ESPTerm is a VT100-like terminal emulator running on the ESP8266 WiFi chip.',
+        '',
+        '  \x1b[93mThis is an online demo of the web user interface.\x1b[m',
+        '',
+        '  Type \x1b[92mls\x1b[m to list available commands.',
+        '  Use the \x1b[94mlinks\x1b[m below this screen for a demo of the options and more info.',
+        ''
+      ]
+
+      if (fast) {
+        this.emit('write', parts.join('\r\n') + '\r\n')
         this.destroy()
       } else {
         const self = this
         let loop = function () {
-          while (true) {
-            let character = chars[0]
-            chars = chars.substr(1)
-            self.emit('write', character)
-            if (character === '\n') break
-          }
-          if (chars) setTimeout(loop, 17)
+          self.emit('write', parts.shift() + '\r\n')
+          if (parts.length) setTimeout(loop, 17)
           else self.destroy()
         }
         loop()
@@ -506,6 +534,40 @@ let demoshIndex = {
       this.destroy()
     }
   },
+  theme: class SetTheme extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
+    run (...args) {
+      let theme = args[0] | 0
+      if (!args.length || !Number.isFinite(theme) || theme < 0 || theme > 5) {
+        this.emit('write', '\x1b[31mUsage: theme [0–5]\r\n')
+        this.destroy()
+        return
+      }
+      this.shell.terminal.theme = theme
+      // HACK: reset drawn screen to prevent only partly redrawn screen
+      this.shell.terminal.termScreen.drawnScreenFG = []
+      this.emit('write', '')
+      this.destroy()
+    }
+  },
+  cursor: class SetCursor extends Process {
+    run (...args) {
+      let steady = args.includes('--steady')
+      if (args.includes('block')) {
+        this.emit('write', `\x1b[${0 + 2 * steady} q`)
+      } else if (args.includes('line')) {
+        this.emit('write', `\x1b[${3 + steady} q`)
+      } else if (args.includes('bar') || args.includes('beam')) {
+        this.emit('write', `\x1b[${5 + steady} q`)
+      } else {
+        this.emit('write', '\x1b[31mUsage: cursor [block|line|bar] [--steady]\r\n')
+      }
+      this.destroy()
+    }
+  },
   pwd: '/this/is/a/demo\r\n',
   cd: '\x1b[38;5;239mNo directories to change to\r\n',
   whoami: `${window.navigator.userAgent}\r\n`,
@@ -516,7 +578,8 @@ let demoshIndex = {
   cp: '\x1b[38;5;239mNothing to copy because this is a demo.\r\n',
   mv: '\x1b[38;5;239mNothing to move because this is a demo.\r\n',
   ln: '\x1b[38;5;239mNothing to link because this is a demo.\r\n',
-  touch: '\x1b[38;5;239mNothing to touch\r\n'
+  touch: '\x1b[38;5;239mNothing to touch\r\n',
+  exit: '\x1b[38;5;239mNowhere to go\r\n'
 }
 
 class DemoShell {
@@ -529,7 +592,7 @@ class DemoShell {
     this.child = null
     this.index = demoshIndex
 
-    if (printInfo) this.run('info --fast')
+    if (printInfo) this.run('info')
     else this.prompt()
   }
   write (text) {
@@ -578,6 +641,7 @@ class DemoShell {
     }
   }
   parse (input) {
+    if (input === 'help') input = 'info'
     // TODO: basic chaining (i.e. semicolon)
     this.run(input)
   }
@@ -608,7 +672,7 @@ class DemoShell {
   spawn (name, args = []) {
     let Process = this.index[name]
     if (Process instanceof Function) {
-      this.child = new Process(...args)
+      this.child = new Process(this)
       let write = data => this.terminal.write(data)
       this.child.on('write', write)
       this.child.on('exit', code => {
