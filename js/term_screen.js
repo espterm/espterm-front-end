@@ -184,20 +184,20 @@ window.TermScreen = class TermScreen {
     let selectStart = (x, y) => {
       if (selecting) return
       selecting = true
-      this.selection.start = this.selection.end = this.screenToGrid(x, y)
+      this.selection.start = this.selection.end = this.screenToGrid(x, y, true)
       this.scheduleDraw('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
-      this.selection.end = this.screenToGrid(x, y)
+      this.selection.end = this.screenToGrid(x, y, true)
       this.scheduleDraw('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
-      this.selection.end = this.screenToGrid(x, y)
+      this.selection.end = this.screenToGrid(x, y, true)
       this.scheduleDraw('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
@@ -708,13 +708,14 @@ window.TermScreen = class TermScreen {
    * Converts screen coordinates to grid coordinates.
    * @param {number} x - x in pixels
    * @param {number} y - y in pixels
+   * @param {boolean} rounded - whether to round the coord, used for select highlighting
    * @returns {number[]} a tuple of (x, y) in cells
    */
-  screenToGrid (x, y) {
+  screenToGrid (x, y, rounded = false) {
     let cellSize = this.getCellSize()
 
     return [
-      Math.floor((x + cellSize.width / 2) / cellSize.width),
+      Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
       Math.floor(y / cellSize.height)
     ]
   }
@@ -1117,8 +1118,8 @@ window.TermScreen = class TermScreen {
     }
 
     this.input.setMouseMode(trackMouseClicks, trackMouseMovement)
-    this.selection.selectable = !trackMouseMovement
-    $(this.canvas).toggleClass('selectable', !trackMouseMovement)
+    this.selection.selectable = !trackMouseClicks && !trackMouseMovement
+    $(this.canvas).toggleClass('selectable', this.selection.selectable)
     this.mouseMode = {
       clicks: trackMouseClicks,
       movement: trackMouseMovement
