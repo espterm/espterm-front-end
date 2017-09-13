@@ -12,18 +12,26 @@ if (!empty($argv[1])) {
 	parse_str($argv[1], $_GET);
 }
 
-if (!file_exists(__DIR__ . '/_env.php')) {
-	die("Copy <b>_env.php.example</b> to <b>_env.php</b> and check the settings inside!");
-}
-
 define('GIT_HASH', trim(shell_exec('git rev-parse --short HEAD')));
-
-require_once __DIR__ . '/_env.php';
 
 $prod = defined('STDIN');
 define('DEBUG', !$prod);
-$root = DEBUG ? json_encode(ESP_IP) : 'location.host';
+
+// Resolve hostname for ajax etc
+$root = 'location.host';
+if (!file_exists(__DIR__ . '/_env.php')) {
+  if (DEBUG) {
+    die("No _env.php found! Copy _env.php.example</b> to <b>_env.php</b> and check the settings inside!");
+  }
+} else {
+  if (DEBUG) {
+    require_once __DIR__ . '/_env.php';
+    $root = json_encode(ESP_IP);
+  }
+}
+
 define('JS_WEB_ROOT', $root);
+
 
 define('ESP_DEMO', (bool)getenv('ESP_DEMO'));
 if (ESP_DEMO) {

@@ -97,7 +97,7 @@ $.ready(function () {
   Modal.init()
   Notify.init()
 
-  // remove tabindixes from h2 if wide
+  // remove tabindices from h2 if wide
   if (window.innerWidth > 550) {
     $('.Box h2').forEach(function (x) {
       x.removeAttribute('tabindex')

@@ -106,7 +106,9 @@ window.Input = function (conn) {
       'np_sub': na('\x1bOS', '-'),
       'np_point': na('\x1bOn', '.'),
       'np_div': na('\x1bOQ', '/')
-      // we don't implement numlock key (should change in numpad_alt mode, but it's even more useless than the rest)
+      // we don't implement numlock key (should change in numpad_alt mode,
+      // but it's even more useless than the rest and also has the side
+      // effect of changing the user's numlock state)
     }
 
     const blacklist = [
@@ -204,7 +206,7 @@ window.Input = function (conn) {
 
     // Button presses
     $('#action-buttons button').forEach(s => {
-      s.addEventListener('click', () => {
+      s.addEventListener('click', function (evt) {
         sendBtnMsg(+this.dataset['n'])
       })
     })
@@ -290,10 +292,10 @@ window.Input = function (conn) {
       // console.log("B ",b," M ",m);
     },
 
-    mouseTracksClicks () {
-      return cfg.mt_click
-    },
-
+    /**
+     * Prevent capturing keys. This is used for text input
+     * modals on the terminal screen
+     */
     blockKeys (yes) {
       cfg.no_keys = yes
     }
