@@ -84,7 +84,7 @@ class ANSIParser {
         this.handler('write', character)
       } else if (code < 0x03) this.handler('_null')
       else if (code === 0x03) this.handler('sigint')
-      else if (code < 0x05) this.handler('_null')
+      else if (code <= 0x06) this.handler('_null')
       else if (code === 0x07) this.handler('bell')
       else if (code === 0x08) this.handler('back')
       else if (code === 0x0a) this.handler('new-line')
