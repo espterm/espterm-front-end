@@ -82,7 +82,10 @@ class ANSIParser {
         // something something nothing
         this.currentSequence = 0
         this.handler('write', character)
-      } else if (code === 0x07) this.handler('bell')
+      } else if (code < 0x03) this.handler('_null')
+      else if (code === 0x03) this.handler('sigint')
+      else if (code <= 0x06) this.handler('_null')
+      else if (code === 0x07) this.handler('bell')
       else if (code === 0x08) this.handler('back')
       else if (code === 0x0a) this.handler('new-line')
       else if (code === 0x0d) this.handler('return')
@@ -203,8 +206,8 @@ class ScrollingTerminal {
     } else if (action === 'return') {
       this.cursor.x = 0
     } else if (action === 'set-cursor') {
-      this.cursor.x = args[0]
-      this.cursor.y = args[1]
+      this.cursor.x = args[1]
+      this.cursor.y = args[0]
       this.clampCursor()
     } else if (action === 'move-cursor-y') {
       this.cursor.y += args[0]
@@ -370,7 +373,8 @@ let demoData = {
       }
       setTimeout(loop, 200)
     }
-  }
+  },
+  mouseReceiver: null
 }
 
 let demoshIndex = {
@@ -613,6 +617,69 @@ let demoshIndex = {
       this.destroy()
     }
   },
+  mouse: class ShowMouse extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
+    run () {
+      this.shell.terminal.trackMouse = true
+      demoData.mouseReceiver = this
+      this.randomData = []
+      this.highlighted = {}
+      let characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      for (let i = 0; i < 23; i++) {
+        let line = ''
+        for (let j = 0; j < 79; j++) {
+          line += characters[Math.floor(characters.length * Math.random())]
+        }
+        this.randomData.push(line)
+      }
+      this.scrollOffset = 0
+      this.render()
+    }
+    render () {
+      this.emit('write', '\x1b[m\x1b[2J\x1b[1;1H')
+      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMouse movement, clicking and scrolling!')
+
+      // render random data for scrolling
+      for (let y = 0; y < 23; y++) {
+        let index = y + this.scrollOffset
+        // proper modulo:
+        index = ((index % this.randomData.length) + this.randomData.length) % this.randomData.length
+        let line = this.randomData[index]
+        let lineData = `\x1b[${3 + y};1H\x1b[38;5;239m`
+        for (let x in line) {
+          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[97m'
+          lineData += line[x]
+          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[38;5;239m'
+        }
+        this.emit('write', lineData)
+      }
+
+      // move cursor to mouse
+      if (this.mouse) {
+        this.emit('write', `\x1b[${this.mouse.y + 1};${this.mouse.x + 1}H`)
+      }
+    }
+    mouseMove (x, y) {
+      this.mouse = { x, y }
+      this.render()
+    }
+    mouseDown (x, y, button) {
+      if (button === 4) this.scrollOffset--
+      else if (button === 5) this.scrollOffset++
+      else this.highlighted[y * 80 + x] = !this.highlighted[y * 80 + x]
+      this.render()
+    }
+    mouseUp (x, y, button) {}
+    destroy () {
+      this.shell.terminal.write('\x1b[2J\x1b[1;1H')
+      this.shell.terminal.trackMouse = false
+      if (demoData.mouseReceiver === this) demoData.mouseReceiver = null
+      super.destroy()
+    }
+  },
   pwd: '/this/is/a/demo\r\n',
   cd: '\x1b[38;5;239mNo directories to change to\r\n',
   whoami: `${window.navigator.userAgent}\r\n`,
@@ -748,7 +815,16 @@ window.demoInterface = {
         else if (action instanceof Function) action(this.terminal, this.shell)
       }
     } else if (type === 'm' || type === 'p' || type === 'r') {
-      console.log(JSON.stringify(data))
+      let row = parse2B(content, 0)
+      let column = parse2B(content, 2)
+      let button = parse2B(content, 4)
+      let modifiers = parse2B(content, 6)
+
+      if (demoData.mouseReceiver) {
+        if (type === 'm') demoData.mouseReceiver.mouseMove(column, row, button, modifiers)
+        else if (type === 'p') demoData.mouseReceiver.mouseDown(column, row, button, modifiers)
+        else if (type === 'r') demoData.mouseReceiver.mouseUp(column, row, button, modifiers)
+      }
     }
   },
   init (screen) {
