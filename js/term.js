@@ -1,7 +1,5 @@
 /** Init the terminal sub-module - called from HTML */
-window.termInit = function (opts) {
-  let { labels, theme, allFn } = opts
-
+window.termInit = function ({ labels, theme, allFn }) {
   const screen = new TermScreen()
   const conn = Conn(screen)
   const input = Input(conn)

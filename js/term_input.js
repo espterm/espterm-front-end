@@ -32,7 +32,7 @@ window.Input = function (conn) {
 
   /** Send a button event */
   function sendBtnMsg (n) {
-    conn.send('b' + Chr(n))
+    conn.send('b' + String.fromCharCode(n))
   }
 
   /** Fn alt choice for key message */
@@ -50,7 +50,7 @@ window.Input = function (conn) {
     return cfg.np_alt ? alt : normal
   }
 
-  function _bindFnKeys (allFn) {
+  function bindFnKeys (allFn) {
     const keymap = {
       'tab': '\x09',
       'backspace': '\x08',
@@ -139,9 +139,7 @@ window.Input = function (conn) {
   }
 
   /** Bind/rebind key messages */
-  function _initKeys (opts) {
-    let { allFn } = opts
-
+  function initKeys ({ allFn }) {
     // This takes care of text characters typed
     window.addEventListener('keypress', function (evt) {
       if (cfg.no_keys) return
@@ -188,11 +186,11 @@ window.Input = function (conn) {
     bind('⌥+right',     '\x1bf')    // ⌥→ to go forward one word (^[f)
     bind('⌘+left',      '\x01')     // ⌘← to go to the beginning of a line (^A)
     bind('⌘+right',     '\x05')     // ⌘→ to go to the end of a line (^E)
-    bind('⌥+backspace', '\x17') // ⌥⌫ to delete a word (^W, I think)
-    bind('⌘+backspace', '\x15') // ⌘⌫ to delete to the beginning of a line (possibly ^U)
+    bind('⌥+backspace', '\x17')     // ⌥⌫ to delete a word (^W)
+    bind('⌘+backspace', '\x15')     // ⌘⌫ to delete to the beginning of a line (^U)
     /* eslint-enable */
 
-    _bindFnKeys(allFn)
+    bindFnKeys(allFn)
   }
 
   // mouse button states
@@ -202,23 +200,23 @@ window.Input = function (conn) {
 
   /** Init the Input module */
   function init (opts) {
-    _initKeys(opts)
+    initKeys(opts)
 
     // Button presses
-    $('#action-buttons button').forEach(function (s) {
-      s.addEventListener('click', function () {
+    $('#action-buttons button').forEach(s => {
+      s.addEventListener('click', () => {
         sendBtnMsg(+this.dataset['n'])
       })
     })
 
     // global mouse state tracking - for motion reporting
-    window.addEventListener('mousedown', function (evt) {
+    window.addEventListener('mousedown', evt => {
       if (evt.button === 0) mb1 = 1
       if (evt.button === 1) mb2 = 1
       if (evt.button === 2) mb3 = 1
     })
 
-    window.addEventListener('mouseup', function (evt) {
+    window.addEventListener('mouseup', evt => {
       if (evt.button === 0) mb1 = 0
       if (evt.button === 1) mb2 = 0
       if (evt.button === 2) mb3 = 0
@@ -235,7 +233,7 @@ window.Input = function (conn) {
 
   return {
     /** Init the Input module */
-    init: init,
+    init,
 
     /** Send a literal string message */
     sendString: sendStrMsg,
@@ -249,24 +247,24 @@ window.Input = function (conn) {
         cfg.crlf_mode = crlf
 
         // rebind keys - codes have changed
-        _bindFnKeys()
+        bindFnKeys()
       }
     },
 
-    setMouseMode: function (click, move) {
+    setMouseMode (click, move) {
       cfg.mt_click = click
       cfg.mt_move = move
     },
 
     // Mouse events
-    onMouseMove: function (x, y) {
+    onMouseMove (x, y) {
       if (!cfg.mt_move) return
       const b = mb1 ? 1 : mb2 ? 2 : mb3 ? 3 : 0
       const m = packModifiersForMouse()
       conn.send('m' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
     },
 
-    onMouseDown: function (x, y, b) {
+    onMouseDown (x, y, b) {
       if (!cfg.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
@@ -274,7 +272,7 @@ window.Input = function (conn) {
       // console.log("B ",b," M ",m);
     },
 
-    onMouseUp: function (x, y, b) {
+    onMouseUp (x, y, b) {
       if (!cfg.mt_click) return
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
@@ -282,7 +280,7 @@ window.Input = function (conn) {
       // console.log("B ",b," M ",m);
     },
 
-    onMouseWheel: function (x, y, dir) {
+    onMouseWheel (x, y, dir) {
       if (!cfg.mt_click) return
       // -1 ... btn 4 (away from user)
       // +1 ... btn 5 (towards user)
@@ -292,11 +290,11 @@ window.Input = function (conn) {
       // console.log("B ",b," M ",m);
     },
 
-    mouseTracksClicks: function () {
+    mouseTracksClicks () {
       return cfg.mt_click
     },
 
-    blockKeys: function (yes) {
+    blockKeys (yes) {
       cfg.no_keys = yes
     }
   }
