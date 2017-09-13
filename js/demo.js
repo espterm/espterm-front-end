@@ -699,7 +699,8 @@ class DemoShell {
     this.terminal = terminal
     this.terminal.reset()
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
-    this.input = ''
+    this.history = []
+    this.historyIndex = 0
     this.cursorPos = 0
     this.child = null
     this.index = demoshIndex
@@ -718,38 +719,54 @@ class DemoShell {
     this.terminal.write('\x1b[34;1mdemosh \x1b[m')
     if (!success) this.terminal.write('\x1b[31m')
     this.terminal.write('$ \x1b[m')
-    this.input = ''
+    this.history.unshift('')
     this.cursorPos = 0
+  }
+  copyFromHistoryIndex () {
+    if (!this.historyIndex) return
+    let current = this.history[this.historyIndex]
+    this.history[0] = current
+    this.historyIndex = 0
   }
   handleParsed (action, ...args) {
     this.terminal.write('\b\x1b[P'.repeat(this.cursorPos))
     if (action === 'write') {
-      this.input = this.input.substr(0, this.cursorPos) + args[0] + this.input.substr(this.cursorPos)
+      this.copyFromHistoryIndex()
+      this.history[0] = this.history[0].substr(0, this.cursorPos) + args[0] + this.history[0].substr(this.cursorPos)
       this.cursorPos++
     } else if (action === 'back') {
-      this.input = this.input.substr(0, this.cursorPos - 1) + this.input.substr(this.cursorPos)
+      this.copyFromHistoryIndex()
+      this.history[0] = this.history[0].substr(0, this.cursorPos - 1) + this.history[0].substr(this.cursorPos)
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
     } else if (action === 'move-cursor-x') {
-      this.cursorPos = Math.max(0, Math.min(this.input.length, this.cursorPos + args[0]))
+      this.copyFromHistoryIndex()
+      this.cursorPos = Math.max(0, Math.min(this.history[0].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
-      this.input = ''
+      this.copyFromHistoryIndex()
+      this.history[0] = ''
       this.cursorPos = 0
     } else if (action === 'delete-word') {
-      let words = this.input.substr(0, this.cursorPos).split(' ')
+      this.copyFromHistoryIndex()
+      let words = this.history[0].substr(0, this.cursorPos).split(' ')
       words.pop()
-      this.input = words.join(' ') + this.input.substr(this.cursorPos)
+      this.history[0] = words.join(' ') + this.history[0].substr(this.cursorPos)
       this.cursorPos = words.join(' ').length
+    } else if (action === 'move-cursor-y') {
+      this.historyIndex -= args[0]
+      if (this.historyIndex < 0) this.historyIndex = 0
+      if (this.historyIndex >= this.history.length) this.historyIndex = this.history.length - 1
+      this.cursorPos = this.history[this.historyIndex].length
     }
 
-    this.terminal.write(this.input)
-    this.terminal.write('\b'.repeat(this.input.length))
+    this.terminal.write(this.history[this.historyIndex])
+    this.terminal.write('\b'.repeat(this.history[this.historyIndex].length))
     this.terminal.moveForward(this.cursorPos)
     this.terminal.write('') // dummy. Apply the moveFoward
 
     if (action === 'return') {
       this.terminal.write('\r\n')
-      this.parse(this.input)
+      this.parse(this.history[this.historyIndex])
     }
   }
   parse (input) {
