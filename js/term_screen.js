@@ -1151,8 +1151,6 @@ window.TermScreen = class TermScreen {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let bgcount = new Array(256).fill(0)
-
     let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
@@ -1174,7 +1172,6 @@ window.TermScreen = class TermScreen {
         else this.blinkingCellCount--
       }
 
-      bgcount[bg]++
       this.screen[cell] = lastChar
       this.screenFG[cell] = fg
       this.screenBG[cell] = bg
@@ -1230,19 +1227,6 @@ window.TermScreen = class TermScreen {
     }
 
     if (this.window.debug) console.log(`Blinky cells = ${this.blinkingCellCount}`)
-
-    // work-around for the grid gaps bug
-    // will mask the glitch if most of the screen uses the same background
-    let mostCommonBg = 0
-    let mcbIndex = 0
-    for (let i = 255; i >= 0; i--) {
-      if (bgcount[i] > mostCommonBg) {
-        mostCommonBg = bgcount[i]
-        mcbIndex = i
-      }
-    }
-    // this.canvas.style.backgroundColor = this.getColor(mcbIndex)
-    this.canvas.style.backgroundColor = '#f00'
 
     this.scheduleDraw('load', 16)
     this.emit('load')
