@@ -524,7 +524,8 @@ window.TermScreen = class TermScreen {
    * Updates the canvas size if it changed
    */
   updateSize () {
-    this._window.devicePixelRatio = this._windowScale * (window.devicePixelRatio || 1)
+    // see below (this is just updating it)
+    this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
     let didChange = false
     for (let key in this.windowState) {
@@ -573,7 +574,8 @@ window.TermScreen = class TermScreen {
       // store new window scale
       this._windowScale = realWidth / (width * cellSize.width)
 
-      let devicePixelRatio = this._window.devicePixelRatio = this._windowScale * window.devicePixelRatio
+      // the DPR must be rounded to a very nice value to prevent gaps between cells
+      let devicePixelRatio = this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
       this.canvas.width = width * devicePixelRatio * cellSize.width
       this.canvas.style.width = `${realWidth}px`
@@ -744,8 +746,8 @@ window.TermScreen = class TermScreen {
   drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
-    ctx.clearRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
-    ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
+    ctx.clearRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+    ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
   }
 
   /**
@@ -1239,7 +1241,8 @@ window.TermScreen = class TermScreen {
         mcbIndex = i
       }
     }
-    this.canvas.style.backgroundColor = this.getColor(mcbIndex)
+    // this.canvas.style.backgroundColor = this.getColor(mcbIndex)
+    this.canvas.style.backgroundColor = '#f00'
 
     this.scheduleDraw('load', 16)
     this.emit('load')
