@@ -680,6 +680,43 @@ let demoshIndex = {
       super.destroy()
     }
   },
+  sudo: class Sudo extends Process {
+    run (...args) {
+      if (args.length === 0) this.emit('write', 'usage: sudo <command>')
+      else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
+        this.emit('write', '                    _.---._\r\n' +
+          '                _.-~       ~-._\r\n' +
+          '            _.-~               ~-._\r\n' +
+          '        _.-~                       ~---._\r\n' +
+          '    _.-~                                 ~\\\r\n' +
+          ' .-~                                    _.;\r\n' +
+          ' :-._                               _.-~ ./\r\n' +
+          ' `-._~-._                   _..__.-~ _.-~\r\n' +
+          '  /  ~-._~-._              / .__..--~----._\r\n' +
+          ' \\_____(_;-._\\.        _.-~_/       ~).. . \\\r\n' +
+          '    /(_____  \\`--...--~_.-~______..-+_______)\r\n' +
+          '  .(_________/`--...--~/    _/           /\\\r\n' +
+          ' /-._     \\_     (___./_..-~__.....__..-~./\r\n' +
+          ' `-._~-._   ~\\--------~  .-~_..__.-~ _.-~\r\n' +
+          '     ~-._~-._ ~---------\'  / .__..--~\r\n' +
+          '         ~-._\\.        _.-~_/\r\n' +
+          '             \\`--...--~_.-~\r\n' +
+          '              `--...--~\r\n')
+      }
+      this.destroy()
+    }
+  },
+  make: class Make extends Process {
+    run (...args) {
+      if (args.length === 0) this.emit('write', '\x1b[31mmake: *** No targets specified.  Stop.\x1b[0m\r\n')
+      else if (args.length === 3 && args.join(' ').toLowerCase() === 'me a sandwich') {
+        this.emit('write', '\x1b[31mmake: me a sandwich : Permission denied\x1b[0m\r\n')
+      } else {
+        this.emit('write', `\x1b[31mmake: *** No rule to make target '${args.join(' ').toLowerCase()}'.  Stop.\x1b[0m\r\n`)
+      }
+      this.destroy()
+    }
+  },
   pwd: '/this/is/a/demo\r\n',
   cd: '\x1b[38;5;239mNo directories to change to\r\n',
   whoami: `${window.navigator.userAgent}\r\n`,
