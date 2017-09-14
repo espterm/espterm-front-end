@@ -682,26 +682,35 @@ let demoshIndex = {
   },
   sudo: class Sudo extends Process {
     run (...args) {
-      if (args.length === 0) this.emit('write', 'usage: sudo <command>')
+      if (args.length === 0) this.emit('write', '\x1b[31musage: sudo <command>\x1b[0m\n')
       else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
-        this.emit('write', '                    _.---._\r\n' +
-          '                _.-~       ~-._\r\n' +
-          '            _.-~               ~-._\r\n' +
-          '        _.-~                       ~---._\r\n' +
-          '    _.-~                                 ~\\\r\n' +
-          ' .-~                                    _.;\r\n' +
-          ' :-._                               _.-~ ./\r\n' +
-          ' `-._~-._                   _..__.-~ _.-~\r\n' +
-          '  /  ~-._~-._              / .__..--~----._\r\n' +
-          ' \\_____(_;-._\\.        _.-~_/       ~).. . \\\r\n' +
-          '    /(_____  \\`--...--~_.-~______..-+_______)\r\n' +
-          '  .(_________/`--...--~/    _/           /\\\r\n' +
-          ' /-._     \\_     (___./_..-~__.....__..-~./\r\n' +
-          ' `-._~-._   ~\\--------~  .-~_..__.-~ _.-~\r\n' +
-          '     ~-._~-._ ~---------\'  / .__..--~\r\n' +
-          '         ~-._\\.        _.-~_/\r\n' +
-          '             \\`--...--~_.-~\r\n' +
-          '              `--...--~\r\n')
+        const b = '\x1b[33m'
+        const r = '\x1b[0m'
+        const l = '\x1b[32m'
+        const c = '\x1b[38;5;229m'
+        const h = '\x1b[38;5;225m'
+        this.emit('write',
+          `                    ${b}_.---._\r\n` +
+          `                _.-~       ~-._\r\n` +
+          `            _.-~               ~-._\r\n` +
+          `        _.-~                       ~---._\r\n` +
+          `    _.-~                                 ~\\\r\n` +
+          ` .-~                                    _.;\r\n` +
+          ` :-._                               _.-~ ./\r\n` +
+          ` \`-._~-._                   _..__.-~ _.-~\r\n` +
+          `  ${c}/  ${b}~-._~-._              / .__..--${c}~-${l}---._\r\n` +
+          `${c} \\_____(_${b};-._\\.        _.-~_/${c}       ~)${l}.. . \\\r\n` +
+          `${l}    /(_____  ${b}\\\`--...--~_.-~${c}______..-+${l}_______)\r\n` +
+          `${l}  .(_________/${b}\`--...--~/${l}    _/ ${h}          ${b}/\\\r\n` +
+          `${b} /-._${h}     \\_     ${l}(___./_..-~${h}__.....${b}__..-~./\r\n` +
+          `${b} \`-._~-._${h}   ~\\--------~  .-~${b}_..__.-~ _.-~\r\n` +
+          `${b}     ~-._~-._ ${h}~---------\`  ${b}/ .__..--~\r\n` +
+          `${b}         ~-._\\.        _.-~_/\r\n` +
+          `${b}             \\\`--...--~_.-~\r\n` +
+          `${b}              \`--...--~${r}\r\n`)
+      } else {
+        this.emit('exec', args.join(' '))
+        return
       }
       this.destroy()
     }
@@ -728,7 +737,13 @@ let demoshIndex = {
   mv: '\x1b[38;5;239mNothing to move because this is a demo.\r\n',
   ln: '\x1b[38;5;239mNothing to link because this is a demo.\r\n',
   touch: '\x1b[38;5;239mNothing to touch\r\n',
-  exit: '\x1b[38;5;239mNowhere to go\r\n'
+  exit: '\x1b[38;5;239mNowhere to go\r\n',
+  github: class GoToGithub extends Process {
+    run () {
+      window.open('https://github.com/espterm/espterm-firmware')
+      this.destroy()
+    }
+  }
 }
 
 class DemoShell {
@@ -839,9 +854,12 @@ class DemoShell {
     if (Process instanceof Function) {
       this.child = new Process(this)
       let write = data => this.terminal.write(data)
+      let exec = line => this.run(line)
       this.child.on('write', write)
+      this.child.on('exec', exec)
       this.child.on('exit', code => {
         if (this.child) this.child.off('write', write)
+        if (this.child) this.child.off('exec', exec)
         this.child = null
         this.prompt(!code)
       })
