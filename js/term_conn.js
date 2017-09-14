@@ -137,8 +137,8 @@ window.Conn = function (screen) {
 
   return {
     ws: null,
-    init: init,
+    init,
     send: doSend,
-    canSend: canSend // check flood control
+    canSend // check flood control
   }
 }

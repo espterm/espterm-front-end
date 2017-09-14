@@ -5,17 +5,13 @@ mkdir -p out/js
 echo 'Generating lang.js...'
 php ./dump_js_lang.php
 
-if [[ $ESP_DEMO ]]; then
-	demofile=js/demo.js
-else
-	demofile=
-fi
-
 echo 'Processing JS...'
 if [[ $ESP_PROD ]]; then
 	smarg=
+	demofile=
 else
 	smarg=--source-maps
+	demofile=js/demo.js
 fi
 
 npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" ${smarg} js/lib \

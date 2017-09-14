@@ -4,6 +4,9 @@ window.initSoftKeyboard = function (screen, input) {
 
   let keyboardOpen = false
 
+  // moves the input to where the cursor is on the canvas.
+  // this is because most browsers will always scroll to wherever the focused
+  // input is
   let updateInputPosition = function () {
     if (!keyboardOpen) return
 
@@ -20,16 +23,9 @@ window.initSoftKeyboard = function (screen, input) {
 
   screen.on('cursor-moved', updateInputPosition)
 
-  let kbOpen = function (open) {
-    keyboardOpen = open
-    updateInputPosition()
-    if (open) keyInput.focus()
-    else keyInput.blur()
-  }
-
-  qs('#term-kb-open').addEventListener('click', function () {
-    kbOpen(true)
-    return false
+  qs('#term-kb-open').addEventListener('click', e => {
+    e.preventDefault()
+    keyInput.focus()
   })
 
   // Chrome for Android doesn't send proper keydown/keypress events with

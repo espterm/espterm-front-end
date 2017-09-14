@@ -82,7 +82,10 @@ class ANSIParser {
         // something something nothing
         this.currentSequence = 0
         this.handler('write', character)
-      } else if (code === 0x07) this.handler('bell')
+      } else if (code < 0x03) this.handler('_null')
+      else if (code === 0x03) this.handler('sigint')
+      else if (code <= 0x06) this.handler('_null')
+      else if (code === 0x07) this.handler('bell')
       else if (code === 0x08) this.handler('back')
       else if (code === 0x0a) this.handler('new-line')
       else if (code === 0x0d) this.handler('return')
@@ -203,8 +206,8 @@ class ScrollingTerminal {
     } else if (action === 'return') {
       this.cursor.x = 0
     } else if (action === 'set-cursor') {
-      this.cursor.x = args[0]
-      this.cursor.y = args[1]
+      this.cursor.x = args[1]
+      this.cursor.y = args[0]
       this.clampCursor()
     } else if (action === 'move-cursor-y') {
       this.cursor.y += args[0]
@@ -370,7 +373,8 @@ let demoData = {
       }
       setTimeout(loop, 200)
     }
-  }
+  },
+  mouseReceiver: null
 }
 
 let demoshIndex = {
@@ -613,6 +617,115 @@ let demoshIndex = {
       this.destroy()
     }
   },
+  mouse: class ShowMouse extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
+    run () {
+      this.shell.terminal.trackMouse = true
+      demoData.mouseReceiver = this
+      this.randomData = []
+      this.highlighted = {}
+      let characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      for (let i = 0; i < 23; i++) {
+        let line = ''
+        for (let j = 0; j < 79; j++) {
+          line += characters[Math.floor(characters.length * Math.random())]
+        }
+        this.randomData.push(line)
+      }
+      this.scrollOffset = 0
+      this.render()
+    }
+    render () {
+      this.emit('write', '\x1b[m\x1b[2J\x1b[1;1H')
+      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMouse movement, clicking and scrolling!')
+
+      // render random data for scrolling
+      for (let y = 0; y < 23; y++) {
+        let index = y + this.scrollOffset
+        // proper modulo:
+        index = ((index % this.randomData.length) + this.randomData.length) % this.randomData.length
+        let line = this.randomData[index]
+        let lineData = `\x1b[${3 + y};1H\x1b[38;5;239m`
+        for (let x in line) {
+          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[97m'
+          lineData += line[x]
+          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[38;5;239m'
+        }
+        this.emit('write', lineData)
+      }
+
+      // move cursor to mouse
+      if (this.mouse) {
+        this.emit('write', `\x1b[${this.mouse.y + 1};${this.mouse.x + 1}H`)
+      }
+    }
+    mouseMove (x, y) {
+      this.mouse = { x, y }
+      this.render()
+    }
+    mouseDown (x, y, button) {
+      if (button === 4) this.scrollOffset--
+      else if (button === 5) this.scrollOffset++
+      else this.highlighted[y * 80 + x] = !this.highlighted[y * 80 + x]
+      this.render()
+    }
+    mouseUp (x, y, button) {}
+    destroy () {
+      this.shell.terminal.write('\x1b[2J\x1b[1;1H')
+      this.shell.terminal.trackMouse = false
+      if (demoData.mouseReceiver === this) demoData.mouseReceiver = null
+      super.destroy()
+    }
+  },
+  sudo: class Sudo extends Process {
+    run (...args) {
+      if (args.length === 0) this.emit('write', '\x1b[31musage: sudo <command>\x1b[0m\n')
+      else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
+        const b = '\x1b[33m'
+        const r = '\x1b[0m'
+        const l = '\x1b[32m'
+        const c = '\x1b[38;5;229m'
+        const h = '\x1b[38;5;225m'
+        this.emit('write',
+          `                    ${b}_.---._\r\n` +
+          `                _.-~       ~-._\r\n` +
+          `            _.-~               ~-._\r\n` +
+          `        _.-~                       ~---._\r\n` +
+          `    _.-~                                 ~\\\r\n` +
+          ` .-~                                    _.;\r\n` +
+          ` :-._                               _.-~ ./\r\n` +
+          ` \`-._~-._                   _..__.-~ _.-~\r\n` +
+          `  ${c}/  ${b}~-._~-._              / .__..--${c}~-${l}---._\r\n` +
+          `${c} \\_____(_${b};-._\\.        _.-~_/${c}       ~)${l}.. . \\\r\n` +
+          `${l}    /(_____  ${b}\\\`--...--~_.-~${c}______..-+${l}_______)\r\n` +
+          `${l}  .(_________/${b}\`--...--~/${l}    _/ ${h}          ${b}/\\\r\n` +
+          `${b} /-._${h}     \\_     ${l}(___./_..-~${h}__.....${b}__..-~./\r\n` +
+          `${b} \`-._~-._${h}   ~\\--------~  .-~${b}_..__.-~ _.-~\r\n` +
+          `${b}     ~-._~-._ ${h}~---------\`  ${b}/ .__..--~\r\n` +
+          `${b}         ~-._\\.        _.-~_/\r\n` +
+          `${b}             \\\`--...--~_.-~\r\n` +
+          `${b}              \`--...--~${r}\r\n`)
+      } else {
+        this.emit('exec', args.join(' '))
+        return
+      }
+      this.destroy()
+    }
+  },
+  make: class Make extends Process {
+    run (...args) {
+      if (args.length === 0) this.emit('write', '\x1b[31mmake: *** No targets specified.  Stop.\x1b[0m\r\n')
+      else if (args.length === 3 && args.join(' ').toLowerCase() === 'me a sandwich') {
+        this.emit('write', '\x1b[31mmake: me a sandwich : Permission denied\x1b[0m\r\n')
+      } else {
+        this.emit('write', `\x1b[31mmake: *** No rule to make target '${args.join(' ').toLowerCase()}'.  Stop.\x1b[0m\r\n`)
+      }
+      this.destroy()
+    }
+  },
   pwd: '/this/is/a/demo\r\n',
   cd: '\x1b[38;5;239mNo directories to change to\r\n',
   whoami: `${window.navigator.userAgent}\r\n`,
@@ -624,7 +737,13 @@ let demoshIndex = {
   mv: '\x1b[38;5;239mNothing to move because this is a demo.\r\n',
   ln: '\x1b[38;5;239mNothing to link because this is a demo.\r\n',
   touch: '\x1b[38;5;239mNothing to touch\r\n',
-  exit: '\x1b[38;5;239mNowhere to go\r\n'
+  exit: '\x1b[38;5;239mNowhere to go\r\n',
+  github: class GoToGithub extends Process {
+    run () {
+      window.open('https://github.com/espterm/espterm-firmware')
+      this.destroy()
+    }
+  }
 }
 
 class DemoShell {
@@ -632,7 +751,8 @@ class DemoShell {
     this.terminal = terminal
     this.terminal.reset()
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
-    this.input = ''
+    this.history = []
+    this.historyIndex = 0
     this.cursorPos = 0
     this.child = null
     this.index = demoshIndex
@@ -651,38 +771,53 @@ class DemoShell {
     this.terminal.write('\x1b[34;1mdemosh \x1b[m')
     if (!success) this.terminal.write('\x1b[31m')
     this.terminal.write('$ \x1b[m')
-    this.input = ''
+    this.history.unshift('')
     this.cursorPos = 0
+  }
+  copyFromHistoryIndex () {
+    if (!this.historyIndex) return
+    let current = this.history[this.historyIndex]
+    this.history[0] = current
+    this.historyIndex = 0
   }
   handleParsed (action, ...args) {
     this.terminal.write('\b\x1b[P'.repeat(this.cursorPos))
     if (action === 'write') {
-      this.input = this.input.substr(0, this.cursorPos) + args[0] + this.input.substr(this.cursorPos)
+      this.copyFromHistoryIndex()
+      this.history[0] = this.history[0].substr(0, this.cursorPos) + args[0] + this.history[0].substr(this.cursorPos)
       this.cursorPos++
     } else if (action === 'back') {
-      this.input = this.input.substr(0, this.cursorPos - 1) + this.input.substr(this.cursorPos)
+      this.copyFromHistoryIndex()
+      this.history[0] = this.history[0].substr(0, this.cursorPos - 1) + this.history[0].substr(this.cursorPos)
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
     } else if (action === 'move-cursor-x') {
-      this.cursorPos = Math.max(0, Math.min(this.input.length, this.cursorPos + args[0]))
+      this.cursorPos = Math.max(0, Math.min(this.history[0].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
-      this.input = ''
+      this.copyFromHistoryIndex()
+      this.history[0] = ''
       this.cursorPos = 0
     } else if (action === 'delete-word') {
-      let words = this.input.substr(0, this.cursorPos).split(' ')
+      this.copyFromHistoryIndex()
+      let words = this.history[0].substr(0, this.cursorPos).split(' ')
       words.pop()
-      this.input = words.join(' ') + this.input.substr(this.cursorPos)
+      this.history[0] = words.join(' ') + this.history[0].substr(this.cursorPos)
       this.cursorPos = words.join(' ').length
+    } else if (action === 'move-cursor-y') {
+      this.historyIndex -= args[0]
+      if (this.historyIndex < 0) this.historyIndex = 0
+      if (this.historyIndex >= this.history.length) this.historyIndex = this.history.length - 1
+      this.cursorPos = this.history[this.historyIndex].length
     }
 
-    this.terminal.write(this.input)
-    this.terminal.write('\b'.repeat(this.input.length))
+    this.terminal.write(this.history[this.historyIndex])
+    this.terminal.write('\b'.repeat(this.history[this.historyIndex].length))
     this.terminal.moveForward(this.cursorPos)
     this.terminal.write('') // dummy. Apply the moveFoward
 
     if (action === 'return') {
       this.terminal.write('\r\n')
-      this.parse(this.input)
+      this.parse(this.history[this.historyIndex])
     }
   }
   parse (input) {
@@ -719,9 +854,12 @@ class DemoShell {
     if (Process instanceof Function) {
       this.child = new Process(this)
       let write = data => this.terminal.write(data)
+      let exec = line => this.run(line)
       this.child.on('write', write)
+      this.child.on('exec', exec)
       this.child.on('exit', code => {
         if (this.child) this.child.off('write', write)
+        if (this.child) this.child.off('exec', exec)
         this.child = null
         this.prompt(!code)
       })
@@ -748,7 +886,16 @@ window.demoInterface = {
         else if (action instanceof Function) action(this.terminal, this.shell)
       }
     } else if (type === 'm' || type === 'p' || type === 'r') {
-      console.log(JSON.stringify(data))
+      let row = parse2B(content, 0)
+      let column = parse2B(content, 2)
+      let button = parse2B(content, 4)
+      let modifiers = parse2B(content, 6)
+
+      if (demoData.mouseReceiver) {
+        if (type === 'm') demoData.mouseReceiver.mouseMove(column, row, button, modifiers)
+        else if (type === 'p') demoData.mouseReceiver.mouseDown(column, row, button, modifiers)
+        else if (type === 'r') demoData.mouseReceiver.mouseUp(column, row, button, modifiers)
+      }
     }
   },
   init (screen) {

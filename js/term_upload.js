@@ -97,7 +97,6 @@ window.TermUpl = function (conn, input, screen) {
       inline_pos += MAX_LINE_LEN
     }
 
-    console.log(chunk)
     if (!input.sendString(chunk)) {
       updateStatus('FAILED!')
       return
@@ -134,10 +133,11 @@ window.TermUpl = function (conn, input, screen) {
       qs('#fu_file').addEventListener('change', function (evt) {
         let reader = new FileReader()
         let file = evt.target.files[0]
-        console.log('Selected file type: ' + file.type)
-        if (!file.type.match(/text\/.*|application\/(json|csv|.*xml.*|.*script.*)/)) {
+        let ftype = file.type || 'application/octet-stream'
+        console.log('Selected file type: ' + ftype)
+        if (!ftype.match(/text\/.*|application\/(json|csv|.*xml.*|.*script.*|x-php)/)) {
           // Deny load of blobs like img - can crash browser and will get corrupted anyway
-          if (!confirm('This does not look like a text file: ' + file.type + '\nReally load?')) {
+          if (!confirm(`This does not look like a text file: ${ftype}\nReally load?`)) {
             qs('#fu_file').value = ''
             return
           }

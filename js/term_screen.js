@@ -524,7 +524,8 @@ window.TermScreen = class TermScreen {
    * Updates the canvas size if it changed
    */
   updateSize () {
-    this._window.devicePixelRatio = this._windowScale * (window.devicePixelRatio || 1)
+    // see below (this is just updating it)
+    this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
     let didChange = false
     for (let key in this.windowState) {
@@ -573,7 +574,8 @@ window.TermScreen = class TermScreen {
       // store new window scale
       this._windowScale = realWidth / (width * cellSize.width)
 
-      let devicePixelRatio = this._window.devicePixelRatio = this._windowScale * window.devicePixelRatio
+      // the DPR must be rounded to a very nice value to prevent gaps between cells
+      let devicePixelRatio = this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
       this.canvas.width = width * devicePixelRatio * cellSize.width
       this.canvas.style.width = `${realWidth}px`
@@ -745,8 +747,8 @@ window.TermScreen = class TermScreen {
   drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
-    ctx.clearRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
-    ctx.fillRect(x * cellWidth, y * cellHeight, Math.ceil(cellWidth), Math.ceil(cellHeight))
+    ctx.clearRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+    ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
   }
 
   /**
@@ -1150,8 +1152,6 @@ window.TermScreen = class TermScreen {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let bgcount = new Array(256).fill(0)
-
     let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
@@ -1173,7 +1173,6 @@ window.TermScreen = class TermScreen {
         else this.blinkingCellCount--
       }
 
-      bgcount[bg]++
       this.screen[cell] = lastChar
       this.screenFG[cell] = fg
       this.screenBG[cell] = bg
@@ -1229,18 +1228,6 @@ window.TermScreen = class TermScreen {
     }
 
     if (this.window.debug) console.log(`Blinky cells = ${this.blinkingCellCount}`)
-
-    // work-around for the grid gaps bug
-    // will mask the glitch if most of the screen uses the same background
-    let mostCommonBg = 0
-    let mcbIndex = 0
-    for (let i = 255; i >= 0; i--) {
-      if (bgcount[i] > mostCommonBg) {
-        mostCommonBg = bgcount[i]
-        mcbIndex = i
-      }
-    }
-    this.canvas.style.backgroundColor = this.getColor(mcbIndex)
 
     this.scheduleDraw('load', 16)
     this.emit('load')

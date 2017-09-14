@@ -149,7 +149,7 @@
     })
 
     // Forget STA credentials
-    $('#forget-sta').on('click', function () {
+    $('#forget-sta').on('click', () => {
       selectSta('', '', '')
       return false
     })

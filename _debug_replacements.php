@@ -83,7 +83,7 @@ return [
 	'term_height' => '25',
 	'default_bg' => '0',
 	'default_fg' => '7',
-	'show_buttons' => '0',
+	'show_buttons' => '1',
 	'show_config_links' => '1',
 
 	'uart_baud' => 115200,
