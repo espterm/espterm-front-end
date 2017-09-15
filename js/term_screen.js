@@ -1381,7 +1381,10 @@ window.TermScreen = class TermScreen extends EventEmitter {
    */
   loadLabels (str) {
     let pieces = str.split('\x01')
-    qs('#screen-title').textContent = pieces[0]
+    let screenTitle = pieces[0]
+    qs('#screen-title').textContent = screenTitle
+    if (screenTitle.length === 0) screenTitle = 'Terminal'
+    qs('title').textContent = `${screenTitle} :: ESPTerm`
     $('#action-buttons button').forEach((button, i) => {
       let label = pieces[i + 1].trim()
       // if empty string, use the "dim" effect and put nbsp instead to
