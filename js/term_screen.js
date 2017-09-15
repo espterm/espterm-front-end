@@ -1,12 +1,3 @@
-// Some non-bold Fraktur symbols are outside the contiguous block
-const frakturExceptions = {
-  'C': '\u212d',
-  'H': '\u210c',
-  'I': '\u2111',
-  'R': '\u211c',
-  'Z': '\u2128'
-}
-
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
 const SEQ_SET_COLORS = 3
@@ -17,59 +8,68 @@ const SEQ_SET_BG = 6
 const SELECTION_BG = '#b2d7fe'
 const SELECTION_FG = '#333'
 
-const themes = [
-  [ // Tango
-    '#111213', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF',
-    '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC'
-  ],
-  [ // Linux
-    '#000000', '#aa0000', '#00aa00', '#aa5500', '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa',
-    '#555555', '#ff5555', '#55ff55', '#ffff55', '#5555ff', '#ff55ff', '#55ffff', '#ffffff'
-  ],
-  [ // xterm
-    '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000ee', '#cd00cd', '#00cdcd', '#e5e5e5',
-    '#7f7f7f', '#ff0000', '#00ff00', '#ffff00', '#5c5cff', '#ff00ff', '#00ffff', '#ffffff'
-  ],
-  [ // rxvt
-    '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000cd', '#cd00cd', '#00cdcd', '#faebd7',
-    '#404040', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
-  ],
-  [ // Ambience
-    '#2e3436', '#cc0000', '#4e9a06', '#c4a000', '#3465a4', '#75507b', '#06989a', '#d3d7cf',
-    '#555753', '#ef2929', '#8ae234', '#fce94f', '#729fcf', '#ad7fa8', '#34e2e2', '#eeeeec'
-  ],
-  [ // Solarized
-    '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
-    '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
-  ]
-]
-
-// TODO move this to the initializer so it's not run on non-terminal pages
-
-// 256color lookup table
-// should not be used to look up 0-15 (will return transparent)
-const colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)')
-
-// fill color table
-// colors 16-231 are a 6x6x6 color cube
-for (let red = 0; red < 6; red++) {
-  for (let green = 0; green < 6; green++) {
-    for (let blue = 0; blue < 6; blue++) {
-      let redValue = red * 40 + (red ? 55 : 0)
-      let greenValue = green * 40 + (green ? 55 : 0)
-      let blueValue = blue * 40 + (blue ? 55 : 0)
-      colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
-    }
-  }
-}
-// colors 232-255 are a grayscale ramp, sans black and white
-for (let gray = 0; gray < 24; gray++) {
-  let value = gray * 10 + 8
-  colorTable256.push(`rgb(${value}, ${value}, ${value})`)
-}
-
 window.TermScreen = class TermScreen {
   constructor () {
+    // Some non-bold Fraktur symbols are outside the contiguous block
+    this.frakturExceptions = {
+      'C': '\u212d',
+      'H': '\u210c',
+      'I': '\u2111',
+      'R': '\u211c',
+      'Z': '\u2128'
+    }
+
+    this.themes = [
+      [ // Tango
+        '#111213', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF',
+        '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC'
+      ],
+      [ // Linux
+        '#000000', '#aa0000', '#00aa00', '#aa5500', '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa',
+        '#555555', '#ff5555', '#55ff55', '#ffff55', '#5555ff', '#ff55ff', '#55ffff', '#ffffff'
+      ],
+      [ // xterm
+        '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000ee', '#cd00cd', '#00cdcd', '#e5e5e5',
+        '#7f7f7f', '#ff0000', '#00ff00', '#ffff00', '#5c5cff', '#ff00ff', '#00ffff', '#ffffff'
+      ],
+      [ // rxvt
+        '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000cd', '#cd00cd', '#00cdcd', '#faebd7',
+        '#404040', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
+      ],
+      [ // Ambience
+        '#2e3436', '#cc0000', '#4e9a06', '#c4a000', '#3465a4', '#75507b', '#06989a', '#d3d7cf',
+        '#555753', '#ef2929', '#8ae234', '#fce94f', '#729fcf', '#ad7fa8', '#34e2e2', '#eeeeec'
+      ],
+      [ // Solarized
+        '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
+        '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
+      ]
+    ]
+
+    // 256color lookup table
+    // should not be used to look up 0-15 (will return transparent)
+    this.colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)')
+
+    // fill color table
+    // colors 16-231 are a 6x6x6 color cube
+    for (let red = 0; red < 6; red++) {
+      for (let green = 0; green < 6; green++) {
+        for (let blue = 0; blue < 6; blue++) {
+          let redValue = red * 40 + (red ? 55 : 0)
+          let greenValue = green * 40 + (green ? 55 : 0)
+          let blueValue = blue * 40 + (blue ? 55 : 0)
+          this.colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
+        }
+      }
+    }
+    // colors 232-255 are a grayscale ramp, sans black and white
+    for (let gray = 0; gray < 24; gray++) {
+      let value = gray * 10 + 8
+      this.colorTable256.push(`rgb(${value}, ${value}, ${value})`)
+    }
+
+    this._debug = null
+
     this.canvas = mk('canvas')
     this.ctx = this.canvas.getContext('2d')
 
@@ -418,7 +418,7 @@ window.TermScreen = class TermScreen {
    * @type {number[]}
    */
   get palette () {
-    return this._palette || themes[0]
+    return this._palette || this.themes[0]
   }
   /** @type {number[]} */
   set palette (palette) {
@@ -445,7 +445,7 @@ window.TermScreen = class TermScreen {
     if (i === -2) return SELECTION_BG
 
     // 256 color
-    if (i > 15 && i < 256) return colorTable256[i]
+    if (i > 15 && i < 256) return this.colorTable256[i]
 
     // true color, encoded as (hex) + 256 (such that #000 == 256)
     if (i > 255) {
@@ -788,22 +788,27 @@ window.TermScreen = class TermScreen {
       let left = x * cellWidth
       let top = y * cellHeight
 
+      // http://www.fileformat.info/info/unicode/block/block_elements/utf8test.htm
+      //         0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0A  0x0B  0x0C  0x0D  0x0E  0x0F
+      // 0x2580     ▀     ▁     ▂     ▃     ▄     ▅     ▆     ▇     █     ▉     ▊     ▋     ▌     ▍     ▎     ▏
+      // 0x2590     ▐     ░     ▒     ▓     ▔     ▕     ▖     ▗     ▘     ▙     ▚     ▛     ▜     ▝     ▞     ▟
+
       if (codePoint === 0x2580) {
-        // upper half block
+        // upper half block >▀<
         ctx.rect(left, top, cellWidth, cellHeight / 2)
       } else if (codePoint <= 0x2588) {
-        // lower n eighth block (increasing)
+        // lower n eighth block (increasing) >▁< to >█<
         let offset = (1 - (codePoint - 0x2580) / 8) * cellHeight
         ctx.rect(left, top + offset, cellWidth, cellHeight - offset)
       } else if (codePoint <= 0x258F) {
-        // left n eighth block (decreasing)
+        // left n eighth block (decreasing) >▉< to >▏<
         let offset = (codePoint - 0x2588) / 8 * cellWidth
         ctx.rect(left, top, cellWidth - offset, cellHeight)
       } else if (codePoint === 0x2590) {
-        // right half block
+        // right half block >▐<
         ctx.rect(left + cellWidth / 2, top, cellWidth / 2, cellHeight)
       } else if (codePoint <= 0x2593) {
-        // shading
+        // shading >░< >▒< >▓<
 
         // dot spacing by dividing cell size by a constant. This could be
         // reworked to always return a whole number, but that would require
@@ -834,17 +839,30 @@ window.TermScreen = class TermScreen {
           alignRight = !alignRight
         }
       } else if (codePoint === 0x2594) {
-        // upper one eighth block
+        // upper one eighth block >▔<
         ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight / 8)
       } else if (codePoint === 0x2595) {
-        // right one eighth block
+        // right one eighth block >▕<
         ctx.rect((x + 7 / 8) * cellWidth, y * cellHeight, cellWidth / 8, cellHeight)
       }
 
       ctx.fill()
     } else {
+      // Draw other characters using the text renderer
       ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
     }
+
+    // -- line drawing - a reference for a possible future rect/line implementation ---
+    // http://www.fileformat.info/info/unicode/block/box_drawing/utf8test.htm
+    //         0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0A  0x0B  0x0C  0x0D  0x0E  0x0F
+    // 0x2500     ─     ━     │     ┃     ┄     ┅     ┆     ┇     ┈     ┉     ┊     ┋     ┌     ┍     ┎     ┏
+    // 0x2510     ┐     ┑     ┒     ┓     └     ┕     ┖     ┗     ┘     ┙     ┚     ┛     ├     ┝     ┞     ┟
+    // 0x2520     ┠     ┡     ┢     ┣     ┤     ┥     ┦     ┧     ┨     ┩     ┪     ┫     ┬     ┭     ┮     ┯
+    // 0x2530     ┰     ┱     ┲     ┳     ┴     ┵     ┶     ┷     ┸     ┹     ┺     ┻     ┼     ┽     ┾     ┿
+    // 0x2540     ╀     ╁     ╂     ╃     ╄     ╅     ╆     ╇     ╈     ╉     ╊     ╋     ╌     ╍     ╎     ╏
+    // 0x2550     ═     ║     ╒     ╓     ╔     ╕     ╖     ╗     ╘     ╙     ╚     ╛     ╜     ╝     ╞     ╟
+    // 0x2560     ╠     ╡     ╢     ╣     ╤     ╥     ╦     ╧     ╨     ╩     ╪     ╫     ╬     ╭     ╮     ╯
+    // 0x2570     ╰     ╱     ╲     ╳     ╴     ╵     ╶     ╷     ╸     ╹     ╺     ╻     ╼     ╽     ╾     ╿
 
     if (underline || strike || overline) {
       ctx.strokeStyle = this.getColor(fg)
@@ -1342,8 +1360,8 @@ window.TermScreen = class TermScreen {
    */
   load (str, theme = -1) {
     const content = str.substr(1)
-    if (theme >= 0 && theme < themes.length) {
-      this.palette = themes[theme]
+    if (theme >= 0 && theme < this.themes.length) {
+      this.palette = this.themes[theme]
     }
 
     switch (str[0]) {
@@ -1413,7 +1431,7 @@ window.TermScreen = class TermScreen {
     if (character >= 'a' && character <= 'z') {
       character = String.fromCodePoint(0x1d51e - 0x61 + character.charCodeAt(0))
     } else if (character >= 'A' && character <= 'Z') {
-      character = frakturExceptions[character] || String.fromCodePoint(
+      character = this.frakturExceptions[character] || String.fromCodePoint(
         0x1d504 - 0x41 + character.charCodeAt(0))
     }
     return character
