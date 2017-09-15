@@ -116,14 +116,28 @@ $._loader = function (vis) {
   $('#loader').toggleClass('show', vis)
 }
 
+let pageShown = false
 // reveal content on load
 function showPage () {
+  pageShown = true
   $('#content').addClass('load')
 }
 
 // Auto reveal pages other than the terminal (sets window.noAutoShow)
 $.ready(function () {
-  if (window.noAutoShow !== true) {
+  if (window.noAutoShow === true) {
+    setTimeout(function () {
+      if (!pageShown) {
+        let bnr = mk('P')
+        bnr.id = 'load-failed'
+        bnr.innerHTML =
+          'Server connection failed! Trying again' +
+          '<span class="anim-dots" style="width:1.5em;text-align:left;display:inline-block">.</span>'
+        qs('#screen').appendChild(bnr)
+        showPage()
+      }
+    }, 2000)
+  } else {
     setTimeout(function () {
       showPage()
     }, 1)

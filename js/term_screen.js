@@ -72,6 +72,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
     this._debug = null
 
+    this.contentLoaded = false
+
     this.canvas = mk('canvas')
     this.ctx = this.canvas.getContext('2d')
 
@@ -1136,16 +1138,16 @@ window.TermScreen = class TermScreen extends EventEmitter {
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
     ctx.clearRect(0, 0, screenWidth, screenHeight)
 
-    ctx.font = `40px ${fontFamily}`
+    ctx.font = `24px ${fontFamily}`
     ctx.fillStyle = '#fff'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 20)
+    ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 50)
 
     if (statusScreen.loading) {
       // show loading spinner
       ctx.save()
-      ctx.translate(screenWidth / 2, screenHeight / 2 + 50)
+      ctx.translate(screenWidth / 2, screenHeight / 2 + 20)
 
       ctx.strokeStyle = '#fff'
       ctx.lineWidth = 5
@@ -1193,6 +1195,12 @@ window.TermScreen = class TermScreen extends EventEmitter {
     let i = 0
     // Uncomment to capture screen content for the demo page
     // console.log(JSON.stringify(`S${str}`))
+
+    if (!this.contentLoaded) {
+      let errmsg = qs('#load-failed')
+      if (errmsg) errmsg.parentNode.removeChild(errmsg)
+      this.contentLoaded = true
+    }
 
     // window size
     const newHeight = parse2B(str, i)

@@ -9,7 +9,8 @@ window.Conn = class TermConnection extends EventEmitter {
     this.pingInterval = null
     this.xoff = false
     this.autoXoffTimeout = null
-    this.reconTimeout = null
+    this.reconnTimeout = null
+    this.forceClosing = false
 
     this.pageShown = false
   }
@@ -19,22 +20,26 @@ window.Conn = class TermConnection extends EventEmitter {
     this.heartbeat()
     this.send('i')
 
-    this.emit('open')
+    this.emit('connect')
   }
 
   onWSClose (evt) {
+    if (this.forceClosing) return
     console.warn('SOCKET CLOSED, code ' + evt.code + '. Reconnecting...')
-    clearTimeout(this.reconTimeout)
-    this.reconTimeout = setTimeout(() => this.init(), 2000)
-    // this happens when the buffer gets fucked up via invalid unicode.
-    // we basically use polling instead of socket then
+    if (evt.code < 1000) {
+      console.error('Bad code from socket!')
+      // this sometimes happens for unknown reasons, code < 1000 is invalid
+      location.reload()
+    }
 
-    this.emit('close', evt.code)
+    clearTimeout(this.reconnTimeout)
+    this.reconnTimeout = setTimeout(() => this.init(), 2000)
+
+    this.emit('disconnect', evt.code)
   }
 
   onWSMessage (evt) {
     try {
-      // . = heartbeat
       switch (evt.data.charAt(0)) {
         case '.':
           // heartbeat, no-op message
@@ -99,10 +104,20 @@ window.Conn = class TermConnection extends EventEmitter {
     return true
   }
 
+  /** Safely close the socket */
+  closeSocket () {
+    if (this.ws) {
+      this.forceClosing = true
+      this.ws.close()
+      this.forceClosing = false
+      this.ws = null
+    }
+  }
+
   init () {
     if (window._demo) {
       if (typeof window.demoInterface === 'undefined') {
-        alert('Demoing non-demo demo!') // this will catch mistakes when deploying to the website
+        alert('Demoing non-demo build!') // this will catch mistakes when deploying to the website
       } else {
         demoInterface.init(screen)
         showPage()
@@ -110,8 +125,10 @@ window.Conn = class TermConnection extends EventEmitter {
       return
     }
 
-    clearTimeout(this.reconTimeout)
+    clearTimeout(this.reconnTimeout)
     clearTimeout(this.heartbeatTimeout)
+
+    this.closeSocket()
 
     this.ws = new WebSocket('ws://' + _root + '/term/update.ws')
     this.ws.addEventListener('open', (...args) => this.onWSOpen(...args))
@@ -120,7 +137,7 @@ window.Conn = class TermConnection extends EventEmitter {
     console.log('Opening socket.')
     this.heartbeat()
 
-    this.emit('connect')
+    this.emit('open')
   }
 
   heartbeat () {
@@ -129,20 +146,25 @@ window.Conn = class TermConnection extends EventEmitter {
   }
 
   onHeartbeatFail () {
+    this.closeSocket()
+    this.emit('silence')
     console.error('Heartbeat lost, probing server...')
     clearInterval(this.pingInterval)
+
     this.pingInterval = setInterval(() => {
       console.log('> ping')
       this.emit('ping')
       $.get('http://' + _root + '/system/ping', (resp, status) => {
         if (status === 200) {
           clearInterval(this.pingInterval)
-          console.info('Server ready, reloading page...')
+          console.info('Server ready, opening socket…')
           this.emit('ping-success')
-          location.reload()
+          this.init()
+          // location.reload()
         } else this.emit('ping-fail', status)
       }, {
-        timeout: 100
+        timeout: 100,
+        loader: false // we have loader on-screen
       })
     }, 1000)
   }
