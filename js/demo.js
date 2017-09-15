@@ -681,9 +681,15 @@ let demoshIndex = {
     }
   },
   sudo: class Sudo extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
     run (...args) {
-      if (args.length === 0) this.emit('write', '\x1b[31musage: sudo <command>\x1b[0m\n')
-      else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
+      if (args.length === 0) {
+        this.emit('write', '\x1b[31mUsage: sudo <command>\x1b[m\r\n')
+        this.destroy()
+      } else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
         const b = '\x1b[33m'
         const r = '\x1b[0m'
         const l = '\x1b[32m'
@@ -708,11 +714,29 @@ let demoshIndex = {
           `${b}         ~-._\\.        _.-~_/\r\n` +
           `${b}             \\\`--...--~_.-~\r\n` +
           `${b}              \`--...--~${r}\r\n`)
+        this.destroy()
       } else {
-        this.emit('exec', args.join(' '))
-        return
+        let name = args.shift()
+        if (this.shell.index[name]) {
+          let Process = this.shell.index[name]
+          if (Process instanceof Function) {
+            let child = new Process(this)
+            let write = data => this.emit('write', data)
+            child.on('write', write)
+            child.on('exit', code => {
+              child.off('write', write)
+              this.destroy()
+            })
+            child.run(...args)
+          } else {
+            this.emit('write', Process)
+            this.destroy()
+          }
+        } else {
+          this.emit('write', `sudo: ${name}: command not found\r\n`)
+          this.destroy()
+        }
       }
-      this.destroy()
     }
   },
   make: class Make extends Process {
@@ -842,6 +866,7 @@ class DemoShell {
     }
 
     let name = parts.shift()
+
     if (name in this.index) {
       this.spawn(name, parts)
     } else {
@@ -854,12 +879,9 @@ class DemoShell {
     if (Process instanceof Function) {
       this.child = new Process(this)
       let write = data => this.terminal.write(data)
-      let exec = line => this.run(line)
       this.child.on('write', write)
-      this.child.on('exec', exec)
       this.child.on('exit', code => {
         if (this.child) this.child.off('write', write)
-        if (this.child) this.child.off('exec', exec)
         this.child = null
         this.prompt(!code)
       })
