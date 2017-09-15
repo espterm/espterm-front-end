@@ -718,11 +718,15 @@ window.TermScreen = class TermScreen extends EventEmitter {
     ctx.fillStyle = this.getColor(fg)
 
     let codePoint = text.codePointAt(0)
-    if (codePoint >= 0x2580 && codePoint <= 0x2595) {
+    if (codePoint >= 0x2580 && codePoint <= 0x259F) {
       // block elements
       ctx.beginPath()
-      let left = x * cellWidth
-      let top = y * cellHeight
+      const left = x * cellWidth
+      const top = y * cellHeight
+      const cw = cellWidth
+      const ch = cellHeight
+      const c2w = cellWidth / 2
+      const c2h = cellHeight / 2
 
       // http://www.fileformat.info/info/unicode/block/block_elements/utf8test.htm
       //         0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0A  0x0B  0x0C  0x0D  0x0E  0x0F
@@ -731,18 +735,30 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
       if (codePoint === 0x2580) {
         // upper half block >▀<
-        ctx.rect(left, top, cellWidth, cellHeight / 2)
+        ctx.rect(left, top, cw, c2h)
       } else if (codePoint <= 0x2588) {
         // lower n eighth block (increasing) >▁< to >█<
-        let offset = (1 - (codePoint - 0x2580) / 8) * cellHeight
-        ctx.rect(left, top + offset, cellWidth, cellHeight - offset)
+        let offset = (1 - (codePoint - 0x2580) / 8) * ch
+        ctx.rect(left, top + offset, cw, ch - offset)
       } else if (codePoint <= 0x258F) {
         // left n eighth block (decreasing) >▉< to >▏<
-        let offset = (codePoint - 0x2588) / 8 * cellWidth
-        ctx.rect(left, top, cellWidth - offset, cellHeight)
+        let offset = (codePoint - 0x2588) / 8 * cw
+        ctx.rect(left, top, cw - offset, ch)
       } else if (codePoint === 0x2590) {
         // right half block >▐<
-        ctx.rect(left + cellWidth / 2, top, cellWidth / 2, cellHeight)
+        ctx.rect(left + c2w, top, c2w, ch)
+      } else if (codePoint === 0x2596) {
+        // left bottom quadrant >▖<
+        ctx.rect(left, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x2597) {
+        // right bottom quadrant >▗<
+        ctx.rect(left + c2w, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x2598) {
+        // left top quadrant >▘<
+        ctx.rect(left, top, c2w, c2h)
+      } else if (codePoint === 0x259D) {
+        // right top quadrant >▝<
+        ctx.rect(left + c2w, top, c2w, c2h)
       } else if (codePoint <= 0x2593) {
         // shading >░< >▒< >▓<
 
@@ -752,34 +768,34 @@ window.TermScreen = class TermScreen extends EventEmitter {
         // take over the world, which is not within the scope of this project.
         let dotSpacingX, dotSpacingY, dotSize
         if (codePoint === 0x2591) {
-          dotSpacingX = cellWidth / 4
-          dotSpacingY = cellHeight / 10
+          dotSpacingX = cw / 4
+          dotSpacingY = ch / 10
           dotSize = 1
         } else if (codePoint === 0x2592) {
-          dotSpacingX = cellWidth / 6
-          dotSpacingY = cellWidth / 10
+          dotSpacingX = cw / 6
+          dotSpacingY = cw / 10
           dotSize = 1
         } else if (codePoint === 0x2593) {
-          dotSpacingX = cellWidth / 4
-          dotSpacingY = cellWidth / 7
+          dotSpacingX = cw / 4
+          dotSpacingY = cw / 7
           dotSize = 2
         }
 
         let alignRight = false
-        for (let dy = 0; dy < cellHeight; dy += dotSpacingY) {
-          for (let dx = 0; dx < cellWidth; dx += dotSpacingX) {
+        for (let dy = 0; dy < ch; dy += dotSpacingY) {
+          for (let dx = 0; dx < cw; dx += dotSpacingX) {
             // prevent overflow
-            let dotSizeY = Math.min(dotSize, cellHeight - dy)
-            ctx.rect(x * cellWidth + (alignRight ? cellWidth - dx - dotSize : dx), y * cellHeight + dy, dotSize, dotSizeY)
+            let dotSizeY = Math.min(dotSize, ch - dy)
+            ctx.rect(x * cw + (alignRight ? cw - dx - dotSize : dx), y * ch + dy, dotSize, dotSizeY)
           }
           alignRight = !alignRight
         }
       } else if (codePoint === 0x2594) {
         // upper one eighth block >▔<
-        ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight / 8)
+        ctx.rect(x * cw, y * ch, cw, ch / 8)
       } else if (codePoint === 0x2595) {
         // right one eighth block >▕<
-        ctx.rect((x + 7 / 8) * cellWidth, y * cellHeight, cellWidth / 8, cellHeight)
+        ctx.rect((x + 7 / 8) * cw, y * ch, cw / 8, ch)
       }
 
       ctx.fill()
