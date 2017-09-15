@@ -6,6 +6,13 @@ window.termInit = function ({ labels, theme, allFn }) {
   const termUpload = TermUpl(conn, input, screen)
   screen.input = input
 
+  conn.on('open', () => { screen.window.statusScreen = null })
+  conn.on('connect', () => { screen.window.statusScreen = { title: 'Connecting', loading: true } })
+  conn.on('close', () => { screen.window.statusScreen = { title: 'Disconnected' } })
+  conn.on('ping', () => { screen.window.statusScreen = { title: 'Disconnected', loading: true } })
+  conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
+  conn.on('ping-success', () => { screen.window.statusScreen = { title: 'Reloading', loading: true } })
+
   conn.init()
   input.init({ allFn })
   termUpload.init()
