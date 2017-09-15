@@ -816,7 +816,7 @@ class DemoShell {
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
     } else if (action === 'move-cursor-x') {
-      this.cursorPos = Math.max(0, Math.min(this.history[0].length, this.cursorPos + args[0]))
+      this.cursorPos = Math.max(0, Math.min(this.history[this.historyIndex].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
       this.copyFromHistoryIndex()
       this.history[0] = ''
