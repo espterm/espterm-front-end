@@ -747,18 +747,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       } else if (codePoint === 0x2590) {
         // right half block >▐<
         ctx.rect(left + c2w, top, c2w, ch)
-      } else if (codePoint === 0x2596) {
-        // left bottom quadrant >▖<
-        ctx.rect(left, top + c2h, c2w, c2h)
-      } else if (codePoint === 0x2597) {
-        // right bottom quadrant >▗<
-        ctx.rect(left + c2w, top + c2h, c2w, c2h)
-      } else if (codePoint === 0x2598) {
-        // left top quadrant >▘<
-        ctx.rect(left, top, c2w, c2h)
-      } else if (codePoint === 0x259D) {
-        // right top quadrant >▝<
-        ctx.rect(left + c2w, top, c2w, c2h)
       } else if (codePoint <= 0x2593) {
         // shading >░< >▒< >▓<
 
@@ -796,6 +784,42 @@ window.TermScreen = class TermScreen extends EventEmitter {
       } else if (codePoint === 0x2595) {
         // right one eighth block >▕<
         ctx.rect((x + 7 / 8) * cw, y * ch, cw / 8, ch)
+      } else if (codePoint === 0x2596) {
+        // left bottom quadrant >▖<
+        ctx.rect(left, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x2597) {
+        // right bottom quadrant >▗<
+        ctx.rect(left + c2w, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x2598) {
+        // left top quadrant >▘<
+        ctx.rect(left, top, c2w, c2h)
+      } else if (codePoint === 0x2599) {
+        // left chair >▙<
+        ctx.rect(left, top, c2w, ch)
+        ctx.rect(left + c2w, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x259A) {
+        // quadrants lt rb >▚<
+        ctx.rect(left, top, c2w, c2h)
+        ctx.rect(left + c2w, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x259B) {
+        // left chair upside down >▛<
+        ctx.rect(left, top, c2w, ch)
+        ctx.rect(left + c2w, top, c2w, c2h)
+      } else if (codePoint === 0x259C) {
+        // right chair upside down >▜<
+        ctx.rect(left, top, cw, c2h)
+        ctx.rect(left + c2w, top + c2h, c2w, c2h)
+      } else if (codePoint === 0x259D) {
+        // right top quadrant >▝<
+        ctx.rect(left + c2w, top, c2w, c2h)
+      } else if (codePoint === 0x259E) {
+        // quadrants lb rt >▞<
+        ctx.rect(left, top + c2h, c2w, c2h)
+        ctx.rect(left + c2w, top, c2w, c2h)
+      } else if (codePoint === 0x259F) {
+        // right chair upside down >▟<
+        ctx.rect(left, top + c2h, c2w, c2h)
+        ctx.rect(left + c2w, top, c2w, ch)
       }
 
       ctx.fill()
