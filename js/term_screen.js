@@ -589,7 +589,7 @@ window.TermScreen = class TermScreen {
       this.drawnScreenAttrs = []
 
       // draw immediately; the canvas shouldn't flash
-      this.draw('init')
+      this.draw('update-size')
     }
   }
 
@@ -780,7 +780,69 @@ window.TermScreen = class TermScreen {
     if (attrs & (1 << 7)) overline = true
 
     ctx.fillStyle = this.getColor(fg)
-    ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
+
+    let codePoint = text.codePointAt(0)
+    if (codePoint >= 0x2580 && codePoint <= 0x2595) {
+      // block elements
+      ctx.beginPath()
+      let left = x * cellWidth
+      let top = y * cellHeight
+
+      if (codePoint === 0x2580) {
+        // upper half block
+        ctx.rect(left, top, cellWidth, cellHeight / 2)
+      } else if (codePoint <= 0x2588) {
+        // lower n eighth block (increasing)
+        let offset = (1 - (codePoint - 0x2580) / 8) * cellHeight
+        ctx.rect(left, top + offset, cellWidth, cellHeight - offset)
+      } else if (codePoint <= 0x258F) {
+        // left n eighth block (decreasing)
+        let offset = (codePoint - 0x2588) / 8 * cellWidth
+        ctx.rect(left, top, cellWidth - offset, cellHeight)
+      } else if (codePoint === 0x2590) {
+        // right half block
+        ctx.rect(left + cellWidth / 2, top, cellWidth / 2, cellHeight)
+      } else if (codePoint <= 0x2593) {
+        // shading
+
+        // dot spacing by dividing cell size by a constant. This could be
+        // reworked to always return a whole number, but that would require
+        // prime factorization, and doing that without a loop would let you
+        // take over the world, which is not within the scope of this project.
+        let dotSpacingX, dotSpacingY, dotSize
+        if (codePoint === 0x2591) {
+          dotSpacingX = cellWidth / 4
+          dotSpacingY = cellHeight / 10
+          dotSize = 1
+        } else if (codePoint === 0x2592) {
+          dotSpacingX = cellWidth / 6
+          dotSpacingY = cellWidth / 10
+          dotSize = 1
+        } else if (codePoint === 0x2593) {
+          dotSpacingX = cellWidth / 4
+          dotSpacingY = cellWidth / 5
+          dotSize = 2
+        }
+
+        let alignRight = false
+        for (let dy = 0; dy < cellHeight; dy += dotSpacingY) {
+          for (let dx = 0; dx < cellWidth; dx += dotSpacingX) {
+            ctx.rect(x * cellWidth + (alignRight ? cellWidth - dx - dotSize : dx), y * cellHeight + dy, dotSize, dotSize)
+          }
+          alignRight = !alignRight
+        }
+      } else if (codePoint === 0x2594) {
+        // upper one eighth block
+        ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight / 8)
+      } else if (codePoint === 0x2595) {
+        // right one eighth block
+        ctx.rect((x + 7 / 8) * cellWidth, y * cellHeight, cellWidth / 8, cellHeight)
+      }
+
+      ctx.fill()
+    } else {
+      ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
+    }
 
     if (underline || strike || overline) {
       ctx.strokeStyle = this.getColor(fg)
