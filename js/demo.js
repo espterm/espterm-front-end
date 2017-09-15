@@ -452,6 +452,13 @@ let demoshIndex = {
         '*': 17,
         '#': 24
       }
+      let characters = {
+        ' ': ' ',
+        '.': '░',
+        '-': '▒',
+        '*': '▓',
+        '#': '█'
+      }
       for (let i in splash) {
         if (splash[i].length < 79) splash[i] += ' '.repeat(79 - splash[i].length)
       }
@@ -474,7 +481,9 @@ let demoshIndex = {
         if (splash[y][x] === '@') {
           this.emit('write', '\x1b[48;5;8m\x1b[38;5;255m▄\b')
         } else {
-          this.emit('write', `\x1b[48;5;${231 + levels[splash[y][x]]}m \b`)
+          let level = 231 + levels[splash[y][x]]
+          let character = characters[splash[y][x]]
+          this.emit('write', `\x1b[48;5;${level}m\x1b[38;5;${level}m${character}\b`)
         }
       }
       return new Promise((resolve, reject) => {

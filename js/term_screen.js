@@ -820,14 +820,16 @@ window.TermScreen = class TermScreen {
           dotSize = 1
         } else if (codePoint === 0x2593) {
           dotSpacingX = cellWidth / 4
-          dotSpacingY = cellWidth / 5
+          dotSpacingY = cellWidth / 7
           dotSize = 2
         }
 
         let alignRight = false
         for (let dy = 0; dy < cellHeight; dy += dotSpacingY) {
           for (let dx = 0; dx < cellWidth; dx += dotSpacingX) {
-            ctx.rect(x * cellWidth + (alignRight ? cellWidth - dx - dotSize : dx), y * cellHeight + dy, dotSize, dotSize)
+            // prevent overflow
+            let dotSizeY = Math.min(dotSize, cellHeight - dy)
+            ctx.rect(x * cellWidth + (alignRight ? cellWidth - dx - dotSize : dx), y * cellHeight + dy, dotSize, dotSizeY)
           }
           alignRight = !alignRight
         }
