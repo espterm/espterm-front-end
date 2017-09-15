@@ -13,23 +13,37 @@ window.Conn = class TermConnection extends EventEmitter {
     this.forceClosing = false
 
     this.pageShown = false
+
+    window.addEventListener('focus', () => {
+      console.info('Window got focus, re-connecting')
+      this.init()
+    })
+    window.addEventListener('blur', () => {
+      console.info('Window lost focus, freeing socket')
+      this.closeSocket()
+      clearTimeout(this.heartbeatTimeout)
+    })
   }
 
   onWSOpen (evt) {
     console.log('CONNECTED')
     this.heartbeat()
     this.send('i')
+    this.forceClosing = false
 
     this.emit('connect')
   }
 
   onWSClose (evt) {
-    if (this.forceClosing) return
+    if (this.forceClosing) {
+      this.forceClosing = false
+      return
+    }
     console.warn('SOCKET CLOSED, code ' + evt.code + '. Reconnecting...')
     if (evt.code < 1000) {
       console.error('Bad code from socket!')
       // this sometimes happens for unknown reasons, code < 1000 is invalid
-      location.reload()
+      // location.reload()
     }
 
     clearTimeout(this.reconnTimeout)
@@ -109,7 +123,6 @@ window.Conn = class TermConnection extends EventEmitter {
     if (this.ws) {
       this.forceClosing = true
       this.ws.close()
-      this.forceClosing = false
       this.ws = null
     }
   }

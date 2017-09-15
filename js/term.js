@@ -6,9 +6,21 @@ window.termInit = function ({ labels, theme, allFn }) {
   const termUpload = TermUpl(conn, input, screen)
   screen.input = input
 
-  conn.on('open', () => { screen.window.statusScreen = { title: 'Connecting', loading: true } })
-  conn.on('connect', () => { screen.window.statusScreen = null })
-  conn.on('disconnect', () => { screen.window.statusScreen = { title: 'Disconnected' } })
+  // we delay the display of "connecting" to avoid flash when changing tabs with the terminal open
+  let showConnectingTimeout = -1
+  conn.on('open', () => {
+    showConnectingTimeout = setTimeout(() => {
+      screen.window.statusScreen = { title: 'Connecting', loading: true }
+    }, 250)
+  })
+  conn.on('connect', () => {
+    clearTimeout(showConnectingTimeout)
+    screen.window.statusScreen = null
+  })
+  conn.on('disconnect', () => {
+    clearTimeout(showConnectingTimeout)
+    screen.window.statusScreen = { title: 'Disconnected' }
+  })
   conn.on('silence', () => { screen.window.statusScreen = { title: 'Waiting for server', loading: true } })
   // conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
   conn.on('ping-success', () => { screen.window.statusScreen = { title: 'Re-connecting', loading: true } })
