@@ -114,7 +114,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
       fitIntoWidth: 0,
       fitIntoHeight: 0,
       debug: false,
-      graphics: 0
+      graphics: 0,
+      statusScreen: null
     }
 
     // scaling caused by fitIntoWidth/fitIntoHeight
@@ -879,8 +880,16 @@ window.TermScreen = class TermScreen extends EventEmitter {
       height,
       devicePixelRatio,
       gridScaleX,
-      gridScaleY
+      gridScaleY,
+      statusScreen
     } = this.window
+
+    if (statusScreen) {
+      // draw status screen instead
+      this.drawStatus(statusScreen)
+      this.startDrawLoop()
+      return
+    } else this.stopDrawLoop()
 
     const charSize = this.getCharSize()
     const { width: cellWidth, height: cellHeight } = this.getCellSize()
@@ -1083,6 +1092,72 @@ window.TermScreen = class TermScreen extends EventEmitter {
     if (this.window.graphics >= 1) ctx.restore()
 
     if (this.window.debug && this._debug) this._debug.drawEnd()
+  }
+
+  drawStatus (statusScreen) {
+    const ctx = this.ctx
+    const {
+      fontFamily,
+      width,
+      height
+    } = this.window
+
+    // reset drawnScreen to force redraw when statusScreen is disabled
+    this.drawnScreen = []
+
+    const cellSize = this.getCellSize()
+    const screenWidth = width * cellSize.width
+    const screenHeight = height * cellSize.height
+
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
+    ctx.clearRect(0, 0, screenWidth, screenHeight)
+
+    ctx.font = `40px ${fontFamily}`
+    ctx.fillStyle = '#fff'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 20)
+
+    if (statusScreen.loading) {
+      // show loading spinner
+      ctx.save()
+      ctx.translate(screenWidth / 2, screenHeight / 2 + 50)
+
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 5
+      ctx.lineCap = 'round'
+
+      let t = Date.now() / 1000
+
+      for (let i = 0; i < 12; i++) {
+        ctx.rotate(Math.PI / 6)
+        let offset = ((t * 12) - i) % 12
+        ctx.globalAlpha = Math.max(0.2, 1 - offset / 3)
+        ctx.beginPath()
+        ctx.moveTo(0, 15)
+        ctx.lineTo(0, 30)
+        ctx.stroke()
+      }
+
+      ctx.restore()
+    }
+  }
+
+  startDrawLoop () {
+    if (this._drawTimerThread) return
+    let threadID = Math.random().toString(36)
+    this._drawTimerThread = threadID
+    this.drawTimerLoop(threadID)
+  }
+
+  stopDrawLoop () {
+    this._drawTimerThread = null
+  }
+
+  drawTimerLoop (threadID) {
+    if (!threadID || threadID !== this._drawTimerThread) return
+    requestAnimationFrame(() => this.drawTimerLoop(threadID))
+    this.draw('draw-loop')
   }
 
   /**

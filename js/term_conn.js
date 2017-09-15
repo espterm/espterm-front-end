@@ -1,31 +1,38 @@
 /** Handle connections */
-window.Conn = function (screen) {
-  let ws
-  let heartbeatTout
-  let pingIv
-  let xoff = false
-  let autoXoffTout
-  let reconTout
+window.Conn = class TermConnection extends EventEmitter {
+  constructor (screen) {
+    super()
 
-  let pageShown = false
+    this.screen = screen
+    this.ws = null
+    this.heartbeatTimeout = null
+    this.pingInterval = null
+    this.xoff = false
+    this.autoXoffTimeout = null
+    this.reconTimeout = null
 
-  function onOpen (evt) {
-    console.log('CONNECTED')
-    heartbeat()
-    doSend('i')
+    this.pageShown = false
   }
 
-  function onClose (evt) {
+  onWSOpen (evt) {
+    console.log('CONNECTED')
+    this.heartbeat()
+    this.send('i')
+
+    this.emit('open')
+  }
+
+  onWSClose (evt) {
     console.warn('SOCKET CLOSED, code ' + evt.code + '. Reconnecting...')
-    clearTimeout(reconTout)
-    reconTout = setTimeout(function () {
-      init()
-    }, 2000)
+    clearTimeout(this.reconTimeout)
+    this.reconTimeout = setTimeout(() => this.init(), 2000)
     // this happens when the buffer gets fucked up via invalid unicode.
     // we basically use polling instead of socket then
+
+    this.emit('close', evt.code)
   }
 
-  function onMessage (evt) {
+  onWSMessage (evt) {
     try {
       // . = heartbeat
       switch (evt.data.charAt(0)) {
@@ -35,66 +42,66 @@ window.Conn = function (screen) {
 
         case '-':
           // console.log('xoff');
-          xoff = true
-          autoXoffTout = setTimeout(function () {
-            xoff = false
+          this.xoff = true
+          this.autoXoffTimeout = setTimeout(() => {
+            this.xoff = false
           }, 250)
           break
 
         case '+':
           // console.log('xon');
-          xoff = false
-          clearTimeout(autoXoffTout)
+          this.xoff = false
+          clearTimeout(this.autoXoffTimeout)
           break
 
         default:
-          screen.load(evt.data)
-          if (!pageShown) {
+          this.screen.load(evt.data)
+          if (!this.pageShown) {
             showPage()
-            pageShown = true
+            this.pageShown = true
           }
           break
       }
-      heartbeat()
+      this.heartbeat()
     } catch (e) {
       console.error(e)
     }
   }
 
-  function canSend () {
-    return !xoff
+  canSend () {
+    return !this.xoff
   }
 
-  function doSend (message) {
-    if (_demo) {
-      if (typeof demoInterface !== 'undefined') {
+  send (message) {
+    if (window._demo) {
+      if (typeof window.demoInterface !== 'undefined') {
         demoInterface.input(message)
       } else {
         console.log(`TX: ${JSON.stringify(message)}`)
       }
       return true // Simulate success
     }
-    if (xoff) {
+    if (this.xoff) {
       // TODO queue
       console.log("Can't send, flood control.")
       return false
     }
 
-    if (!ws) return false // for dry testing
-    if (ws.readyState !== 1) {
+    if (!this.ws) return false // for dry testing
+    if (this.ws.readyState !== 1) {
       console.error('Socket not ready')
       return false
     }
     if (typeof message != 'string') {
       message = JSON.stringify(message)
     }
-    ws.send(message)
+    this.ws.send(message)
     return true
   }
 
-  function init () {
+  init () {
     if (window._demo) {
-      if (typeof demoInterface === 'undefined') {
+      if (typeof window.demoInterface === 'undefined') {
         alert('Demoing non-demo demo!') // this will catch mistakes when deploying to the website
       } else {
         demoInterface.init(screen)
@@ -103,42 +110,40 @@ window.Conn = function (screen) {
       return
     }
 
-    clearTimeout(reconTout)
-    clearTimeout(heartbeatTout)
+    clearTimeout(this.reconTimeout)
+    clearTimeout(this.heartbeatTimeout)
 
-    ws = new WebSocket('ws://' + _root + '/term/update.ws')
-    ws.onopen = onOpen
-    ws.onclose = onClose
-    ws.onmessage = onMessage
+    this.ws = new WebSocket('ws://' + _root + '/term/update.ws')
+    this.ws.addEventListener('open', (...args) => this.onWSOpen(...args))
+    this.ws.addEventListener('close', (...args) => this.onWSClose(...args))
+    this.ws.addEventListener('message', (...args) => this.onWSMessage(...args))
     console.log('Opening socket.')
-    heartbeat()
+    this.heartbeat()
+
+    this.emit('connect')
   }
 
-  function heartbeat () {
-    clearTimeout(heartbeatTout)
-    heartbeatTout = setTimeout(heartbeatFail, 2000)
+  heartbeat () {
+    clearTimeout(this.heartbeatTimeout)
+    this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), 2000)
   }
 
-  function heartbeatFail () {
+  onHeartbeatFail () {
     console.error('Heartbeat lost, probing server...')
-    pingIv = setInterval(function () {
+    clearInterval(this.pingInterval)
+    this.pingInterval = setInterval(() => {
       console.log('> ping')
-      $.get('http://' + _root + '/system/ping', function (resp, status) {
+      this.emit('ping')
+      $.get('http://' + _root + '/system/ping', (resp, status) => {
         if (status === 200) {
-          clearInterval(pingIv)
+          clearInterval(this.pingInterval)
           console.info('Server ready, reloading page...')
+          this.emit('ping-success')
           location.reload()
-        }
+        } else this.emit('ping-fail', status)
       }, {
         timeout: 100
       })
     }, 1000)
-  }
-
-  return {
-    ws: null,
-    init,
-    send: doSend,
-    canSend // check flood control
   }
 }
