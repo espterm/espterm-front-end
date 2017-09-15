@@ -304,47 +304,7 @@ class ScrollingTerminal {
   }
 }
 
-class Process {
-  constructor (args) {
-    // event listeners
-    this._listeners = {}
-  }
-  on (event, listener) {
-    if (!this._listeners[event]) this._listeners[event] = []
-    this._listeners[event].push({ listener })
-  }
-  once (event, listener) {
-    if (!this._listeners[event]) this._listeners[event] = []
-    this._listeners[event].push({ listener, once: true })
-  }
-  off (event, listener) {
-    let listeners = this._listeners[event]
-    if (listeners) {
-      for (let i in listeners) {
-        if (listeners[i].listener === listener) {
-          listeners.splice(i, 1)
-          break
-        }
-      }
-    }
-  }
-  emit (event, ...args) {
-    let listeners = this._listeners[event]
-    if (listeners) {
-      let remove = []
-      for (let listener of listeners) {
-        try {
-          listener.listener(...args)
-          if (listener.once) remove.push(listener)
-        } catch (err) {
-          console.error(err)
-        }
-      }
-      for (let listener of remove) {
-        listeners.splice(listeners.indexOf(listener), 1)
-      }
-    }
-  }
+class Process extends EventEmitter {
   write (data) {
     this.emit('in', data)
   }
