@@ -117,13 +117,14 @@ window.TermScreen = class TermScreen extends EventEmitter {
       fitIntoHeight: 0,
       debug: false,
       graphics: 0,
-      statusScreen: null
+      statusScreen: null,
+      focused: false
     }
 
     // scaling caused by fitIntoWidth/fitIntoHeight
     this._windowScale = 1
 
-    // properties of this.window that require updating size and redrawing
+    // properties of this.window that change the size (used for diffing)
     this.windowState = {
       width: 0,
       height: 0,
@@ -907,7 +908,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
       devicePixelRatio,
       gridScaleX,
       gridScaleY,
-      statusScreen
+      statusScreen,
+      focused
     } = this.window
 
     if (statusScreen) {
@@ -946,7 +948,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
       let isCursor = !this.cursor.hanging &&
         this.cursor.x === x &&
         this.cursor.y === y &&
-        this.cursor.blinkOn &&
+        (this.cursor.blinkOn || !focused) &&
         this.cursor.visible
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
@@ -974,7 +976,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
         bg !== this.drawnScreenBG[cell] ||
         attrs !== this.drawnScreenAttrs[cell] ||
         isCursor !== wasCursor ||
-        (isCursor && this.cursor.style !== this.drawnCursor[2])
+        (isCursor && this.cursor.style !== this.drawnCursor[2]) ||
+        (isCursor && !focused) // hack to ensure cursor is redrawn when blurred. Side effect: will always redraw when blurred
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -1086,7 +1089,24 @@ window.TermScreen = class TermScreen extends EventEmitter {
         if (isCursor && !inSelection) {
           ctx.save()
           ctx.beginPath()
-          if (this.cursor.style === 'block') {
+          if (!focused) {
+            let left = x * cellWidth
+            let top = y * cellHeight
+            let right = (x + 1) * cellWidth
+            let bottom = (y + 1) * cellHeight
+            // draw a rect clockwise
+            ctx.moveTo(left, top)
+            ctx.lineTo(right, top)
+            ctx.lineTo(right, bottom)
+            ctx.lineTo(left, bottom)
+            ctx.lineTo(left, top)
+            // draw another smaller rect counter-clockwise to subtract
+            ctx.moveTo(left + 2, top + 2)
+            ctx.lineTo(left + 2, bottom - 2)
+            ctx.lineTo(right - 2, bottom - 2)
+            ctx.lineTo(right - 2, top + 2)
+            ctx.lineTo(left + 2, top + 2)
+          } else if (this.cursor.style === 'block') {
             // block
             ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
           } else if (this.cursor.style === 'bar') {

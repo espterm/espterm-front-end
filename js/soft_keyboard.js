@@ -2,6 +2,15 @@ window.initSoftKeyboard = function (screen, input) {
   const keyInput = qs('#softkb-input')
   if (!keyInput) return // abort, we're not on the terminal page
 
+  document.addEventListener('paste', e => {
+    e.preventDefault()
+    console.log('document paste', e)
+  })
+  keyInput.addEventListener('paste', e => {
+    e.preventDefault()
+    console.log('keyInput paste', e)
+  })
+
   let keyboardOpen = false
 
   // moves the input to where the cursor is on the canvas.
@@ -59,18 +68,19 @@ window.initSoftKeyboard = function (screen, input) {
     lastCompositionString = newValue
   }
 
+  // override keymaster filter to include keyInput
+  let originalFilter = key.filter
+  key.filter = function (event) {
+    if (event.target === keyInput) return true
+    return originalFilter(event)
+  }
+
   keyInput.addEventListener('keydown', e => {
     if (e.key === 'Unidentified') return
 
     keyInput.value = ''
 
-    if (e.key === 'Backspace') {
-      e.preventDefault()
-      input.sendString('\b')
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      input.sendString('\x0d')
-    }
+    key.dispatch(e)
   })
 
   keyInput.addEventListener('keypress', e => {
@@ -106,4 +116,16 @@ window.initSoftKeyboard = function (screen, input) {
   })
 
   screen.on('open-soft-keyboard', () => keyInput.focus())
+  screen.canvas.addEventListener('mouseup', e => {
+    if (document.activeElement !== keyInput) keyInput.focus()
+  })
+
+  keyInput.addEventListener('focus', () => {
+    qs('#screen').classList.add('focused')
+    screen.window.focused = true
+  })
+  keyInput.addEventListener('blur', () => {
+    qs('#screen').classList.remove('focused')
+    screen.window.focused = false
+  })
 }

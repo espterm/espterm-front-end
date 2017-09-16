@@ -144,6 +144,7 @@ window.Input = function (conn) {
   function initKeys ({ allFn }) {
     // This takes care of text characters typed
     window.addEventListener('keypress', function (evt) {
+      return
       if (cfg.no_keys) return
       let str = ''
       if (evt.key) str = evt.key

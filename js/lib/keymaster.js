@@ -277,7 +277,8 @@
   };
 
   // set the handlers globally on document
-  addEvent(document, 'keydown', function(event) { dispatch(event) }); // Passing _scope to a callback to ensure it remains the same by execution. Fixes #48
+  // Disabled for ESPTerm:
+  // addEvent(document, 'keydown', function(event) { dispatch(event) }); // Passing _scope to a callback to ensure it remains the same by execution. Fixes #48
   addEvent(document, 'keyup', clearModifier);
 
   // reset modifiers to false whenever the window is (re)focused.
@@ -304,6 +305,9 @@
   global.key.getPressedKeyCodes = getPressedKeyCodes;
   global.key.noConflict = noConflict;
   global.key.unbind = unbindKey;
+
+  // Added for ESPTerm:
+  global.key.dispatch = dispatch;
 
   if(typeof module !== 'undefined') module.exports = assignKey;
 

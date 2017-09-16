@@ -20,9 +20,11 @@ body.term {
 	background: #111213;
 	padding: 6px;
 	display: inline-block;
-	border: 2px solid #3983CD;
+	border: 2px solid #224364;
 	position: relative;
 	line-height: 0;
+
+	@include noselect();
 
 	cursor: default;
 
@@ -30,7 +32,9 @@ body.term {
 		cursor: text;
 	}
 
-	@include noselect();
+	&.focused {
+		border-color: #3983CD;
+	}
 
 	// Dummy input field used to open soft keyboard
 	#softkb-input {
