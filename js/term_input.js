@@ -208,7 +208,12 @@ window.Input = function (conn, screen) {
     'Meta+ArrowLeft':      '\x01',     // ⌘← to go to the beginning of a line (^A)
     'Meta+ArrowRight':     '\x05',     // ⌘→ to go to the end of a line (^E)
     'Alt+Backspace':       '\x17',     // ⌥⌫ to delete a word (^W)
-    'Meta+Backspace':      '\x15'     // ⌘⌫ to delete to the beginning of a line (^U)
+    'Meta+Backspace':      '\x15',     // ⌘⌫ to delete to the beginning of a line (^U)
+
+    // copy to clipboard
+    'Control+Shift+C' () {
+      screen.copySelectionToClipboard()
+    }
     /* eslint-enable key-spacing */
   }
 
