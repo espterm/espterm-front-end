@@ -344,12 +344,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       }
       selectEnd(e.offsetX, e.offsetY)
     })
-
-    // bind ctrl+shift+c to copy
-    key('⌃+⇧+c', e => {
-      e.preventDefault()
-      this.copySelectionToClipboard()
-    })
   }
 
   /**

@@ -16,7 +16,6 @@ fi
 
 npm run babel -- -o "out/js/app.$FRONT_END_HASH.js" ${smarg} js/lib \
     js/lib/chibi.js \
-    js/lib/keymaster.js \
     js/lib/polyfills.js \
     js/event_emitter.js \
     js/utils.js \

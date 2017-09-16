@@ -2,7 +2,7 @@
 window.termInit = function ({ labels, theme, allFn }) {
   const screen = new TermScreen()
   const conn = new Conn(screen)
-  const input = Input(conn)
+  const input = Input(conn, screen)
   const termUpload = TermUpl(conn, input, screen)
   screen.input = input
 
