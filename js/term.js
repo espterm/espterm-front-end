@@ -5,6 +5,7 @@ window.termInit = function ({ labels, theme, allFn }) {
   const input = Input(conn, screen)
   const termUpload = TermUpl(conn, input, screen)
   screen.input = input
+  input.termUpload = termUpload
 
   // we delay the display of "connecting" to avoid flash when changing tabs with the terminal open
   let showConnectingTimeout = -1

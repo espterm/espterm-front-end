@@ -15,6 +15,9 @@
  * m - mouse move
  */
 window.Input = function (conn, screen) {
+  // handle for input object
+  let input
+
   const KEY_NAMES = {
     0x03: 'Cancel',
     0x06: 'Help',
@@ -299,10 +302,16 @@ window.Input = function (conn, screen) {
     })
     window.addEventListener('paste', e => {
       e.preventDefault()
-      console.log('User pasted:\n' + e.clipboardData.getData('text/plain'))
-
-      // just write it for now
-      sendString(e.clipboardData.getData('text/plain'))
+      let string = e.clipboardData.getData('text/plain')
+      if (string.includes('\n') || string.length > 90) {
+        if (!input.termUpload) console.error('input.termUpload is undefined')
+        input.termUpload.setContent(string)
+        input.termUpload.open()
+      } else {
+        // simple string, just paste it
+        if (screen.bracketedPaste) string = `\x1b[200~${string}\x1b[201~`
+        sendString(string)
+      }
     })
 
     cfg.all_fn = allFn
@@ -361,7 +370,7 @@ window.Input = function (conn, screen) {
     return modifiers
   }
 
-  return {
+  input = {
     /** Init the Input module */
     init,
 
@@ -428,4 +437,5 @@ window.Input = function (conn, screen) {
       cfg.no_keys = yes
     }
   }
+  return input
 }

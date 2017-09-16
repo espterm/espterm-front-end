@@ -164,6 +164,10 @@ window.TermUpl = function (conn, input, screen) {
         fuClose()
         return false
       })
+    },
+    open: openUploadDialog,
+    setContent (content) {
+      qs('#fu_text').value = content
     }
   }
 }
