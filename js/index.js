@@ -2,6 +2,6 @@ require('./lib/polyfills')
 require('./modal')
 require('./notif')
 require('./appcommon')
-require('./demo')
+try { require('./demo') } catch (err) {}
 require('./wifi')
 window.termInit = require('./term')

@@ -865,7 +865,7 @@ class DemoShell {
   }
 }
 
-window.demoInterface = {
+window.demoInterface = module.exports = {
   input (data) {
     let type = data[0]
     let content = data.substr(1)

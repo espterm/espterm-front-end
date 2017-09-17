@@ -1,6 +1,7 @@
 const EventEmitter = require('events')
 const $ = require('./lib/chibi')
-const demo = require('./demo')
+let demo
+try { demo = require('./demo') } catch (err) {}
 
 /** Handle connections */
 module.exports = class TermConnection extends EventEmitter {
