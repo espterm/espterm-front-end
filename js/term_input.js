@@ -384,9 +384,6 @@ window.Input = function (conn, screen) {
         cfg.np_alt = np
         cfg.fn_alt = fn
         cfg.crlf_mode = crlf
-
-        // rebind keys - codes have changed
-        bindFnKeys()
       }
     },
 
@@ -408,7 +405,6 @@ window.Input = function (conn, screen) {
       if (b > 3 || b < 1) return
       const m = packModifiersForMouse()
       conn.send('p' + encode2B(y) + encode2B(x) + encode2B(b) + encode2B(m))
-      // console.log("B ",b," M ",m);
     },
 
     onMouseUp (x, y, b) {
