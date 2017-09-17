@@ -19,15 +19,16 @@ module.exports = class TermConnection extends EventEmitter {
 
     this.pageShown = false
 
-    window.addEventListener('focus', () => {
-      console.info('Window got focus, re-connecting')
-      this.init()
-    })
-    window.addEventListener('blur', () => {
-      console.info('Window lost focus, freeing socket')
-      this.closeSocket()
-      clearTimeout(this.heartbeatTimeout)
-    })
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden === true) {
+        console.info('Window lost focus, freeing socket')
+        this.closeSocket()
+        clearTimeout(this.heartbeatTimeout)
+      } else {
+        console.info('Window got focus, re-connecting')
+        this.init()
+      }
+    }, false)
   }
 
   onWSOpen (evt) {
