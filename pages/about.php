@@ -83,7 +83,7 @@
 			*cpsdqs,* for rewriting the front-end to use HTML5 canvas and other JS improvements
 		</li>
 		<li>
-			*Guenter Honisch,* for findign bugs and suggesting many improvements
+			*Guenter Honisch,* for finding bugs and suggesting many improvements
 		</li>
 		<li>
 			*doc. Jan Fischer,* who came up with the original idea
