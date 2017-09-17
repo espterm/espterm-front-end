@@ -13,8 +13,3 @@
 	}
 	?>
 </nav>
-
-<script>
-	function menuOpen() { $('#menu').toggleClass('expanded') }
-	$('#brand').on('click', menuOpen).on('keypress', cr(menuOpen));
-</script>

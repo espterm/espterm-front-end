@@ -1,3 +1,9 @@
+const EventEmitter = require('events')
+const $ = require('./lib/chibi')
+const { mk, qs, parse2B, parse3B } = require('./utils')
+const notify = require('./notif')
+const { themes, buildColorTable } = require('./themes')
+
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
 const SEQ_SET_COLORS = 3
@@ -8,7 +14,7 @@ const SEQ_SET_BG = 6
 const SELECTION_BG = '#b2d7fe'
 const SELECTION_FG = '#333'
 
-window.TermScreen = class TermScreen extends EventEmitter {
+module.exports = class TermScreen extends EventEmitter {
   constructor () {
     super()
 
@@ -21,54 +27,9 @@ window.TermScreen = class TermScreen extends EventEmitter {
       'Z': '\u2128'
     }
 
-    this.themes = [
-      [ // Tango
-        '#111213', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF',
-        '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC'
-      ],
-      [ // Linux
-        '#000000', '#aa0000', '#00aa00', '#aa5500', '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa',
-        '#555555', '#ff5555', '#55ff55', '#ffff55', '#5555ff', '#ff55ff', '#55ffff', '#ffffff'
-      ],
-      [ // xterm
-        '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000ee', '#cd00cd', '#00cdcd', '#e5e5e5',
-        '#7f7f7f', '#ff0000', '#00ff00', '#ffff00', '#5c5cff', '#ff00ff', '#00ffff', '#ffffff'
-      ],
-      [ // rxvt
-        '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000cd', '#cd00cd', '#00cdcd', '#faebd7',
-        '#404040', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
-      ],
-      [ // Ambience
-        '#2e3436', '#cc0000', '#4e9a06', '#c4a000', '#3465a4', '#75507b', '#06989a', '#d3d7cf',
-        '#555753', '#ef2929', '#8ae234', '#fce94f', '#729fcf', '#ad7fa8', '#34e2e2', '#eeeeec'
-      ],
-      [ // Solarized
-        '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
-        '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
-      ]
-    ]
-
     // 256color lookup table
     // should not be used to look up 0-15 (will return transparent)
-    this.colorTable256 = new Array(16).fill('rgba(0, 0, 0, 0)')
-
-    // fill color table
-    // colors 16-231 are a 6x6x6 color cube
-    for (let red = 0; red < 6; red++) {
-      for (let green = 0; green < 6; green++) {
-        for (let blue = 0; blue < 6; blue++) {
-          let redValue = red * 40 + (red ? 55 : 0)
-          let greenValue = green * 40 + (green ? 55 : 0)
-          let blueValue = blue * 40 + (blue ? 55 : 0)
-          this.colorTable256.push(`rgb(${redValue}, ${greenValue}, ${blueValue})`)
-        }
-      }
-    }
-    // colors 232-255 are a grayscale ramp, sans black and white
-    for (let gray = 0; gray < 24; gray++) {
-      let value = gray * 10 + 8
-      this.colorTable256.push(`rgb(${value}, ${value}, ${value})`)
-    }
+    this.colorTable256 = buildColorTable()
 
     this._debug = null
 
@@ -351,7 +312,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
    * @type {number[]}
    */
   get palette () {
-    return this._palette || this.themes[0]
+    return this._palette || themes[0]
   }
   /** @type {number[]} */
   set palette (palette) {
@@ -472,8 +433,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       const {
         width,
         height,
-        gridScaleX,
-        gridScaleY,
         fitIntoWidth,
         fitIntoHeight
       } = this.window
@@ -632,9 +591,9 @@ window.TermScreen = class TermScreen extends EventEmitter {
     textarea.value = selectedText
     textarea.select()
     if (document.execCommand('copy')) {
-      Notify.show('Copied to clipboard')
+      notify.show('Copied to clipboard')
     } else {
-      Notify.show('Failed to copy')
+      notify.show('Failed to copy')
     }
     document.body.removeChild(textarea)
   }
@@ -899,8 +858,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       width,
       height,
       devicePixelRatio,
-      gridScaleX,
-      gridScaleY,
       statusScreen
     } = this.window
 
@@ -913,8 +870,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
     const charSize = this.getCharSize()
     const { width: cellWidth, height: cellHeight } = this.getCellSize()
-    const screenWidth = width * cellWidth
-    const screenHeight = height * cellHeight
     const screenLength = width * height
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
@@ -1042,7 +997,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
     // pass 1: backgrounds
     for (let font of fontGroups.keys()) {
       for (let data of fontGroups.get(font)) {
-        let [cell, x, y, text, fg, bg, attrs, isCursor] = data
+        let [cell, x, y, text, , bg] = data
 
         if (redrawMap.get(cell)) {
           this.drawBackground({ x, y, cellWidth, cellHeight, bg })
@@ -1128,7 +1083,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
     const {
       fontFamily,
       width,
-      height
+      height,
+      devicePixelRatio
     } = this.window
 
     // reset drawnScreen to force redraw when statusScreen is disabled
@@ -1185,7 +1141,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
   drawTimerLoop (threadID) {
     if (!threadID || threadID !== this._drawTimerThread) return
-    requestAnimationFrame(() => this.drawTimerLoop(threadID))
+    window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
     this.draw('draw-loop')
   }
 
@@ -1296,7 +1252,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
+    let strArray = Array.from ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
     const MASK_BLINK = 1 << 4
@@ -1392,7 +1348,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
       let label = pieces[i + 1].trim()
       // if empty string, use the "dim" effect and put nbsp instead to
       // stretch the button vertically
-      button.innerHTML = label ? esc(label) : '&nbsp;'
+      button.innerHTML = label ? $.htmlEscape(label) : '&nbsp;'
       button.style.opacity = label ? 1 : 0.2
     })
   }
@@ -1403,17 +1359,17 @@ window.TermScreen = class TermScreen extends EventEmitter {
    */
   showNotification (text) {
     console.info(`Notification: ${text}`)
-    if (Notification && Notification.permission === 'granted') {
-      let notification = new Notification('ESPTerm', {
+    if (window.Notification && window.Notification.permission === 'granted') {
+      let notification = new window.Notification('ESPTerm', {
         body: text
       })
       notification.addEventListener('click', () => window.focus())
     } else {
-      if (Notification && Notification.permission !== 'denied') {
-        Notification.requestPermission()
+      if (window.Notification && window.Notification.permission !== 'denied') {
+        window.Notification.requestPermission()
       } else {
         // Fallback using the built-in notification balloon
-        Notify.show(text)
+        notify.show(text)
       }
     }
   }
@@ -1425,8 +1381,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
    */
   load (str, theme = -1) {
     const content = str.substr(1)
-    if (theme >= 0 && theme < this.themes.length) {
-      this.palette = this.themes[theme]
+    if (theme >= 0 && theme < themes.length) {
+      this.palette = themes[theme]
     }
 
     switch (str[0]) {
@@ -1500,7 +1456,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
     surrOsc.stop(startTime + 0.8)
 
     let loop = function () {
-      if (audioCtx.currentTime < startTime + 0.8) requestAnimationFrame(loop)
+      if (audioCtx.currentTime < startTime + 0.8) window.requestAnimationFrame(loop)
       mainGain.gain.value *= 0.8
       surrGain.gain.value *= 0.8
     }

@@ -1,5 +1,10 @@
+const EventEmitter = require('events')
+const $ = require('./lib/chibi')
+let demo
+try { demo = require('./demo') } catch (err) {}
+
 /** Handle connections */
-window.Conn = class TermConnection extends EventEmitter {
+module.exports = class TermConnection extends EventEmitter {
   constructor (screen) {
     super()
 
@@ -94,7 +99,7 @@ window.Conn = class TermConnection extends EventEmitter {
   send (message) {
     if (window._demo) {
       if (typeof window.demoInterface !== 'undefined') {
-        demoInterface.input(message)
+        demo.input(message)
       } else {
         console.log(`TX: ${JSON.stringify(message)}`)
       }
@@ -130,9 +135,9 @@ window.Conn = class TermConnection extends EventEmitter {
   init () {
     if (window._demo) {
       if (typeof window.demoInterface === 'undefined') {
-        alert('Demoing non-demo build!') // this will catch mistakes when deploying to the website
+        window.alert('Demoing non-demo build!') // this will catch mistakes when deploying to the website
       } else {
-        demoInterface.init(this.screen)
+        demo.init(this.screen)
         showPage()
       }
       return
@@ -143,7 +148,7 @@ window.Conn = class TermConnection extends EventEmitter {
 
     this.closeSocket()
 
-    this.ws = new WebSocket('ws://' + _root + '/term/update.ws')
+    this.ws = new window.WebSocket('ws://' + window._root + '/term/update.ws')
     this.ws.addEventListener('open', (...args) => this.onWSOpen(...args))
     this.ws.addEventListener('close', (...args) => this.onWSClose(...args))
     this.ws.addEventListener('message', (...args) => this.onWSMessage(...args))
@@ -167,7 +172,7 @@ window.Conn = class TermConnection extends EventEmitter {
     this.pingInterval = setInterval(() => {
       console.log('> ping')
       this.emit('ping')
-      $.get('http://' + _root + '/system/ping', (resp, status) => {
+      $.get('http://' + window._root + '/system/ping', (resp, status) => {
         if (status === 200) {
           clearInterval(this.pingInterval)
           console.info('Server ready, opening socket…')

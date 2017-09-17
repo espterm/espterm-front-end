@@ -18,5 +18,5 @@ foreach ($selected as $key) {
 file_put_contents(__DIR__. '/js/lang.js',
 	"// Generated from PHP locale file\n" .
 	'let _tr = ' . json_encode($out, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) . ";\n\n" .
-	"function tr (key) { return _tr[key] || '?' + key + '?' }\n"
+	"module.exports = function tr (key) { return _tr[key] || '?' + key + '?' }\n"
 );

@@ -1,4 +1,6 @@
-window.initSoftKeyboard = function (screen, input) {
+const { qs } = require('./utils')
+
+module.exports = function (screen, input) {
   const keyInput = qs('#softkb-input')
   if (!keyInput) return // abort, we're not on the terminal page
 
@@ -33,7 +35,6 @@ window.initSoftKeyboard = function (screen, input) {
   // that deals with the input composition events.
 
   let lastCompositionString = ''
-  let compositing = false
 
   // sends the difference between the last and the new composition string
   let sendInputDelta = function (newValue) {
@@ -96,12 +97,10 @@ window.initSoftKeyboard = function (screen, input) {
 
   keyInput.addEventListener('compositionstart', e => {
     lastCompositionString = ''
-    compositing = true
   })
 
   keyInput.addEventListener('compositionend', e => {
     lastCompositionString = ''
-    compositing = false
     keyInput.value = ''
   })
 

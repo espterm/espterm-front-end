@@ -1,9 +1,18 @@
+const { qs, mk } = require('./utils')
+const Notify = require('./notif')
+const TermScreen = require('./term_screen')
+const TermConnection = require('./term_conn')
+const TermInput = require('./term_input')
+const TermUpload = require('./term_upload')
+const initSoftKeyboard = require('./soft_keyboard')
+const attachDebugScreen = require('./debug_screen')
+
 /** Init the terminal sub-module - called from HTML */
-window.termInit = function ({ labels, theme, allFn }) {
+module.exports = function ({ labels, theme, allFn }) {
   const screen = new TermScreen()
-  const conn = new Conn(screen)
-  const input = Input(conn, screen)
-  const termUpload = TermUpl(conn, input, screen)
+  const conn = new TermConnection(screen)
+  const input = TermInput(conn, screen)
+  const termUpload = TermUpload(conn, input, screen)
   screen.input = input
   input.termUpload = termUpload
 
@@ -39,8 +48,8 @@ window.termInit = function ({ labels, theme, allFn }) {
   qs('#screen').appendChild(screen.canvas)
   screen.load(labels, theme) // load labels and theme
 
-  window.initSoftKeyboard(screen, input)
-  if (window.attachDebugScreen) window.attachDebugScreen(screen)
+  initSoftKeyboard(screen, input)
+  if (attachDebugScreen) attachDebugScreen(screen)
 
   let isFullscreen = false
   let fitScreen = false
@@ -75,10 +84,10 @@ window.termInit = function ({ labels, theme, allFn }) {
   })
 
   // add fullscreen mode & button
-  if (Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen) {
+  if (window.Element.prototype.requestFullscreen || window.Element.prototype.webkitRequestFullscreen) {
     let checkForFullscreen = function () {
       // document.fullscreenElement is not really supported yet, so here's a hack
-      if (isFullscreen && (innerWidth !== window.screen.width || innerHeight !== window.screen.height)) {
+      if (isFullscreen && (window.innerWidth !== window.screen.width || window.innerHeight !== window.screen.height)) {
         isFullscreen = false
         fitScreenIfNeeded()
       }

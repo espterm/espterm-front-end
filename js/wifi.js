@@ -1,4 +1,8 @@
-(function (w) {
+const $ = require('./lib/chibi')
+const { mk, bool } = require('./utils')
+const tr = require('./lang')
+
+;(function (w) {
   const authStr = ['Open', 'WEP', 'WPA', 'WPA2', 'WPA/WPA2']
   let curSSID
 
@@ -15,8 +19,8 @@
     $('#sta-nw').toggleClass('hidden', name.length === 0)
     $('#sta-nw-nil').toggleClass('hidden', name.length > 0)
 
-    $('#sta-nw .essid').html(esc(name))
-    const nopw = undef(password) || password.length === 0
+    $('#sta-nw .essid').html($.htmlEscape(name))
+    const nopw = !password || password.length === 0
     $('#sta-nw .passwd').toggleClass('hidden', nopw)
     $('#sta-nw .nopasswd').toggleClass('hidden', !nopw)
     $('#sta-nw .ip').html(ip.length > 0 ? tr('wifi.connected_ip_is') + ip : tr('wifi.not_conn'))
@@ -96,7 +100,7 @@
 
         if (+$th.data('pwd')) {
           // this AP needs a password
-          conn_pass = prompt(tr('wifi.enter_passwd').replace(':ssid:', conn_ssid))
+          conn_pass = window.prompt(tr('wifi.enter_passwd').replace(':ssid:', conn_ssid))
           if (!conn_pass) return
         }
 
@@ -120,10 +124,10 @@
 
   /** Ask the CGI what APs are visible (async) */
   function scanAPs () {
-    if (_demo) {
-      onScan(_demo_aps, 200)
+    if (window._demo) {
+      onScan(window._demo_aps, 200)
     } else {
-      $.get('http://' + _root + '/cfg/wifi/scan', onScan)
+      $.get('http://' + window._root + '/cfg/wifi/scan', onScan)
     }
   }
 

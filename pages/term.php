@@ -2,9 +2,9 @@
 <script>
 	// Workaround for badly loaded page
 	setTimeout(function() {
-		if (typeof termInit == 'undefined' || typeof $ == 'undefined') {
-			console.error("Page load failed, refreshing…");
-			location.reload(true);
+		if (typeof termInit == 'undefined') {
+			console.error("Page load failed, refreshing…")
+			location.reload(true)
 		}
 	}, 3000);
 </script>
