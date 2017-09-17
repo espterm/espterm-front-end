@@ -1,4 +1,6 @@
-window.attachDebugScreen = function (screen) {
+const { mk } = require('./utils')
+
+module.exports = function attachDebugScreen (screen) {
   const debugCanvas = mk('canvas')
   const ctx = debugCanvas.getContext('2d')
 
@@ -73,7 +75,7 @@ window.attachDebugScreen = function (screen) {
   let isDrawing = false
 
   let drawLoop = function () {
-    if (isDrawing) requestAnimationFrame(drawLoop)
+    if (isDrawing) window.requestAnimationFrame(drawLoop)
 
     let { devicePixelRatio, width, height } = screen.window
     let { width: cellWidth, height: cellHeight } = screen.getCellSize()

@@ -1,4 +1,20 @@
 const $ = require('./lib/chibi')
+const { mk, qs } = require('./utils')
+const modal = require('./modal')
+const notify = require('./notif')
+
+/**
+ * Filter 'spacebar' and 'return' from keypress handler,
+ * and when they're pressed, fire the callback.
+ * use $(...).on('keypress', cr(handler))
+ */
+function cr (hdl) {
+  return function (e) {
+    if (e.which === 10 || e.which === 13 || e.which === 32) {
+      hdl()
+    }
+  }
+}
 
 /** Global generic init */
 $.ready(function () {
@@ -60,8 +76,8 @@ $.ready(function () {
       val -= step
     }
 
-    if (undef(min)) val = Math.max(val, +min)
-    if (undef(max)) val = Math.min(val, +max)
+    if (!Number.isFinite(min)) val = Math.max(val, +min)
+    if (!Number.isFinite(max)) val = Math.min(val, +max)
     $this.val(val)
 
     if ('createEvent' in document) {
@@ -96,8 +112,8 @@ $.ready(function () {
     qs('.Box.errors').classList.remove('hidden')
   }
 
-  Modal.init()
-  Notify.init()
+  modal.init()
+  notify.init()
 
   // remove tabindices from h2 if wide
   if (window.innerWidth > 550) {
@@ -108,7 +124,7 @@ $.ready(function () {
     // brand works as a link back to term in widescreen mode
     let br = qs('#brand')
     br && br.addEventListener('click', function () {
-      location.href = '/' // go to terminal
+      window.location.href = '/' // go to terminal
     })
   }
 })
@@ -124,6 +140,8 @@ function showPage () {
   pageShown = true
   $('#content').addClass('load')
 }
+// HACKITY HACK: fix this later
+window.showPage = showPage
 
 // Auto reveal pages other than the terminal (sets window.noAutoShow)
 $.ready(function () {

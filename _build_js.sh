@@ -6,6 +6,9 @@ echo 'Generating lang.js...'
 php ./dump_js_lang.php
 
 echo 'Processing JS...'
+npm run webpack
+exit
+
 if [[ $ESP_PROD ]]; then
 	smarg=
 	demofile=

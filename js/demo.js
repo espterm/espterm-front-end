@@ -1,3 +1,6 @@
+const EventEmitter = require('events')
+const { encode2B, encode3B, parse2B } = require('./utils')
+
 class ANSIParser {
   constructor (handler) {
     this.reset()

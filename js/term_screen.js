@@ -1,3 +1,8 @@
+const EventEmitter = require('events')
+const $ = require('./lib/chibi')
+const { mk, qs, parse2B, parse3B } = require('./utils')
+const notify = require('./notif')
+
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
 const SEQ_SET_COLORS = 3
@@ -8,7 +13,7 @@ const SEQ_SET_BG = 6
 const SELECTION_BG = '#b2d7fe'
 const SELECTION_FG = '#333'
 
-window.TermScreen = class TermScreen extends EventEmitter {
+module.exports = class TermScreen extends EventEmitter {
   constructor () {
     super()
 
@@ -472,8 +477,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       const {
         width,
         height,
-        gridScaleX,
-        gridScaleY,
         fitIntoWidth,
         fitIntoHeight
       } = this.window
@@ -632,9 +635,9 @@ window.TermScreen = class TermScreen extends EventEmitter {
     textarea.value = selectedText
     textarea.select()
     if (document.execCommand('copy')) {
-      Notify.show('Copied to clipboard')
+      notify.show('Copied to clipboard')
     } else {
-      Notify.show('Failed to copy')
+      notify.show('Failed to copy')
     }
     document.body.removeChild(textarea)
   }
@@ -899,8 +902,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
       width,
       height,
       devicePixelRatio,
-      gridScaleX,
-      gridScaleY,
       statusScreen
     } = this.window
 
@@ -913,8 +914,6 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
     const charSize = this.getCharSize()
     const { width: cellWidth, height: cellHeight } = this.getCellSize()
-    const screenWidth = width * cellWidth
-    const screenHeight = height * cellHeight
     const screenLength = width * height
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
@@ -1042,7 +1041,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
     // pass 1: backgrounds
     for (let font of fontGroups.keys()) {
       for (let data of fontGroups.get(font)) {
-        let [cell, x, y, text, fg, bg, attrs, isCursor] = data
+        let [cell, x, y, text, , bg] = data
 
         if (redrawMap.get(cell)) {
           this.drawBackground({ x, y, cellWidth, cellHeight, bg })
@@ -1128,7 +1127,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
     const {
       fontFamily,
       width,
-      height
+      height,
+      devicePixelRatio
     } = this.window
 
     // reset drawnScreen to force redraw when statusScreen is disabled
@@ -1185,7 +1185,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
   drawTimerLoop (threadID) {
     if (!threadID || threadID !== this._drawTimerThread) return
-    requestAnimationFrame(() => this.drawTimerLoop(threadID))
+    window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
     this.draw('draw-loop')
   }
 
@@ -1296,7 +1296,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
       this.screenAttrs = new Array(screenLength).fill(' ')
     }
 
-    let strArray = !undef(Array.from) ? Array.from(str) : str.split('')
+    let strArray = Array.from ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
     const MASK_BLINK = 1 << 4
@@ -1392,7 +1392,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
       let label = pieces[i + 1].trim()
       // if empty string, use the "dim" effect and put nbsp instead to
       // stretch the button vertically
-      button.innerHTML = label ? esc(label) : '&nbsp;'
+      button.innerHTML = label ? $.htmlEscape(label) : '&nbsp;'
       button.style.opacity = label ? 1 : 0.2
     })
   }
@@ -1403,17 +1403,17 @@ window.TermScreen = class TermScreen extends EventEmitter {
    */
   showNotification (text) {
     console.info(`Notification: ${text}`)
-    if (Notification && Notification.permission === 'granted') {
-      let notification = new Notification('ESPTerm', {
+    if (window.Notification && window.Notification.permission === 'granted') {
+      let notification = new window.Notification('ESPTerm', {
         body: text
       })
       notification.addEventListener('click', () => window.focus())
     } else {
-      if (Notification && Notification.permission !== 'denied') {
-        Notification.requestPermission()
+      if (window.Notification && window.Notification.permission !== 'denied') {
+        window.Notification.requestPermission()
       } else {
         // Fallback using the built-in notification balloon
-        Notify.show(text)
+        notify.show(text)
       }
     }
   }
@@ -1500,7 +1500,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
     surrOsc.stop(startTime + 0.8)
 
     let loop = function () {
-      if (audioCtx.currentTime < startTime + 0.8) requestAnimationFrame(loop)
+      if (audioCtx.currentTime < startTime + 0.8) window.requestAnimationFrame(loop)
       mainGain.gain.value *= 0.8
       surrGain.gain.value *= 0.8
     }

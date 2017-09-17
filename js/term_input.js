@@ -1,3 +1,6 @@
+const $ = require('./lib/chibi')
+const { encode2B } = require('./utils')
+
 /**
  * User input
  *
@@ -14,7 +17,7 @@
  * r - mb release
  * m - mouse move
  */
-window.Input = function (conn, screen) {
+module.exports = function (conn, screen) {
   // handle for input object
   let input
 

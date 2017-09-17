@@ -135,7 +135,7 @@
     "no-unsafe-finally": "error",
     "no-unsafe-negation": "error",
     "no-unused-expressions": ["warn", { "allowShortCircuit": true, "allowTernary": true, "allowTaggedTemplates": true }],
-    "no-unused-vars": ["error", { "vars": "local", "args": "none", "ignoreRestSiblings": true }],
+    "no-unused-vars": ["warn", { "vars": "local", "args": "none", "ignoreRestSiblings": true }],
     "no-use-before-define": ["error", { "functions": false, "classes": false, "variables": false }],
     "no-useless-call": "error",
     "no-useless-computed-key": "error",
