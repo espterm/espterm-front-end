@@ -1,23 +1,18 @@
 const $ = require('./lib/chibi')
-const { mk, qs } = require('./utils')
+const { mk, qs, cr } = require('./utils')
 const modal = require('./modal')
 const notify = require('./notif')
 
-/**
- * Filter 'spacebar' and 'return' from keypress handler,
- * and when they're pressed, fire the callback.
- * use $(...).on('keypress', cr(handler))
- */
-function cr (hdl) {
-  return function (e) {
-    if (e.which === 10 || e.which === 13 || e.which === 32) {
-      hdl()
-    }
-  }
-}
-
 /** Global generic init */
 $.ready(function () {
+  // Opening menu on mobile / narrow screen
+  function menuOpen () {
+    $('#menu').toggleClass('expanded')
+  }
+  $('#brand')
+    .on('click', menuOpen)
+    .on('keypress', cr(menuOpen))
+
   // Checkbox UI (checkbox CSS and hidden input with int value)
   $('.Row.checkbox').forEach(function (x) {
     let inp = x.querySelector('input')

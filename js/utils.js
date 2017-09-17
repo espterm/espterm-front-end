@@ -13,6 +13,19 @@ exports.qsa = function qsa (s) {
   return document.querySelectorAll(s)
 }
 
+/**
+ * Filter 'spacebar' and 'return' from keypress handler,
+ * and when they're pressed, fire the callback.
+ * use $(...).on('keypress', cr(handler))
+ */
+exports.cr = function cr (hdl) {
+  return function (e) {
+    if (e.which === 10 || e.which === 13 || e.which === 32) {
+      hdl()
+    }
+  }
+}
+
 /** Convert any to bool safely */
 exports.bool = function bool (x) {
   return (x === 1 || x === '1' || x === true || x === 'true')

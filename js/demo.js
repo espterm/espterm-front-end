@@ -175,7 +175,7 @@ class ScrollingTerminal {
       }
     }
   }
-  deleteChar () {
+  deleteChar () {  // FIXME unused?
     this.moveBack()
     this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE])
     this.screen.splice(this.cursor.y * this.width + this.cursor.x, 1)
@@ -197,11 +197,11 @@ class ScrollingTerminal {
     } else if (action === 'delete') {
       this.deleteForward(args[0])
     } else if (action === 'insert-blanks') {
-      this.insertBlanks(args[0])
+      this.insertBlanks(args[0]) // FIXME undefined?
     } else if (action === 'clear') {
       this.clear()
     } else if (action === 'bell') {
-      this.terminal.load('B')
+      this.terminal.load('B') // FIXME undefined?
     } else if (action === 'back') {
       this.moveBack()
     } else if (action === 'new-line') {
@@ -566,7 +566,7 @@ let demoshIndex = {
     run (...args) {
       let steady = args.includes('--steady')
       if (args.includes('block')) {
-        this.emit('write', `\x1b[${0 + 2 * steady} q`)
+        this.emit('write', `\x1b[${2 * steady} q`)
       } else if (args.includes('line')) {
         this.emit('write', `\x1b[${3 + steady} q`)
       } else if (args.includes('bar') || args.includes('beam')) {
