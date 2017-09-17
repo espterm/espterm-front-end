@@ -677,7 +677,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
    * @param {number} options.cellHeight - cell height in pixels
    * @param {number} options.bg - the background color
    */
-  drawCellBackground ({ x, y, cellWidth, cellHeight, bg }) {
+  drawBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     ctx.fillStyle = this.getColor(bg)
     ctx.clearRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
@@ -698,7 +698,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
    * @param {number} options.fg - the foreground color
    * @param {number} options.attrs - the cell's attributes
    */
-  drawCell ({ x, y, charSize, cellWidth, cellHeight, text, fg, attrs }) {
+  drawCharacter ({ x, y, charSize, cellWidth, cellHeight, text, fg, attrs }) {
     if (!text) return
 
     const ctx = this.ctx
@@ -954,7 +954,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
       if (attrs & (1 << 4) && !this.window.blinkStyleOn) {
         // blinking is enabled and blink style is off
-        // set text to nothing so drawCell doesn't draw anything
+        // set text to nothing so drawCharacter doesn't draw anything
         text = ''
       }
 
@@ -1045,7 +1045,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
         let [cell, x, y, text, fg, bg, attrs, isCursor] = data
 
         if (redrawMap.get(cell)) {
-          this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
+          this.drawBackground({ x, y, cellWidth, cellHeight, bg })
 
           if (this.window.debug && this._debug) {
             // set cell flags
@@ -1074,7 +1074,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
         let [cell, x, y, text, fg, bg, attrs, isCursor, inSelection] = data
 
         if (redrawMap.get(cell)) {
-          this.drawCell({
+          this.drawCharacter({
             x, y, charSize, cellWidth, cellHeight, text, fg, attrs
           })
 
@@ -1108,8 +1108,8 @@ window.TermScreen = class TermScreen extends EventEmitter {
             // HACK: ensure cursor is visible
             if (fg === bg) bg = fg === 0 ? 7 : 0
 
-            this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
-            this.drawCell({
+            this.drawBackground({ x, y, cellWidth, cellHeight, bg })
+            this.drawCharacter({
               x, y, charSize, cellWidth, cellHeight, text, fg, attrs
             })
             ctx.restore()
@@ -1462,29 +1462,49 @@ window.TermScreen = class TermScreen extends EventEmitter {
     if (this._lastBeep && this._lastBeep > Date.now() - 50) return
     this._lastBeep = Date.now()
 
-    let osc, gain
+    if (!this._convolver) {
+      this._convolver = audioCtx.createConvolver()
+      let impulseLength = audioCtx.sampleRate * 0.8
+      let impulse = audioCtx.createBuffer(2, impulseLength, audioCtx.sampleRate)
+      for (let i = 0; i < impulseLength; i++) {
+        impulse.getChannelData(0)[i] = (1 - i / impulseLength) ** (7 + Math.random())
+        impulse.getChannelData(1)[i] = (1 - i / impulseLength) ** (7 + Math.random())
+      }
+      this._convolver.buffer = impulse
+      this._convolver.connect(audioCtx.destination)
+    }
 
     // main beep
-    osc = audioCtx.createOscillator()
-    gain = audioCtx.createGain()
-    osc.connect(gain)
-    gain.connect(audioCtx.destination)
-    gain.gain.value = 0.5
-    osc.frequency.value = 750
-    osc.type = 'sine'
-    osc.start()
-    osc.stop(audioCtx.currentTime + 0.05)
+    const mainOsc = audioCtx.createOscillator()
+    const mainGain = audioCtx.createGain()
+    mainOsc.connect(mainGain)
+    mainGain.gain.value = 6
+    mainOsc.frequency.value = 750
+    mainOsc.type = 'sine'
 
     // surrogate beep (making it sound like 'oops')
-    osc = audioCtx.createOscillator()
-    gain = audioCtx.createGain()
-    osc.connect(gain)
-    gain.connect(audioCtx.destination)
-    gain.gain.value = 0.2
-    osc.frequency.value = 400
-    osc.type = 'sine'
-    osc.start(audioCtx.currentTime + 0.05)
-    osc.stop(audioCtx.currentTime + 0.08)
+    const surrOsc = audioCtx.createOscillator()
+    const surrGain = audioCtx.createGain()
+    surrOsc.connect(surrGain)
+    surrGain.gain.value = 4
+    surrOsc.frequency.value = 400
+    surrOsc.type = 'sine'
+
+    mainGain.connect(this._convolver)
+    surrGain.connect(this._convolver)
+
+    let startTime = audioCtx.currentTime
+    mainOsc.start()
+    mainOsc.stop(startTime + 0.5)
+    surrOsc.start(startTime + 0.05)
+    surrOsc.stop(startTime + 0.8)
+
+    let loop = function () {
+      if (audioCtx.currentTime < startTime + 0.8) requestAnimationFrame(loop)
+      mainGain.gain.value *= 0.8
+      surrGain.gain.value *= 0.8
+    }
+    loop()
   }
 
   /**
