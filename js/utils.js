@@ -31,16 +31,6 @@ exports.bool = function bool (x) {
   return (x === 1 || x === '1' || x === true || x === 'true')
 }
 
-/** Safe json parse */
-exports.jsp = function jsp (str) {
-  try {
-    return JSON.parse(str)
-  } catch (e) {
-    console.error(e)
-    return null
-  }
-}
-
 /** Decode number from 2B encoding */
 exports.parse2B = function parse2B (s, i = 0) {
   return (s.charCodeAt(i++) - 1) + (s.charCodeAt(i) - 1) * 127
