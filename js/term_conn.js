@@ -132,7 +132,7 @@ window.Conn = class TermConnection extends EventEmitter {
       if (typeof window.demoInterface === 'undefined') {
         alert('Demoing non-demo build!') // this will catch mistakes when deploying to the website
       } else {
-        demoInterface.init(screen)
+        demoInterface.init(this.screen)
         showPage()
       }
       return

@@ -889,7 +889,10 @@ window.demoInterface = {
       }
     }
   },
+  didInit: false,
   init (screen) {
+    if (this.didInit) return
+    this.didInit = true
     this.terminal = new ScrollingTerminal(screen)
     this.shell = new DemoShell(this.terminal, true)
   }
