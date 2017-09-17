@@ -13,7 +13,7 @@
     "webpack": "^3.6.0"
   },
   "scripts": {
-    "webpack": "webpack $@",
+    "webpack": "webpack --display-modules $@",
     "sass": "node-sass $@"
   }
 }
