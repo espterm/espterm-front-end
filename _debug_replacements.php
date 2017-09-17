@@ -57,7 +57,7 @@ return [
 
 	'vers_fw' => $vers,
 	'date' => date('Y-m-d'),
-	'time' => date('G:i'),
+	'time' => date('G:i')." ".TIMEZONE,
 	'vers_httpd' => '0.4',
 	'vers_sdk' => '010502',
 	'githubrepo' => 'https://github.com/espterm/espterm-firmware',

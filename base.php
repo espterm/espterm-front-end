@@ -14,6 +14,8 @@ if (!empty($argv[1])) {
 
 define('GIT_HASH', trim(shell_exec('git rev-parse --short HEAD')));
 
+define('TIMEZONE', trim(shell_exec('date +%Z'))); // for replacements
+
 $prod = defined('STDIN');
 define('DEBUG', !$prod);
 
