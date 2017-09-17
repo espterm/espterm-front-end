@@ -4,7 +4,7 @@ const path = require('path')
 
 let hash = execSync('git rev-parse --short HEAD').toString().trim()
 
-let plugins = []
+let plugins = [new webpack.optimize.UglifyJsPlugin()]
 let devtool = 'source-map'
 
 if (process.env.ESP_PROD) {
@@ -25,6 +25,9 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
+        exclude: [
+          path.resolve(__dirname, 'node_modules')
+        ],
         loader: 'babel-loader'
       }
     ]

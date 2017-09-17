@@ -6,8 +6,8 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-loader": "^7.1.2",
-    "babel-minify": "^0.2.0",
     "babel-preset-env": "^1.6.0",
+    "babel-preset-minify": "^0.2.0",
     "node-sass": "^4.5.3",
     "standard": "^10.0.3",
     "webpack": "^3.6.0"
