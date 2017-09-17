@@ -699,5 +699,5 @@
 	};
 
 	// Set Chibi's global namespace here ($)
-	w.$ = chibi;
+	module.exports = chibi;
 }());

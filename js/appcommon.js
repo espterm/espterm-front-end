@@ -1,3 +1,5 @@
+const $ = require('./lib/chibi')
+
 /** Global generic init */
 $.ready(function () {
   // Checkbox UI (checkbox CSS and hidden input with int value)
@@ -75,9 +77,9 @@ $.ready(function () {
 
   // populate the form errors box from GET arg ?err=...
   // (a way to pass errors back from server via redirect)
-  let errAt = location.search.indexOf('err=')
+  let errAt = window.location.search.indexOf('err=')
   if (errAt !== -1 && qs('.Box.errors')) {
-    let errs = location.search.substr(errAt + 4).split(',')
+    let errs = window.location.search.substr(errAt + 4).split(',')
     let humanReadableErrors = []
     errs.forEach(function (er) {
       let lbl = qs('label[for="' + er + '"]')
