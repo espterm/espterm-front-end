@@ -708,7 +708,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
     let overline = false
     if (attrs & (1 << 1)) ctx.globalAlpha = 0.5
     if (attrs & (1 << 3)) underline = true
-    if (attrs & (1 << 5)) text = TermScreen.alphaToFraktur(text)
+    if (attrs & (1 << 5)) text = this.alphaToFraktur(text)
     if (attrs & (1 << 6)) strike = true
     if (attrs & (1 << 7)) overline = true
 
@@ -963,12 +963,12 @@ window.TermScreen = class TermScreen extends EventEmitter {
         bg = -2
       }
 
-      let didUpdate = text !== this.drawnScreen[cell] ||
-        fg !== this.drawnScreenFG[cell] ||
-        bg !== this.drawnScreenBG[cell] ||
-        attrs !== this.drawnScreenAttrs[cell] ||
-        isCursor !== wasCursor ||
-        (isCursor && this.cursor.style !== this.drawnCursor[2])
+      let didUpdate = text !== this.drawnScreen[cell] || // text updated
+        fg !== this.drawnScreenFG[cell] || // foreground updated, and this cell has text
+        bg !== this.drawnScreenBG[cell] || // background updated
+        attrs !== this.drawnScreenAttrs[cell] || // attributes updated
+        isCursor !== wasCursor || // cursor blink/position updated
+        (isCursor && this.cursor.style !== this.drawnCursor[2]) // cursor style updated
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -985,7 +985,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
     // decide for each cell if it should be redrawn
     let updateRedrawMapAt = cell => {
-      let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell)
+      let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell) || false
 
       // TODO: fonts (necessary?)
       let text = this.screen[cell]
@@ -997,7 +997,10 @@ window.TermScreen = class TermScreen extends EventEmitter {
         let adjacentDidUpdate = false
 
         for (let adjacentCell of this.getAdjacentCells(cell, checkRadius)) {
-          if (updateMap.get(adjacentCell)) {
+          // update this cell if:
+          // - the adjacent cell updated (For now, this'll always be true because characters can be slightly larger than they say they are)
+          // - the adjacent cell updated and this cell or the adjacent cell is wide
+          if (updateMap.get(adjacentCell) && (this.window.graphics < 2 || isWideCell || isTextWide(this.screen[adjacentCell]))) {
             adjacentDidUpdate = true
             break
           }
@@ -1013,6 +1016,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
     // mask to redrawing regions only
     if (this.window.graphics >= 1) {
+      let debug = this.window.debug && this._debug
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -1023,11 +1027,13 @@ window.TermScreen = class TermScreen extends EventEmitter {
           if (redrawing && regionStart === null) regionStart = x
           if (!redrawing && regionStart !== null) {
             ctx.rect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            if (debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
           }
         }
         if (regionStart !== null) {
           ctx.rect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          if (debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
         }
       }
       ctx.clip()
@@ -1040,9 +1046,20 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
         if (redrawMap.get(cell)) {
           this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
+
+          if (this.window.debug && this._debug) {
+            // set cell flags
+            let flags = (+redrawMap.get(cell))
+            flags |= (+updateMap.get(cell)) << 1
+            flags |= (+isTextWide(text)) << 2
+            this._debug.setCell(cell, flags)
+          }
         }
       }
     }
+
+    // reset drawn cursor
+    this.drawnCursor = [-1, -1, -1]
 
     // pass 2: characters
     for (let font of fontGroups.keys()) {
@@ -1068,43 +1085,35 @@ window.TermScreen = class TermScreen extends EventEmitter {
 
           if (isCursor) this.drawnCursor = [x, y, this.cursor.style]
 
-          if (this.window.debug && this._debug) {
-            // set cell flags
-            let flags = 1 // always redrawn
-            flags |= (+updateMap.get(cell)) << 1
-            flags |= (+isTextWide(text)) << 2
-            this._debug.setCell(cell, flags)
+          if (isCursor && !inSelection) {
+            ctx.save()
+            ctx.beginPath()
+            if (this.cursor.style === 'block') {
+              // block
+              ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+            } else if (this.cursor.style === 'bar') {
+              // vertical bar
+              let barWidth = 2
+              ctx.rect(x * cellWidth, y * cellHeight, barWidth, cellHeight)
+            } else if (this.cursor.style === 'line') {
+              // underline
+              let lineHeight = 2
+              ctx.rect(x * cellWidth, y * cellHeight + charSize.height, cellWidth, lineHeight)
+            }
+            ctx.clip()
+
+            // swap foreground/background
+            ;[fg, bg] = [bg, fg]
+
+            // HACK: ensure cursor is visible
+            if (fg === bg) bg = fg === 0 ? 7 : 0
+
+            this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
+            this.drawCell({
+              x, y, charSize, cellWidth, cellHeight, text, fg, attrs
+            })
+            ctx.restore()
           }
-        }
-
-        if (isCursor && !inSelection) {
-          ctx.save()
-          ctx.beginPath()
-          if (this.cursor.style === 'block') {
-            // block
-            ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
-          } else if (this.cursor.style === 'bar') {
-            // vertical bar
-            let barWidth = 2
-            ctx.rect(x * cellWidth, y * cellHeight, barWidth, cellHeight)
-          } else if (this.cursor.style === 'line') {
-            // underline
-            let lineHeight = 2
-            ctx.rect(x * cellWidth, y * cellHeight + charSize.height, cellWidth, lineHeight)
-          }
-          ctx.clip()
-
-          // swap foreground/background
-          ;[fg, bg] = [bg, fg]
-
-          // HACK: ensure cursor is visible
-          if (fg === bg) bg = fg === 0 ? 7 : 0
-
-          this.drawCellBackground({ x, y, cellWidth, cellHeight, bg })
-          this.drawCell({
-            x, y, charSize, cellWidth, cellHeight, text, fg, attrs
-          })
-          ctx.restore()
         }
       }
     }
@@ -1483,7 +1492,7 @@ window.TermScreen = class TermScreen extends EventEmitter {
    * @param {string} character - the character
    * @returns {string} the converted character
    */
-  static alphaToFraktur (character) {
+  alphaToFraktur (character) {
     if (character >= 'a' && character <= 'z') {
       character = String.fromCodePoint(0x1d51e - 0x61 + character.charCodeAt(0))
     } else if (character >= 'A' && character <= 'Z') {

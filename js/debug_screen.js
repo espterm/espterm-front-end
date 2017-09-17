@@ -25,6 +25,7 @@ window.attachDebugScreen = function (screen) {
 
   let startTime, endTime, lastReason
   let cells = new Map()
+  let clippedRects = []
 
   let startDrawing
 
@@ -32,6 +33,7 @@ window.attachDebugScreen = function (screen) {
     drawStart (reason) {
       lastReason = reason
       startTime = Date.now()
+      clippedRects = []
     },
     drawEnd () {
       endTime = Date.now()
@@ -40,7 +42,32 @@ window.attachDebugScreen = function (screen) {
     },
     setCell (cell, flags) {
       cells.set(cell, [flags, Date.now()])
+    },
+    clipRect (...args) {
+      clippedRects.push(args)
     }
+  }
+
+  let clipPattern
+  {
+    let patternCanvas = document.createElement('canvas')
+    patternCanvas.width = patternCanvas.height = 12
+    let pctx = patternCanvas.getContext('2d')
+    pctx.lineWidth = 1
+    pctx.strokeStyle = '#00f'
+    pctx.beginPath()
+    pctx.moveTo(0, 0)
+    pctx.lineTo(0 - 4, 12)
+    pctx.moveTo(4, 0)
+    pctx.lineTo(4 - 4, 12)
+    pctx.moveTo(8, 0)
+    pctx.lineTo(8 - 4, 12)
+    pctx.moveTo(12, 0)
+    pctx.lineTo(12 - 4, 12)
+    pctx.moveTo(16, 0)
+    pctx.lineTo(16 - 4, 12)
+    pctx.stroke()
+    clipPattern = ctx.createPattern(patternCanvas, 'repeat')
   }
 
   let isDrawing = false
@@ -88,6 +115,18 @@ window.attachDebugScreen = function (screen) {
         ctx.strokeStyle = '#f00'
         ctx.strokeRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
       }
+    }
+
+    if (clippedRects.length) {
+      ctx.globalAlpha = 0.5
+      ctx.beginPath()
+
+      for (let rect of clippedRects) {
+        ctx.rect(...rect)
+      }
+
+      ctx.fillStyle = clipPattern
+      ctx.fill()
     }
 
     if (activeCells === 0) {
