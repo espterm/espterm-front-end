@@ -12,3 +12,5 @@ const { qs } = require('./utils')
 window.termInit = require('./term')
 window.$ = $
 window.qs = qs
+
+window.themes = require('./themes')

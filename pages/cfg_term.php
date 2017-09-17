@@ -13,63 +13,66 @@
 		<label for="theme"><?= tr("term.theme") ?></label>
 		<select name="theme" id="theme" class="short" onchange="showColor()">
 			<option value="0">Tango</option>
-			<option value="1">Linux</option>
+			<option value="1">Linux (CGA)</option>
 			<option value="2">XTerm</option>
 			<option value="3">Rxvt</option>
 			<option value="4">Ambience</option>
 			<option value="5">Solarized</option>
+			<option value="6">CGA NTSC</option>
+			<option value="7">ZX Spectrum</option>
+			<option value="8">Apple II</option>
+			<option value="9">Commodore</option>
 		</select>
 	</div>
 
 	<div class="Row color-preview">
 		<div class="colorprev">
-			<span data-fg=0 class="bg0 fg0">30</span><!--
-			--><span data-fg=1 class="bg0 fg1">31</span><!--
-			--><span data-fg=2 class="bg0 fg2">32</span><!--
-			--><span data-fg=3 class="bg0 fg3">33</span><!--
-			--><span data-fg=4 class="bg0 fg4">34</span><!--
-			--><span data-fg=5 class="bg0 fg5">35</span><!--
-			--><span data-fg=6 class="bg0 fg6">36</span><!--
-			--><span data-fg=7 class="bg0 fg7">37</span>
+			<span data-fg=0 data-bg="0">30</span><!--
+			--><span data-fg=1 data-bg="0">31</span><!--
+			--><span data-fg=2 data-bg="0">32</span><!--
+			--><span data-fg=3 data-bg="0">33</span><!--
+			--><span data-fg=4 data-bg="0">34</span><!--
+			--><span data-fg=5 data-bg="0">35</span><!--
+			--><span data-fg=6 data-bg="0">36</span><!--
+			--><span data-fg=7 data-bg="0">37</span>
 		</div>
 
 		<div class="colorprev">
-			<span data-fg=8 class="bg0 fg8">90</span><!--
-			--><span data-fg=9 class="bg0 fg9">91</span><!--
-			--><span data-fg=10 class="bg0 fg10">92</span><!--
-			--><span data-fg=11 class="bg0 fg11">93</span><!--
-			--><span data-fg=12 class="bg0 fg12">94</span><!--
-			--><span data-fg=13 class="bg0 fg13">95</span><!--
-			--><span data-fg=14 class="bg0 fg14">96</span><!--
-			--><span data-fg=15 class="bg0 fg15">97</span>
+			<span data-fg=8 data-bg="0">90</span><!--
+			--><span data-fg=9 data-bg="0">91</span><!--
+			--><span data-fg=10 data-bg="0">92</span><!--
+			--><span data-fg=11 data-bg="0">93</span><!--
+			--><span data-fg=12 data-bg="0">94</span><!--
+			--><span data-fg=13 data-bg="0">95</span><!--
+			--><span data-fg=14 data-bg="0">96</span><!--
+			--><span data-fg=15 data-bg="0">97</span>
 		</div>
 
 		<div class="colorprev">
-			<span data-bg=0 class="bg0 fg15">40</span><!--
-			--><span data-bg=1 class="bg1 fg15">41</span><!--
-			--><span data-bg=2 class="bg2 fg15">42</span><!--
-			--><span data-bg=3 class="bg3 fg0">43</span><!--
-			--><span data-bg=4 class="bg4 fg15">44</span><!--
-			--><span data-bg=5 class="bg5 fg15">45</span><!--
-			--><span data-bg=6 class="bg6 fg15">46</span><!--
-			--><span data-bg=7 class="bg7 fg0">47</span>
+			<span data-bg=0 data-fg="15">40</span><!--
+			--><span data-bg=1 data-fg="15">41</span><!--
+			--><span data-bg=2 data-fg="15">42</span><!--
+			--><span data-bg=3 data-fg="0">43</span><!--
+			--><span data-bg=4 data-fg="15">44</span><!--
+			--><span data-bg=5 data-fg="15">45</span><!--
+			--><span data-bg=6 data-fg="15">46</span><!--
+			--><span data-bg=7 data-fg="0">47</span>
 		</div>
 
 		<div class="colorprev">
-			<span data-bg=8 class="bg8 fg15">100</span><!--
-			--><span data-bg=9 class="bg9 fg0">101</span><!--
-			--><span data-bg=10 class="bg10 fg0">102</span><!--
-			--><span data-bg=11 class="bg11 fg0">103</span><!--
-			--><span data-bg=12 class="bg12 fg0">104</span><!--
-			--><span data-bg=13 class="bg13 fg0">105</span><!--
-			--><span data-bg=14 class="bg14 fg0">106</span><!--
-			--><span data-bg=15 class="bg15 fg0">107</span>
+			<span data-bg=8 data-fg="15">100</span><!--
+			--><span data-bg=9 data-fg="0">101</span><!--
+			--><span data-bg=10 data-fg="0">102</span><!--
+			--><span data-bg=11 data-fg="0">103</span><!--
+			--><span data-bg=12 data-fg="0">104</span><!--
+			--><span data-bg=13 data-fg="0">105</span><!--
+			--><span data-bg=14 data-fg="0">106</span><!--
+			--><span data-bg=15 data-fg="0">107</span>
 		</div>
 	</div>
 
 	<div class="Row color-preview">
-		<div style="
-		" id="color-example">
+		<div id="color-example" data-fg="" data-bg="">
 			<?= tr("term.example") ?>
 		</div>
 	</div>
@@ -208,13 +211,9 @@
 
 	function showColor() {
 		var ex = qs('#color-example');
-		ex.className = '';
-		ex.classList.add('fg'+$('#default_fg').val());
-		ex.classList.add('bg'+$('#default_bg').val());
-		var th = $('#theme').val();
-		$('.color-preview').forEach(function(e) {
-			e.className = 'Row color-preview theme-'+th;
-		});
+		ex.dataset.fg = +$('#default_fg').val();
+		ex.dataset.bg = +$('#default_bg').val();
+		themes.themePreview(+$('#theme').val())
 	}
 	showColor();
 
