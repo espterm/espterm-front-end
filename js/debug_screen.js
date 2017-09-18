@@ -144,4 +144,34 @@ module.exports = function attachDebugScreen (screen) {
     isDrawing = true
     drawLoop()
   }
+
+  // debug toolbar
+  const toolbar = mk('div')
+  toolbar.classList.add('debug-toolbar')
+  let toolbarAttached = false
+
+  const attachToolbar = function () {
+    screen.canvas.parentNode.appendChild(toolbar)
+  }
+  const detachToolbar = function () {
+    toolbar.parentNode.removeChild(toolbar)
+  }
+
+  screen.on('update-window:debug', debug => {
+    if (debug !== toolbarAttached) {
+      toolbarAttached = debug
+      if (debug) attachToolbar()
+      else detachToolbar()
+    }
+  })
+
+  screen.on('draw', () => {
+    if (!toolbarAttached) return
+    let cursorCell = screen.cursor.y * screen.window.width + screen.cursor.x
+    let cellFG = screen.screenFG[cursorCell]
+    let cellBG = screen.screenBG[cursorCell]
+    let cellCode = (screen.screen[cursorCell] || '').codePointAt(0)
+    let cellAttrs = screen.screenAttrs[cursorCell]
+    toolbar.textContent = `Rudimentary debug toolbar. Cursor cell (${cursorCell}): u+${cellCode.toString(16)} FG: ${cellFG} BG: ${cellBG} Attrs: ${cellAttrs.toString(2)}`
+  })
 }

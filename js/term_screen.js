@@ -118,6 +118,7 @@ module.exports = class TermScreen extends EventEmitter {
         target[key] = value
         self.scheduleSizeUpdate()
         self.scheduleDraw(`window:${key}=${value}`)
+        self.emit(`update-window:${key}`, value)
         return true
       }
     })
@@ -1076,6 +1077,8 @@ module.exports = class TermScreen extends EventEmitter {
     if (this.window.graphics >= 1) ctx.restore()
 
     if (this.window.debug && this._debug) this._debug.drawEnd()
+
+    this.emit('draw')
   }
 
   drawStatus (statusScreen) {
