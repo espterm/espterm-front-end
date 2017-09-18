@@ -219,6 +219,11 @@ module.exports = function (conn, screen) {
     // copy to clipboard
     'Control+Shift+C' () {
       screen.copySelectionToClipboard()
+    },
+
+    // toggle debug mode
+    'Control+F12' () {
+      screen.window.debug ^= 1
     }
     /* eslint-enable key-spacing */
   }
