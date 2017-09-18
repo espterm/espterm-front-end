@@ -27,7 +27,7 @@
 
 	<div class="Row color-preview">
 		<div class="colorprev">
-			<span data-fg=0 data-bg="0">30</span><!--
+			<span data-fg=0 data-bg="0" style="text-shadow: 0 0 4px white;">30</span><!--
 			--><span data-fg=1 data-bg="0">31</span><!--
 			--><span data-fg=2 data-bg="0">32</span><!--
 			--><span data-fg=3 data-bg="0">33</span><!--

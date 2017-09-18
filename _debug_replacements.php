@@ -90,5 +90,5 @@ return [
 	'uart_stopbits' => 1,
 	'uart_parity' => 2,
 
-	'theme' => 7,
+	'theme' => 1,
 ];
