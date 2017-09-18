@@ -201,23 +201,26 @@ module.exports = function (conn, screen) {
     'Control+End':        '\x1f[1;5F',
 
     // extra shift controls
-    'Shift+ArrowLeft':  '\x1f[1;2D',
-    'Shift+ArrowRight': '\x1f[1;2C',
-    'Shift+ArrowUp':    '\x1f[1;2A',
-    'Shift+ArrowDown':  '\x1f[1;2B',
-    'Shift+Home':       '\x1f[1;2H',
-    'Shift+End':        '\x1f[1;2F',
+    'Shift+ArrowLeft':    '\x1f[1;2D',
+    'Shift+ArrowRight':   '\x1f[1;2C',
+    'Shift+ArrowUp':      '\x1f[1;2A',
+    'Shift+ArrowDown':    '\x1f[1;2B',
+    'Shift+Home':         '\x1f[1;2H',
+    'Shift+End':          '\x1f[1;2F',
 
     // macOS text editing commands
-    'Alt+ArrowLeft':       '\x1bb',    // ⌥← to go back a word (^[b)
-    'Alt+ArrowRight':      '\x1bf',    // ⌥→ to go forward one word (^[f)
-    'Meta+ArrowLeft':      '\x01',     // ⌘← to go to the beginning of a line (^A)
-    'Meta+ArrowRight':     '\x05',     // ⌘→ to go to the end of a line (^E)
-    'Alt+Backspace':       '\x17',     // ⌥⌫ to delete a word (^W)
-    'Meta+Backspace':      '\x15',     // ⌘⌫ to delete to the beginning of a line (^U)
+    'Alt+ArrowLeft':      '\x1bb',  // ⌥← to go back a word (^[b)
+    'Alt+ArrowRight':     '\x1bf',  // ⌥→ to go forward one word (^[f)
+    'Meta+ArrowLeft':     '\x01',   // ⌘← to go to the beginning of a line (^A)
+    'Meta+ArrowRight':    '\x05',   // ⌘→ to go to the end of a line (^E)
+    'Alt+Backspace':      '\x17',   // ⌥⌫ to delete a word (^W)
+    'Meta+Backspace':     '\x15',   // ⌘⌫ to delete to the beginning of a line (^U)
 
     // copy to clipboard
     'Control+Shift+C' () {
+      screen.copySelectionToClipboard()
+    },
+    'Control+Insert' () {
       screen.copySelectionToClipboard()
     },
 
@@ -229,7 +232,9 @@ module.exports = function (conn, screen) {
   }
 
   // ctrl+[A-Z] sent as simple low ASCII codes
-  for (let i = 1; i <= 26; i++) keymap[`Control+${String.fromCharCode(0x40 + i)}`] = String.fromCharCode(i)
+  for (let i = 1; i <= 26; i++) {
+    keymap[`Control+${String.fromCharCode(0x40 + i)}`] = String.fromCharCode(i)
+  }
 
   /** Send a literal message */
   function sendString (str) {
