@@ -172,6 +172,9 @@ module.exports = function attachDebugScreen (screen) {
     let cellBG = screen.screenBG[cursorCell]
     let cellCode = (screen.screen[cursorCell] || '').codePointAt(0)
     let cellAttrs = screen.screenAttrs[cursorCell]
-    toolbar.textContent = `Rudimentary debug toolbar. Cursor cell (${cursorCell}): u+${cellCode.toString(16)} FG: ${cellFG} BG: ${cellBG} Attrs: ${cellAttrs.toString(2)}`
+    let hexcode = cellCode.toString(16).toUpperCase()
+    if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
+    hexcode = `U+${hexcode}`
+    toolbar.textContent = `Cursor cell (${cursorCell}): ${hexcode} FG: ${cellFG} BG: ${cellBG} Attrs: ${cellAttrs.toString(2)}`
   })
 }
