@@ -4,7 +4,7 @@ const path = require('path')
 
 let hash = execSync('git rev-parse --short HEAD').toString().trim()
 
-let plugins = [new webpack.optimize.UglifyJsPlugin()]
+let plugins = []
 let devtool = 'source-map'
 
 if (process.env.ESP_PROD) {
@@ -14,6 +14,10 @@ if (process.env.ESP_PROD) {
   // no source maps
   devtool = ''
 }
+
+plugins.push(new webpack.optimize.UglifyJsPlugin({
+  sourceMap: devtool === 'source-map'
+}))
 
 module.exports = {
   entry: './js',
