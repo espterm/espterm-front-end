@@ -19,7 +19,7 @@
 		<h3>Foreground colors</h3>
 
 		<div class="colorprev">
-			<span data-bg="7" data-fg="0">30</span><!--
+			<span data-bg="0" data-fg="0" style="text-shadow: 0 0 3px white;">30</span><!--
 			--><span data-bg="0" data-fg="1">31</span><!--
 			--><span data-bg="0" data-fg="2">32</span><!--
 			--><span data-bg="0" data-fg="3">33</span><!--
