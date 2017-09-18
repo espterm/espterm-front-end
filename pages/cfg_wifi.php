@@ -1,4 +1,4 @@
-<form class="Box str mobcol" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-1">
+<form class="Box str mobcol" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-ap">
 	<h2 tabindex=0><?= tr('wifi.ap') ?></h2>
 
 	<div class="Row checkbox x-ap-toggle">
@@ -38,11 +38,11 @@
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-1').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-ap').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
-<form class="Box str mobcol expanded" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-2">
+<form class="Box str mobcol expanded" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-sta">
 	<h2 tabindex=0><?= tr('wifi.sta') ?></h2>
 
 	<div class="Row checkbox x-sta-toggle">
@@ -85,7 +85,7 @@
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-2').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-sta').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 

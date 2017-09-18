@@ -91,4 +91,5 @@ return [
 	'uart_parity' => 2,
 
 	'theme' => 1,
+	'pwlock' => 1,
 ];

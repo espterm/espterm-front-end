@@ -156,20 +156,49 @@ return [
 		'Restore to firmware default settings? This will reset ' .
 		'all active settings and switch to AP mode with the default SSID.',
 	'system.confirm_store_defaults' =>
-		'Enter admin password to confirm you want to store the current settings as defaults.',
+		'Enter admin password to confirm you want to overwrite the default settings.',
 	'system.password' => 'Admin password:',
-	'system.restore_defaults' => 'Reset active settings to defaults',
+	'system.restore_defaults' => 'Reset to saved defaults',
 	'system.write_defaults' => 'Save active settings as defaults',
 	'system.restore_hard' => 'Reset active settings to firmware defaults',
 	'system.explain_persist' => '
-		ESPTerm contains two persistent memory banks, one for default and 
-		one for active settings. Active settings can be stored as defaults 
-		by the administrator (password required).
+		ESPTerm saves all settings in Flash. The active settings can be copied to
+		the "defaults area" and restored later using the blue button below.
 		',
 	'system.uart' => 'Serial Port',
 	'system.explain_uart' => '
-		This form controls the primary, communication UART. The debug UART is fixed at 115.200 baud, one stop-bit and no parity.
+		This form controls the primary, communication UART. The debug UART is fixed 
+		at 115.200 baud, one stop-bit and no parity.
 		',
+
+	'system.security' => 'Access Restrictions',
+	'system.explain_security' => '
+		Some parts, or all of the web interface can be protected by a password prompt.
+		Leave the new password fields empty if you do not wish to change it.
+	',
+	'system.pwlock' => 'Protected pages',
+	'system.pwlock.none' => 'None, all open',
+	'system.pwlock.settings_noterm' => 'WiFi, Net & System settings',
+	'system.pwlock.settings' => 'All settings pages',
+	'system.pwlock.menus' => 'This entire menu section',
+	'system.pwlock.all' => 'Everything, even terminal',
+	'system.new_access_pw' => 'New password',
+	'system.new_access_pw2' => 'New pass., repeat',
+	'system.admin_pw' => 'Admin password',
+
+	'system.change_adminpw' => 'Change Admin Password',
+	'system.explain_adminpw' =>
+		'
+		The "admin password" is used to manipulate the stored default settings
+		and to change access restrictions. This password is not saved as part 
+		of the main config, i.e. using save / restore does not affect this 
+		password. When the admin password is forgotten, the easiest way to
+		re-gain access is to wipe and re-flash the chip. 
+		',
+	'system.new_admin_pw' => 'New admin pass.',
+	'system.new_admin_pw2' => 'New pass., repeat',
+	'system.old_admin_pw' => 'Old admin pass.',
+
 	'uart.baud' => 'Baud rate',
 	'uart.parity' => 'Parity',
 	'uart.parity.none' => 'None',

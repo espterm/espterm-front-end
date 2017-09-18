@@ -2,7 +2,7 @@
 	<a href="<?= e(url('reset_screen')) ?>"><?= tr('term.reset_screen') ?></a>
 </div>
 
-<form class="Box mobopen str" action="<?= e(url('term_set')) ?>" method="GET" id='form-1'>
+<form class="Box mobopen str" action="<?= e(url('term_set')) ?>" method="GET" id='form-initial'>
 	<h2><?= tr('term.defaults') ?></h2>
 
 	<div class="Row explain">
@@ -86,7 +86,7 @@
 		</select>&nbsp;<!--
 		--><select name="default_bg" id="default_bg" class="short" onchange="showColor()">
 			<?php for($i=0; $i<16; $i++): ?>
-				<option value="<?=$i?>"><?= tr("color.$i") ?></option>
+			<option value="<?=$i?>"><?= tr("color.$i") ?></option>
 			<?php endfor; ?>
 		</select>
 	</div>
@@ -100,6 +100,12 @@
 	<div class="Row">
 		<label for="term_title"><?= tr('term.term_title') ?></label>
 		<input type="text" name="term_title" id="term_title" value="%h:term_title%" required>
+	</div>
+
+	<div class="Row checkbox" >
+		<label><?= tr('term.show_buttons') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="show_buttons" name="show_buttons" value="%show_buttons%">
 	</div>
 
 	<div class="Row">
@@ -124,11 +130,62 @@
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-1').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-initial').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
-<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id='form-2'>
+<form class="Box fold str" action="<?= e(url('system_set')) ?>" method="GET" id="form-uart">
+	<h2 tabindex=0><?= tr('system.uart') ?></h2>
+
+	<div class="Row explain">
+		<?= tr('system.explain_uart') ?>
+	</div>
+
+	<div class="Row">
+		<label for="uart_baud"><?= tr('uart.baud') ?><span class="mq-phone">&nbsp;(bps)</span></label>
+		<select name="uart_baud" id="uart_baud" class="short">
+			<?php foreach([
+				              300, 600, 1200, 2400, 4800, 9600, 19200, 38400,
+				              57600, 74880, 115200, 230400, 460800, 921600, 1843200, 3686400,
+			              ] as $b):
+				?><option value="<?=$b?>"><?= number_format($b, 0, ',', '.') ?></option>
+			<?php endforeach; ?>
+		</select>
+		<span class="mq-no-phone">&nbsp;bps</span>
+	</div>
+
+	<div class="Row">
+		<label for="uart_parity"><?= tr('uart.parity') ?></label>
+		<select name="uart_parity" id="uart_parity" class="short">
+			<?php foreach([
+				              2 => tr('uart.parity.none'),
+				              1 => tr('uart.parity.odd'),
+				              0 => tr('uart.parity.even'),
+			              ] as $k => $label):
+				?><option value="<?=$k?>"><?=$label?></option>
+			<?php endforeach; ?>
+		</select>
+	</div>
+
+	<div class="Row">
+		<label for="uart_stopbits"><?= tr('uart.stop_bits') ?></label>
+		<select name="uart_stopbits" id="uart_stopbits" class="short">
+			<?php foreach([
+				              1 => tr('uart.stop_bits.one'),
+				              2 => tr('uart.stop_bits.one_and_half'),
+				              3 => tr('uart.stop_bits.two'),
+			              ] as $k => $label):
+				?><option value="<?=$k?>"><?=$label?></option>
+			<?php endforeach; ?>
+		</select>
+	</div>
+
+	<div class="Row buttons">
+		<a class="button icn-ok" href="#" onclick="qs('#form-uart').submit()"><?= tr('apply') ?></a>
+	</div>
+</form>
+
+<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id='form-expert'>
 	<h2><?= tr('term.expert') ?></h2>
 
 	<div class="Row explain">
@@ -181,12 +238,6 @@
 	</div>
 
 	<div class="Row checkbox" >
-		<label><?= tr('term.show_buttons') ?></label><!--
-		--><span class="box" tabindex=0 role=checkbox></span>
-		<input type="hidden" id="show_buttons" name="show_buttons" value="%show_buttons%">
-	</div>
-
-	<div class="Row checkbox" >
 		<label><?= tr('term.show_config_links') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="show_config_links" name="show_config_links" value="%show_config_links%">
@@ -199,7 +250,7 @@
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-2').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-expert').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
@@ -208,6 +259,10 @@
 	$('#default_bg').val(%default_bg%);
 	$('#cursor_shape').val(%cursor_shape%);
 	$('#theme').val(%theme%);
+
+    $('#uart_baud').val(%uart_baud%);
+    $('#uart_parity').val(%uart_parity%);
+    $('#uart_stopbits').val(%uart_stopbits%);
 
 	function showColor() {
 		var ex = qs('#color-example');

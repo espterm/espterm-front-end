@@ -21,6 +21,7 @@ form { @include naked(); }
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	flex-wrap: wrap;
 
 	&:first-child {
 		margin-top: 0;

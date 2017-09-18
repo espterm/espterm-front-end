@@ -2,7 +2,7 @@
 $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 ?>
 
-<form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-2">
+<form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-netsta">
 	<h2 tabindex=0><?= tr('net.sta') ?></h2>
 
 	<div class="Row explain">
@@ -31,11 +31,11 @@ $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-2').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-netsta').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
-<form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-1">
+<form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-netap">
 	<h2 tabindex=0><?= tr('net.ap') ?></h2>
 
 	<div class="Row explain">
@@ -69,7 +69,7 @@ $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-1').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-netap').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
