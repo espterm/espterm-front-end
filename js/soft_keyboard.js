@@ -82,8 +82,12 @@ module.exports = function (screen, input) {
   keyInput.addEventListener('input', e => {
     e.stopPropagation()
 
-    if (e.isComposing) {
+    if (e.isComposing && 'data' in e) {
       sendInputDelta(e.data)
+    } else if (e.isComposing) {
+      // Firefox Mobile doesn't support InputEvent#data, so here's a hack
+      // that just takes the input value and uses that
+      sendInputDelta(keyInput.value)
     } else {
       if (e.inputType === 'insertCompositionText') input.sendString(e.data)
       else if (e.inputType === 'deleteContentBackward') {
