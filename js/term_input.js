@@ -444,7 +444,9 @@ module.exports = function (conn, screen) {
      */
     blockKeys (yes) {
       cfg.no_keys = yes
-    }
+    },
+
+    handleKeyDown
   }
   return input
 }

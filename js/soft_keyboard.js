@@ -65,13 +65,8 @@ module.exports = function (screen, input) {
 
     keyInput.value = ''
 
-    if (e.key === 'Backspace') {
-      e.preventDefault()
-      input.sendString('\b')
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      input.sendString('\x0d')
-    }
+    e.stopPropagation()
+    input.handleKeyDown(e)
   })
 
   keyInput.addEventListener('keypress', e => {
