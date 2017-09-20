@@ -1,4 +1,4 @@
-const { qs } = require('./utils')
+const { qs } = require('../utils')
 
 module.exports = function (screen, input) {
   const keyInput = qs('#softkb-input')

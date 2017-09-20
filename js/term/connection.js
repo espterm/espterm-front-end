@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const $ = require('./lib/chibi')
+const $ = require('../lib/chibi')
 let demo
 try { demo = require('./demo') } catch (err) {}
 

@@ -72,6 +72,9 @@ exports.buildColorTable = function () {
   return colorTable256
 }
 
+exports.SELECTION_FG = '#333'
+exports.SELECTION_BG = '#b2d7fe'
+
 exports.themePreview = function (n) {
   document.querySelectorAll('[data-fg]').forEach((elem) => {
     let shade = +elem.dataset.fg

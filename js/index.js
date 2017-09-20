@@ -2,7 +2,7 @@ require('./lib/polyfills')
 require('./modal')
 require('./notif')
 require('./appcommon')
-try { require('./demo') } catch (err) {}
+try { require('./term/demo') } catch (err) {}
 require('./wifi')
 
 const $ = require('./lib/chibi')
@@ -13,4 +13,4 @@ window.termInit = require('./term')
 window.$ = $
 window.qs = qs
 
-window.themes = require('./themes')
+window.themes = require('./term/themes')

@@ -1,5 +1,5 @@
-const $ = require('./lib/chibi')
-const { encode2B } = require('./utils')
+const $ = require('../lib/chibi')
+const { encode2B } = require('../utils')
 
 /**
  * User input

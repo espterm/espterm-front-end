@@ -1,4 +1,4 @@
-const { mk } = require('./utils')
+const { mk } = require('../utils')
 
 module.exports = function attachDebugScreen (screen) {
   const debugCanvas = mk('canvas')

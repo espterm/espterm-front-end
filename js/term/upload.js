@@ -1,6 +1,6 @@
-const $ = require('./lib/chibi')
-const { qs } = require('./utils')
-const modal = require('./modal')
+const $ = require('../lib/chibi')
+const { qs } = require('../utils')
+const modal = require('../modal')
 
 /** File upload utility */
 module.exports = function (conn, input, screen) {
