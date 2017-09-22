@@ -1,5 +1,5 @@
 const $ = require('./lib/chibi')
-const { mk, qs, cr } = require('./utils')
+const { mk, qs, qsa, cr } = require('./utils')
 const modal = require('./modal')
 const notify = require('./notif')
 
@@ -93,10 +93,11 @@ $.ready(function () {
     let errs = window.location.search.substr(errAt + 4).split(',')
     let humanReadableErrors = []
     errs.forEach(function (er) {
-      let lbl = qs('label[for="' + er + '"]')
-      if (lbl) {
+      let lbls = qsa('label[for="' + er + '"]')
+      for (let i = 0; i < lbls.length; i++) {
+        let lbl = lbls[i]
         lbl.classList.add('error')
-        humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+        if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
       }
       // else {
       //   hres.push(er)
