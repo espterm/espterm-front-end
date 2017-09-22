@@ -32,9 +32,6 @@ $NOFILL = 'readonly onfocus="this.removeAttribute(\'readonly\')" style="cursor:t
 <form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-2">
 	<h2 tabindex=0><?= tr('system.security') ?></h2>
 
-	<!-- flag to use the security cgi handler -->
-	<input type="hidden" name="security" value="1">
-
 	<div class="Row explain">
 		<?= tr('system.explain_security') ?>
 	</div>
@@ -72,9 +69,6 @@ $NOFILL = 'readonly onfocus="this.removeAttribute(\'readonly\')" style="cursor:t
 
 <form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-3">
 	<h2 tabindex=0><?= tr('system.change_adminpw') ?></h2>
-
-	<!-- flag to use the security cgi handler -->
-	<input type="hidden" name="security" value="1">
 
 	<div class="Row explain">
 		<?= tr('system.explain_adminpw') ?>

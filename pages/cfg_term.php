@@ -134,7 +134,7 @@
 	</div>
 </form>
 
-<form class="Box fold str" action="<?= e(url('system_set')) ?>" method="GET" id="form-uart">
+<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id="form-uart">
 	<h2 tabindex=0><?= tr('system.uart') ?></h2>
 
 	<div class="Row explain">
