@@ -185,6 +185,7 @@ return [
 	'system.new_access_pw' => 'New password',
 	'system.new_access_pw2' => 'New pass., repeat',
 	'system.admin_pw' => 'Admin password',
+	'system.access_name' => 'Username',
 
 	'system.change_adminpw' => 'Change Admin Password',
 	'system.explain_adminpw' =>

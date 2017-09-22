@@ -48,6 +48,11 @@ $NOFILL = 'readonly onfocus="this.removeAttribute(\'readonly\')" style="cursor:t
 	</div>
 
 	<div class="Row">
+		<label for="access_name"><?= tr('system.access_name') ?></label>
+		<input type="text" name="access_name" id="access_name" value="%access_name%">
+	</div>
+
+	<div class="Row">
 		<label for="access_pw"><?= tr('system.new_access_pw') ?></label>
 		<input type="password" name="access_pw" id="access_pw" <?=$NOFILL?>>
 	</div>

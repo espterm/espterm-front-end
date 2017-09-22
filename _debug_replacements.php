@@ -92,4 +92,5 @@ return [
 
 	'theme' => 1,
 	'pwlock' => 1,
+	'access_name' => 'espterm',
 ];
