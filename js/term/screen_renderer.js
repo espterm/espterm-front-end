@@ -53,6 +53,7 @@ module.exports = class ScreenRenderer {
   set palette (palette) {
     if (this._palette !== palette) {
       this._palette = palette
+      this.resetDrawn()
       this.scheduleDraw('palette')
     }
   }
@@ -96,8 +97,8 @@ module.exports = class ScreenRenderer {
       return `rgb(${red}, ${green}, ${blue})`
     }
 
-    // default to transparent
-    return 'rgba(0, 0, 0, 0)'
+    // return error color
+    return (Date.now() / 1000) % 2 === 0 ? '#f0f' : '#0f0'
   }
 
   /**
@@ -413,9 +414,9 @@ module.exports = class ScreenRenderer {
       let inSelection = this.screen.isInSelection(x, y)
 
       let text = this.screen.screen[cell]
-      let fg = this.screen.screenFG[cell]
-      let bg = this.screen.screenBG[cell]
-      let attrs = this.screen.screenAttrs[cell]
+      let fg = this.screen.screenFG[cell] | 0
+      let bg = this.screen.screenBG[cell] | 0
+      let attrs = this.screen.screenAttrs[cell] | 0
 
       if (attrs & (1 << 4) && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
@@ -438,7 +439,7 @@ module.exports = class ScreenRenderer {
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
 
-      fontGroups.get(font).push([cell, x, y, text, fg, bg, attrs, isCursor, inSelection])
+      fontGroups.get(font).push({ cell, x, y, text, fg, bg, attrs, isCursor, inSelection })
       updateMap.set(cell, didUpdate)
     }
 
@@ -507,7 +508,7 @@ module.exports = class ScreenRenderer {
     // pass 1: backgrounds
     for (let font of fontGroups.keys()) {
       for (let data of fontGroups.get(font)) {
-        let [cell, x, y, text, , bg] = data
+        let { cell, x, y, text, bg } = data
 
         if (redrawMap.get(cell)) {
           this.drawBackground({ x, y, cellWidth, cellHeight, bg })
@@ -536,7 +537,7 @@ module.exports = class ScreenRenderer {
       ctx.font = this.screen.getFont(modifiers)
 
       for (let data of fontGroups.get(font)) {
-        let [cell, x, y, text, fg, bg, attrs, isCursor, inSelection] = data
+        let { cell, x, y, text, fg, bg, attrs, isCursor, inSelection } = data
 
         if (redrawMap.get(cell)) {
           this.drawCharacter({

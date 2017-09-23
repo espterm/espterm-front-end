@@ -281,7 +281,6 @@ class ScrollingTerminal {
         else if (setForeground) serialized += '\x05' + encode2B(foreground)
         else if (setBackground) serialized += '\x06' + encode2B(background)
         if (setAttributes) serialized += '\x04' + encode2B(attributes)
-
         lastStyle = style
       }
       serialized += cell[0]
