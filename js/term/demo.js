@@ -696,7 +696,7 @@ let demoshIndex = {
             let write = data => this.emit('write', data)
             child.on('write', write)
             child.on('exit', code => {
-              child.off('write', write)
+              child.removeListener('write', write)
               this.destroy()
             })
             child.run(...args)
@@ -853,7 +853,7 @@ class DemoShell {
       let write = data => this.terminal.write(data)
       this.child.on('write', write)
       this.child.on('exit', code => {
-        if (this.child) this.child.off('write', write)
+        if (this.child) this.child.removeListener('write', write)
         this.child = null
         this.prompt(!code)
       })
