@@ -1,5 +1,6 @@
 const EventEmitter = require('events')
 const { encode2B, encode3B, parse2B } = require('../utils')
+const { themes } = require('./themes')
 
 class ANSIParser {
   constructor (handler) {
@@ -119,13 +120,15 @@ class ScrollingTerminal {
     this.reset()
 
     this._lastLoad = Date.now()
-    this.termScreen.load(this.serialize(), 0)
+    this.termScreen.load(this.serialize())
+
+    window.showPage()
   }
   reset () {
     this.style = TERM_DEFAULT_STYLE
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
-    this.theme = 0
+    this.theme = -1
     this.rainbow = false
     this.parser.reset()
     this.clear()
@@ -291,6 +294,7 @@ class ScrollingTerminal {
     clearTimeout(this._scheduledLoad)
     if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
       this.termScreen.load(this.serialize(), this.theme)
+      this.theme = -1 // prevent useless theme setting next time
     } else {
       this._scheduledLoad = setTimeout(() => {
         this.termScreen.load(this.serialize())
@@ -441,7 +445,7 @@ let demoshIndex = {
       let drawCell = (x, y) => {
         moveTo(x, y)
         if (splash[y][x] === '@') {
-          this.emit('write', '\x1b[48;5;8m\x1b[38;5;255m▄\b')
+          this.emit('write', '\x1b[48;5;238m\x1b[38;5;255m▄\b')
         } else {
           let level = 231 + levels[splash[y][x]]
           let character = characters[splash[y][x]]
@@ -548,9 +552,10 @@ let demoshIndex = {
       this.shell = shell
     }
     run (...args) {
-      let theme = args[0] | 0
-      if (!args.length || !Number.isFinite(theme) || theme < 0 || theme > 5) {
-        this.emit('write', '\x1b[31mUsage: theme [0–5]\r\n')
+      let theme = +args[0] | 0
+      const maxnum = themes.length
+      if (!args.length || !Number.isFinite(theme) || theme < 0 || theme >= maxnum) {
+        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum-1}]\r\n`)
         this.destroy()
         return
       }

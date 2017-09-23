@@ -90,7 +90,7 @@ return [
 	'uart_stopbits' => 1,
 	'uart_parity' => 2,
 
-	'theme' => 1,
+	'theme' => 0,
 	'pwlock' => 1,
 	'access_name' => 'espterm',
 ];

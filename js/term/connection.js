@@ -82,7 +82,7 @@ module.exports = class TermConnection extends EventEmitter {
         default:
           this.screen.load(evt.data)
           if (!this.pageShown) {
-            showPage()
+            window.showPage()
             this.pageShown = true
           }
           break
@@ -139,7 +139,6 @@ module.exports = class TermConnection extends EventEmitter {
         window.alert('Demoing non-demo build!') // this will catch mistakes when deploying to the website
       } else {
         demo.init(this.screen)
-        showPage()
       }
       return
     }
