@@ -41,6 +41,7 @@
 </div>
 
 <h1 id="screen-title"><!-- Screen title is loaded here by JS --></h1>
+<a href="#" id="term-fit-screen" class="mq-tablet-max"><i id="resize-button-icon" class="icn-resize-small"></i></a>
 
 <div id="term-wrap">
 	<div id="screen">
@@ -60,8 +61,7 @@
 </div>
 
 <nav id="term-nav">
-	<a href="#" id="term-fit-screen" class="mq-tablet-max"><i id="resize-button-icon" class="icn-resize-small"></i></a><!--
-	--><a href="#" id="term-kb-open" class="mq-tablet-max"><i class="icn-keyboard"></i><span><?= tr('term_nav.keybd') ?></span></a><!--
+	<a href="#" id="term-kb-open" class="mq-tablet-max"><i class="icn-keyboard"></i><span><?= tr('term_nav.keybd') ?></span></a><!--
 	--><a href="#" id="term-fu-open"><i class="icn-download"></i><span><?= tr('term_nav.upload') ?></span></a><!--
 	--><a href="<?= url('cfg_term') ?>" class="x-term-conf-btn"><i class="icn-configure"></i><span><?= tr('term_nav.config') ?></span></a><!--
 	--><a href="<?= url('cfg_wifi') ?>" class="x-term-conf-btn"><i class="icn-wifi"></i><span><?= tr('term_nav.wifi') ?></span></a><!--

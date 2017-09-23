@@ -4,6 +4,12 @@ module.exports = function (screen, input) {
   const keyInput = qs('#softkb-input')
   if (!keyInput) return // abort, we're not on the terminal page
 
+  const shortcutBar = document.createElement('div')
+  shortcutBar.id = 'keyboard-shortcut-bar'
+  if (navigator.userAgent.match(/iPad|iPhone|iPod/)) {
+    qs('#screen').appendChild(shortcutBar)
+  }
+
   let keyboardOpen = false
 
   // moves the input to where the cursor is on the canvas.
@@ -19,9 +25,13 @@ module.exports = function (screen, input) {
   keyInput.addEventListener('focus', () => {
     keyboardOpen = true
     updateInputPosition()
+    shortcutBar.classList.add('open')
   })
 
-  keyInput.addEventListener('blur', () => (keyboardOpen = false))
+  keyInput.addEventListener('blur', () => {
+    keyboardOpen = false
+    shortcutBar.classList.remove('open')
+  })
 
   screen.on('cursor-moved', updateInputPosition)
 
@@ -104,4 +114,30 @@ module.exports = function (screen, input) {
   })
 
   screen.on('open-soft-keyboard', () => keyInput.focus())
+
+  // shortcut bar
+  const shortcuts = {
+    Tab: 0x09,
+    '←': 0x25,
+    '↓': 0x28,
+    '↑': 0x26,
+    '→': 0x27,
+    '^C': { which: 0x43, ctrlKey: true }
+  }
+
+  for (const shortcut in shortcuts) {
+    const button = document.createElement('button')
+    button.classList.add('shortcut-button')
+    button.textContent = shortcut
+    shortcutBar.appendChild(button)
+
+    const key = shortcuts[shortcut]
+    button.addEventListener('click', e => {
+      e.preventDefault()
+      let fakeEvent = key
+      if (typeof key === 'number') fakeEvent = { which: key }
+      fakeEvent.preventDefault = () => {}
+      input.handleKeyDown(fakeEvent)
+    })
+  }
 }

@@ -207,6 +207,31 @@ body.term {
 	}
 }
 
+// shortcut bar on iOS
+#keyboard-shortcut-bar {
+	border-radius: 4px;
+	width: calc(100vw - 20px);
+	background: #d1d5db;
+	padding: 5px 10px;
+	overflow-x: auto;
+
+	&:not(.open) {
+		display: none;
+	}
+
+	.shortcut-button {
+		background: #fff;
+		color: #000;
+		padding: 10px 20px;
+		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+		text-shadow: none;
+		border-radius: 4px;
+		margin: 0 10px 0 0;
+		font-family: -apple-system, sans-serif;
+		min-width: 2em;
+	}
+}
+
 // Attributes
 .bold {
 	font-weight: bold !important;
