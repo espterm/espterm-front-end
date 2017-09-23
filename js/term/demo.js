@@ -91,6 +91,7 @@ class ANSIParser {
       else if (code <= 0x06) this.handler('_null')
       else if (code === 0x07) this.handler('bell')
       else if (code === 0x08) this.handler('back')
+      else if (code === 0x09) this.handler('tab')
       else if (code === 0x0a) this.handler('new-line')
       else if (code === 0x0d) this.handler('return')
       else if (code === 0x15) this.handler('delete-line')
@@ -204,7 +205,7 @@ class ScrollingTerminal {
     } else if (action === 'clear') {
       this.clear()
     } else if (action === 'bell') {
-      this.terminal.load('B') // FIXME undefined?
+      this.termScreen.load('B')
     } else if (action === 'back') {
       this.moveBack()
     } else if (action === 'new-line') {
@@ -555,7 +556,7 @@ let demoshIndex = {
       let theme = +args[0] | 0
       const maxnum = themes.length
       if (!args.length || !Number.isFinite(theme) || theme < 0 || theme >= maxnum) {
-        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum-1}]\r\n`)
+        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum - 1}]\r\n`)
         this.destroy()
         return
       }
@@ -791,6 +792,8 @@ class DemoShell {
       this.history[0] = this.history[0].substr(0, this.cursorPos - 1) + this.history[0].substr(this.cursorPos)
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
+    } else if (action === 'tab') {
+      console.warn('TAB not implemented') // TODO completion
     } else if (action === 'move-cursor-x') {
       this.cursorPos = Math.max(0, Math.min(this.history[this.historyIndex].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
