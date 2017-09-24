@@ -122,7 +122,7 @@ module.exports = function (screen, input) {
     '↓': 0x28,
     '↑': 0x26,
     '→': 0x27,
-    '^C': { which: 0x43, ctrlKey: true }
+    Control: 'ctrl'
   }
 
   for (const shortcut in shortcuts) {
@@ -132,12 +132,24 @@ module.exports = function (screen, input) {
     shortcutBar.appendChild(button)
 
     const key = shortcuts[shortcut]
-    button.addEventListener('click', e => {
+    button.addEventListener('touchstart', e => {
+      if (typeof key === 'string') {
+        // modifier button
+        input.softModifiers[key] = true
+
+        // prevent default. This prevents scrolling, but also prevents the
+        // selection popup
+        e.preventDefault()
+      }
+    })
+    button.addEventListener('touchend', e => {
       e.preventDefault()
-      let fakeEvent = key
-      if (typeof key === 'number') fakeEvent = { which: key }
-      fakeEvent.preventDefault = () => {}
-      input.handleKeyDown(fakeEvent)
+      if (typeof key === 'number') {
+        let fakeEvent = { which: key, preventDefault: () => {} }
+        input.handleKeyDown(fakeEvent)
+      } else if (typeof key === 'string') {
+        input.softModifiers[key] = false
+      }
     })
   }
 }

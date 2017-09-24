@@ -256,16 +256,23 @@ module.exports = function (conn, screen) {
     'F5', 'F11', 'F12', 'Shift+F5'
   ]
 
+  let softModifiers = {
+    alt: false,
+    ctrl: false,
+    meta: false,
+    shift: false
+  }
+
   const handleKeyDown = function (e) {
     if (!shouldAcceptEvent()) return
     if (cfg.no_keys) return
 
     let modifiers = []
     // sorted alphabetically
-    if (e.altKey) modifiers.push('Alt')
-    if (e.ctrlKey) modifiers.push('Control')
-    if (e.metaKey) modifiers.push('Meta')
-    if (e.shiftKey) modifiers.push('Shift')
+    if (e.altKey || softModifiers.alt) modifiers.push('Alt')
+    if (e.ctrlKey || softModifiers.ctrl) modifiers.push('Control')
+    if (e.metaKey || softModifiers.meta) modifiers.push('Meta')
+    if (e.shiftKey || softModifiers.shift) modifiers.push('Shift')
 
     let key = KEY_NAMES[e.which] || e.key
 
@@ -455,7 +462,8 @@ module.exports = function (conn, screen) {
       cfg.no_keys = yes
     },
 
-    handleKeyDown
+    handleKeyDown,
+    softModifiers
   }
   return input
 }
