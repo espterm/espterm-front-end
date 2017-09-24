@@ -1,6 +1,6 @@
 const $ = require('../lib/chibi')
 const { qs } = require('../utils')
-const { themes, defThemes } = require('./themes')
+const { themes } = require('./themes')
 
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
@@ -160,7 +160,7 @@ module.exports = class ScreenParser {
         case SEQ_REPEAT:
           let count = strArray[i++].codePointAt(0) - 1
           for (let j = 0; j < count; j++) {
-            setCellContent(cell)
+            setCellContent()
             if (++cell > screenLength) break
           }
           break
@@ -189,7 +189,7 @@ module.exports = class ScreenParser {
         default:
           if (charCode < 32) character = '\ufffd'
           lastChar = character
-          setCellContent(cell)
+          setCellContent()
           cell++
       }
     }
@@ -223,7 +223,10 @@ module.exports = class ScreenParser {
   /**
    * Loads a message from the server, and optionally a theme.
    * @param {string} str - the message
-   * @param {object} [opts] - options { [int] theme, [int] defaultFg, [int] defaultBg }
+   * @param {object} [opts] - options
+   * @param {number} [opts.theme] - theme
+   * @param {number} [opts.defaultFg] - default foreground
+   * @param {number} [opts.defaultBg] - default background
    */
   load (str, opts = null) {
     const content = str.substr(1)

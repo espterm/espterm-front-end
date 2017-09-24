@@ -89,7 +89,7 @@ module.exports = class ScreenRenderer {
    */
   getColor (i) {
     // return palette color if it exists
-    if (i < 16) return this.palette[i]
+    if (i < 16 && i in this.palette) return this.palette[i]
 
     // -1 for selection foreground, -2 for selection background
     if (i === -1) return SELECTION_FG
