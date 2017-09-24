@@ -48,7 +48,7 @@ return [
 	'term.explain_scheme' => '
 		To select default text and background color, click on the
 		preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard 
-		colors and hex (#FFF or #FFFFFF) for True Color (24-bit).
+		colors and hex (#FFFFFF) for True Color (24-bit).
 		',
 
 	'term.fgbg_presets' => 'Presets',

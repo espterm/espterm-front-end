@@ -299,12 +299,12 @@
 		var bg = $('#default_bg').val();
 
 		if (/^\d+$/.test(fg)) fg = +fg;
-		else if (!/^#[\da-f]{3,6}$/i.test(fg)) {
+		else if (!/^#[\da-f]{6}$/i.test(fg)) {
 		  fg = 'black';
 		}
 
 		if (/^\d+$/.test(bg)) bg = +bg;
-		else if (!/^#[\da-f]{3,6}$/i.test(bg)) {
+		else if (!/^#[\da-f]{6}$/i.test(bg)) {
 		  bg = 'black';
 		}
 
