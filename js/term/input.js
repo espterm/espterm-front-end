@@ -247,6 +247,7 @@ module.exports = function (conn, screen) {
   }
 
   const shouldAcceptEvent = function () {
+    if (cfg.no_keys) return false
     if (document.activeElement instanceof window.HTMLTextAreaElement) return false
     return true
   }
@@ -298,7 +299,6 @@ module.exports = function (conn, screen) {
     // This takes care of text characters typed
     window.addEventListener('keypress', function (evt) {
       if (!shouldAcceptEvent()) return
-      if (cfg.no_keys) return
       if (evt.ctrlKey || evt.metaKey) return
 
       let str = ''
