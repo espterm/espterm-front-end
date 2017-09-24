@@ -543,7 +543,7 @@ module.exports = class TermScreen extends EventEmitter {
     const mainOsc = audioCtx.createOscillator()
     const mainGain = audioCtx.createGain()
     mainOsc.connect(mainGain)
-    mainGain.gain.value = 6
+    mainGain.gain.value = 4
     mainOsc.frequency.value = 750
     mainOsc.type = 'sine'
 
@@ -551,7 +551,7 @@ module.exports = class TermScreen extends EventEmitter {
     const surrOsc = audioCtx.createOscillator()
     const surrGain = audioCtx.createGain()
     surrOsc.connect(surrGain)
-    surrGain.gain.value = 4
+    surrGain.gain.value = 2
     surrOsc.frequency.value = 400
     surrOsc.type = 'sine'
 

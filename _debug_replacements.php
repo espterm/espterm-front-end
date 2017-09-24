@@ -63,7 +63,7 @@ return [
 	'githubrepo' => 'https://github.com/espterm/espterm-firmware',
 	'githubrepo_front' => 'https://github.com/espterm/espterm-front-end',
 	'hash_backend' => $fwHash,
-	'hash_frontend' => GIT_HASH, // TODO actual versions?
+	'hash_frontend' => GIT_HASH,
 
 	'ap_dhcp_time' => '120',
 	'ap_dhcp_start' => '192.168.4.100',
@@ -91,6 +91,6 @@ return [
 	'uart_parity' => 2,
 
 	'theme' => 0,
-	'pwlock' => 1,
+	'pwlock' => 0,
 	'access_name' => 'espterm',
 ];
