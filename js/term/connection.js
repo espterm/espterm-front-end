@@ -80,6 +80,7 @@ module.exports = class TermConnection extends EventEmitter {
           break
 
         default:
+          this.emit('load')
           this.screen.load(evt.data)
           if (!this.pageShown) {
             window.showPage()

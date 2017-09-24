@@ -25,11 +25,18 @@ module.exports = function (opts) {
   })
   conn.on('connect', () => {
     clearTimeout(showConnectingTimeout)
-    screen.window.statusScreen = null
+    screen.window.statusScreen = { title: 'Waiting for content', loading: true }
+  })
+  conn.on('load', () => {
+    if (screen.window.statusScreen) screen.window.statusScreen = null
   })
   conn.on('disconnect', () => {
     clearTimeout(showConnectingTimeout)
     screen.window.statusScreen = { title: 'Disconnected' }
+    screen.screen = []
+    screen.screenFG = []
+    screen.screenBG = []
+    screen.screenAttrs = []
   })
   conn.on('silence', () => { screen.window.statusScreen = { title: 'Waiting for server', loading: true } })
   // conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
