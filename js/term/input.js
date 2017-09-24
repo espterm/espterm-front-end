@@ -106,14 +106,14 @@ module.exports = function (conn, screen) {
   for (let i = 0x60; i <= 0x69; i++) KEY_NAMES[i] = `Numpad${i - 0x60}`
 
   let cfg = {
-    np_alt: false,
-    cu_alt: false,
-    fn_alt: false,
-    mt_click: false,
-    mt_move: false,
-    no_keys: false,
-    crlf_mode: false,
-    all_fn: false
+    np_alt: false,    // Application Numpad Mode
+    cu_alt: false,    // Application Cursors Mode
+    fn_alt: false,    // SS3 function keys mode
+    mt_click: false,  // Mouse click tracking
+    mt_move: false,   // Mouse move tracking
+    no_keys: false,   // Suppress any key / clipboard event intercepting
+    crlf_mode: false, // Enter sends CR LF
+    all_fn: false     // Capture also F5, F11 and F12
   }
 
   /** Fn alt choice for key message */
@@ -265,7 +265,6 @@ module.exports = function (conn, screen) {
 
   const handleKeyDown = function (e) {
     if (!shouldAcceptEvent()) return
-    if (cfg.no_keys) return
 
     let modifiers = []
     // sorted alphabetically
