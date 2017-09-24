@@ -1,5 +1,5 @@
 const EventEmitter = require('events')
-const { encode2B, encode3B, parse2B } = require('../utils')
+const { parse2B } = require('../utils')
 const { themes } = require('./themes')
 
 class ANSIParser {
@@ -51,8 +51,8 @@ class ANSIParser {
         else if (type === 20) this.handler('add-attrs', 1 << 5) // fraktur
         else if (type >= 30 && type <= 37) this.handler('set-color-fg', type % 10)
         else if (type >= 40 && type <= 47) this.handler('set-color-bg', type % 10)
-        else if (type === 39) this.handler('set-color-fg', 7)
-        else if (type === 49) this.handler('set-color-bg', 0)
+        else if (type === 39) this.handler('reset-color-fg')
+        else if (type === 49) this.handler('reset-color-bg')
         else if (type >= 90 && type <= 98) this.handler('set-color-fg', (type % 10) + 8)
         else if (type >= 100 && type <= 108) this.handler('set-color-bg', (type % 10) + 8)
         else if (type === 38 || type === 48) {
@@ -101,7 +101,7 @@ class ANSIParser {
     if (!this.joinChunks) this.reset()
   }
 }
-const TERM_DEFAULT_STYLE = 7
+const TERM_DEFAULT_STYLE = 0
 const TERM_MIN_DRAW_DELAY = 10
 
 let getRainbowColor = t => {
@@ -233,15 +233,15 @@ class ScrollingTerminal {
     } else if (action === 'reset-style') {
       this.style = TERM_DEFAULT_STYLE
     } else if (action === 'add-attrs') {
-      if (args[0] === -1) {
-        this.style = (this.style & 0xFF0000) | ((this.style >> 8) & 0xFF) | ((this.style & 0xFF) << 8)
-      } else {
-        this.style |= (args[0] << 16)
-      }
+      this.style |= (args[0] << 16)
     } else if (action === 'set-color-fg') {
-      this.style = (this.style & 0xFFFF00) | args[0]
+      this.style = (this.style & 0xFFFFFF00) | (1 << 8 << 16) | args[0]
     } else if (action === 'set-color-bg') {
-      this.style = (this.style & 0xFF00FF) | (args[0] << 8)
+      this.style = (this.style & 0xFFFF00FF) | (1 << 9 << 16) | (args[0] << 8)
+    } else if (action === 'reset-color-fg') {
+      this.style = this.style & 0xFFFEFF00
+    } else if (action === 'reset-color-bg') {
+      this.style = this.style & 0xFFFD00FF
     } else if (action === 'hide-cursor') {
       this.cursor.visible = false
     } else if (action === 'show-cursor') {
@@ -254,14 +254,14 @@ class ScrollingTerminal {
   }
   serialize () {
     let serialized = 'S'
-    serialized += encode2B(this.height) + encode2B(this.width)
-    serialized += encode2B(this.cursor.y) + encode2B(this.cursor.x)
+    serialized += String.fromCodePoint(this.height + 1) + String.fromCodePoint(this.width + 1)
+    serialized += String.fromCodePoint(this.cursor.y + 1) + String.fromCodePoint(this.cursor.x + 1)
 
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
     attributes |= (this.cursor.style << 9)
-    serialized += encode3B(attributes)
+    serialized += String.fromCodePoint(attributes + 1)
 
     let lastStyle = null
     let index = 0
@@ -270,21 +270,22 @@ class ScrollingTerminal {
       if (this.rainbow) {
         let x = index % this.width
         let y = Math.floor(index / this.width)
-        style = (style & 0xFF0000) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        // C instead of F in mask and 1 << 8 in attrs to change attr bits 8 and 9
+        style = (style & 0xFFFC0000) | (1 << 8 << 16) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
         index++
       }
       if (style !== lastStyle) {
         let foreground = style & 0xFF
         let background = (style >> 8) & 0xFF
-        let attributes = (style >> 16) & 0xFF
+        let attributes = (style >> 16) & 0xFFFF
         let setForeground = foreground !== (lastStyle & 0xFF)
         let setBackground = background !== ((lastStyle >> 8) & 0xFF)
-        let setAttributes = attributes !== ((lastStyle >> 16) & 0xFF)
+        let setAttributes = attributes !== ((lastStyle >> 16) & 0xFFFF)
 
-        if (setForeground && setBackground) serialized += '\x03' + encode3B(style & 0xFFFF)
-        else if (setForeground) serialized += '\x05' + encode2B(foreground)
-        else if (setBackground) serialized += '\x06' + encode2B(background)
-        if (setAttributes) serialized += '\x04' + encode2B(attributes)
+        if (setForeground && setBackground) serialized += '\x03' + String.fromCodePoint((style & 0xFFFF) + 1)
+        else if (setForeground) serialized += '\x05' + String.fromCodePoint(foreground + 1)
+        else if (setBackground) serialized += '\x06' + String.fromCodePoint(background + 1)
+        if (setAttributes) serialized += '\x04' + String.fromCodePoint(attributes + 1)
         lastStyle = style
       }
       serialized += cell[0]
@@ -463,7 +464,7 @@ let demoshIndex = {
             if (dx > 0) drawCell(dx, y)
           }
 
-          if (++x < 79) {
+          if (++x < 69) {
             if (++cycles >= 3) {
               setTimeout(loop, 20)
               cycles = 0

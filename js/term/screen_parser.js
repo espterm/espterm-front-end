@@ -132,9 +132,11 @@ module.exports = class ScreenParser {
     let setCellContent = () => {
       // Remove blink attribute if it wouldn't have any effect
       let myAttrs = attrs
+      let hasFG = attrs & (1 << 8)
+      let hasBG = attrs & (1 << 9)
       if ((myAttrs & MASK_BLINK) !== 0 &&
         ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
-          fg === bg // invisible text
+          (fg === bg && hasFG && hasBG) // invisible text
         )
       ) {
         myAttrs ^= MASK_BLINK
