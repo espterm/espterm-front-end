@@ -229,6 +229,11 @@ body.term {
 		margin: 0 10px 0 0;
 		font-family: -apple-system, sans-serif;
 		min-width: 2em;
+
+		&.modifier:not(.enabled) {
+			background: #9ea6b1;
+			color: #000;
+		}
 	}
 }
 
