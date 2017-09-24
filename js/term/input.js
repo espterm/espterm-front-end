@@ -246,11 +246,17 @@ module.exports = function (conn, screen) {
     conn.send('b' + String.fromCharCode(n))
   }
 
+  const shouldAcceptEvent = function () {
+    if (document.activeElement instanceof window.HTMLTextAreaElement) return false
+    return true
+  }
+
   const keyBlacklist = [
     'F5', 'F11', 'F12', 'Shift+F5'
   ]
 
   const handleKeyDown = function (e) {
+    if (!shouldAcceptEvent()) return
     if (cfg.no_keys) return
 
     let modifiers = []
@@ -291,6 +297,7 @@ module.exports = function (conn, screen) {
   function initKeys ({ allFn }) {
     // This takes care of text characters typed
     window.addEventListener('keypress', function (evt) {
+      if (!shouldAcceptEvent()) return
       if (cfg.no_keys) return
       if (evt.ctrlKey || evt.metaKey) return
 
@@ -307,6 +314,7 @@ module.exports = function (conn, screen) {
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('copy', e => {
+      if (!shouldAcceptEvent()) return
       let selectedText = screen.getSelectedText()
       if (selectedText) {
         e.preventDefault()
@@ -314,6 +322,7 @@ module.exports = function (conn, screen) {
       }
     })
     window.addEventListener('paste', e => {
+      if (!shouldAcceptEvent()) return
       e.preventDefault()
       let string = e.clipboardData.getData('text/plain')
       if (string.includes('\n') || string.length > 90) {
