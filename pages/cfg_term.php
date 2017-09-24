@@ -26,7 +26,34 @@
 	</div>
 
 	<div class="Row color-preview">
-		<label><?= tr("term.color_fg") ?></label>
+		<label><?= tr("term.color_bg_prev") ?></label>
+		<div>
+			<div class="colorprev bg">
+				<span data-bg=0 data-fg=15>0</span><!--
+				--><span data-bg=1 data-fg=15>1</span><!--
+				--><span data-bg=2 data-fg=15>2</span><!--
+				--><span data-bg=3 data-fg=0>3</span><!--
+				--><span data-bg=4 data-fg=15>4</span><!--
+				--><span data-bg=5 data-fg=15>5</span><!--
+				--><span data-bg=6 data-fg=15>6</span><!--
+				--><span data-bg=7 data-fg=0>7</span>
+			</div>
+
+			<div class="colorprev bg">
+				<span data-bg=8 data-fg=15>8</span><!--
+				--><span data-bg=9 data-fg=0>9</span><!--
+				--><span data-bg=10 data-fg=0>10</span><!--
+				--><span data-bg=11 data-fg=0>11</span><!--
+				--><span data-bg=12 data-fg=0>12</span><!--
+				--><span data-bg=13 data-fg=0>13</span><!--
+				--><span data-bg=14 data-fg=0>14</span><!--
+				--><span data-bg=15 data-fg=0>15</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="Row color-preview">
+		<label><?= tr("term.color_fg_prev") ?></label>
 		<div>
 			<div class="colorprev fg">
 				<span data-fg=0 data-bg=0 style="text-shadow: 0 0 4px white;">0</span><!--
@@ -53,30 +80,15 @@
 	</div>
 
 	<div class="Row color-preview">
-		<label><?= tr("term.color_bg") ?></label>
-		<div>
-			<div class="colorprev bg">
-				<span data-bg=0 data-fg=15>0</span><!--
-				--><span data-bg=1 data-fg=15>1</span><!--
-				--><span data-bg=2 data-fg=15>2</span><!--
-				--><span data-bg=3 data-fg=0>3</span><!--
-				--><span data-bg=4 data-fg=15>4</span><!--
-				--><span data-bg=5 data-fg=15>5</span><!--
-				--><span data-bg=6 data-fg=15>6</span><!--
-				--><span data-bg=7 data-fg=0>7</span>
-			</div>
-
-			<div class="colorprev bg">
-				<span data-bg=8 data-fg=15>8</span><!--
-				--><span data-bg=9 data-fg=0>9</span><!--
-				--><span data-bg=10 data-fg=0>10</span><!--
-				--><span data-bg=11 data-fg=0>11</span><!--
-				--><span data-bg=12 data-fg=0>12</span><!--
-				--><span data-bg=13 data-fg=0>13</span><!--
-				--><span data-bg=14 data-fg=0>14</span><!--
-				--><span data-bg=15 data-fg=0>15</span>
-			</div>
+		<label><?= tr("term.colors_preview") ?></label>
+		<div class="color-example" data-fg="" data-bg="">
+			<?= tr("term.example") ?>
 		</div>
+	</div>
+
+	<div class="Row color-preview">
+		<label><?= tr("term.fgbg_presets") ?></label>
+		<div id="fgbg_presets"></div>
 	</div>
 
 	<div class="Row">
@@ -88,18 +100,6 @@
 			<label for="default_bg"><?= tr("term.color_bg") ?></label>
 			<input type="text" name="default_bg" id="default_bg" class="short" value="%default_bg%">
 		</div>
-	</div>
-
-	<div class="Row color-preview">
-		<label><?= tr("term.colors_preview") ?></label>
-		<div class="color-example" data-fg="" data-bg="">
-			<?= tr("term.example") ?>
-		</div>
-	</div>
-
-	<div class="Row color-preview">
-		<label><?= tr("term.fgbg_presets") ?></label>
-		<div id="fgbg_presets"></div>
 	</div>
 
 	<div class="Row">
