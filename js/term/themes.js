@@ -20,7 +20,11 @@ const themes = exports.themes = [
     '#2e3436', '#cc0000', '#4e9a06', '#c4a000', '#3465a4', '#75507b', '#06989a', '#d3d7cf',
     '#555753', '#ef2929', '#8ae234', '#fce94f', '#729fcf', '#ad7fa8', '#34e2e2', '#eeeeec'
   ],
-  [ // Solarized
+  [ // Solarized light
+    '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
+    '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
+  ],
+  [ // Solarized dark
     '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
     '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
   ],
@@ -40,6 +44,18 @@ const themes = exports.themes = [
     '#000000', '#8D3E37', '#55A049', '#AAB95D', '#40318D', '#80348B', '#72C1C8', '#D59F74',
     '#8B5429', '#B86962', '#94E089', '#FFFFB2', '#8071CC', '#AA5FB6', '#87D6DD', '#ffffff'
   ]
+]
+
+exports.fgbgThemes = [
+  ['#aaaaaa', '#000000'], // grey_on_black
+  ['#000000', '#ffffdd'], // black_on_yellow
+  ['#000000', '#ffffff'], // black_on_white
+  ['#ffffff', '#000000'], // white_on_black
+  ['#00ff00', '#000000'], // green_on_black
+  ['#e53c00', '#000000'], // orange_on_black
+  ['#ffffff', '#300a24'], // ambience
+  ['#657b83', '#fdf6e3'], // solarized_light
+  ['#839496', '#002b36']  // solarized_dark
 ]
 
 let colorTable256 = null

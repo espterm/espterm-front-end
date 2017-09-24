@@ -99,6 +99,7 @@ module.exports = class TermScreen extends EventEmitter {
 
     this.bracketedPaste = false
     this.blinkingCellCount = 0
+    this.reverseVideo = false
 
     this.screen = []
     this.screenFG = []

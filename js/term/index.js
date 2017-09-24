@@ -8,7 +8,7 @@ const initSoftKeyboard = require('./soft_keyboard')
 const attachDebugScreen = require('./debug_screen')
 
 /** Init the terminal sub-module - called from HTML */
-module.exports = function ({ labels, theme, allFn }) {
+module.exports = function (opts) {
   const screen = new TermScreen()
   const conn = new TermConnection(screen)
   const input = TermInput(conn, screen)
@@ -36,7 +36,7 @@ module.exports = function ({ labels, theme, allFn }) {
   conn.on('ping-success', () => { screen.window.statusScreen = { title: 'Re-connecting', loading: true } })
 
   conn.init()
-  input.init({ allFn })
+  input.init(opts)
   termUpload.init()
   Notify.init()
 
@@ -46,7 +46,7 @@ module.exports = function ({ labels, theme, allFn }) {
   }
 
   qs('#screen').appendChild(screen.canvas)
-  screen.load(labels, theme) // load labels and theme
+  screen.load(opts.labels, opts) // load labels and theme
 
   initSoftKeyboard(screen, input)
   if (attachDebugScreen) attachDebugScreen(screen)

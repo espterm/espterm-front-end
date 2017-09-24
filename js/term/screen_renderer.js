@@ -14,7 +14,9 @@ module.exports = class ScreenRenderer {
     this.screen = screen
     this.ctx = screen.ctx
 
-    this._palette = null
+    this._palette = null    // colors 0-15
+    this.defaultBgNum = 0
+    this.defaultFgNum = 7
 
     // 256color lookup table
     // should not be used to look up 0-15 (will return transparent)
@@ -44,18 +46,26 @@ module.exports = class ScreenRenderer {
 
   /**
    * The color palette. Should define 16 colors in an array.
-   * @type {number[]}
+   * @type {string[]}
    */
   get palette () {
     return this._palette || themes[0]
   }
-  /** @type {number[]} */
+
+  /** @type {string[]} */
   set palette (palette) {
     if (this._palette !== palette) {
       this._palette = palette
       this.resetDrawn()
       this.scheduleDraw('palette')
     }
+  }
+
+  setDefaultColors (fg, bg) {
+    this.defaultFgNum = fg
+    this.defaultBgNum = bg
+    this.resetDrawn()
+    this.scheduleDraw('defaultColors')
   }
 
   /**
@@ -79,7 +89,7 @@ module.exports = class ScreenRenderer {
    */
   getColor (i) {
     // return palette color if it exists
-    if (this.palette[i]) return this.palette[i]
+    if (i < 16) return this.palette[i]
 
     // -1 for selection foreground, -2 for selection background
     if (i === -1) return SELECTION_FG
@@ -417,6 +427,12 @@ module.exports = class ScreenRenderer {
       let fg = this.screen.screenFG[cell] | 0
       let bg = this.screen.screenBG[cell] | 0
       let attrs = this.screen.screenAttrs[cell] | 0
+
+      if (!(attrs & (1 << 8))) fg = this.defaultFgNum
+      if (!(attrs & (1 << 9))) bg = this.defaultBgNum
+
+      if (attrs & (1 << 10)) [fg, bg] = [bg, fg] // swap - reversed character colors
+      if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
 
       if (attrs & (1 << 4) && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
