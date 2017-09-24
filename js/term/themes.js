@@ -24,10 +24,6 @@ const themes = exports.themes = [
     '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
     '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
   ],
-  [ // Solarized dark
-    '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
-    '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
-  ],
   [ // CGA NTSC
     '#000000', '#69001A', '#117800', '#769100', '#1A00A6', '#8019AB', '#289E76', '#A4A4A4',
     '#484848', '#C54E76', '#6DD441', '#D2ED46', '#765BFF', '#DC75FF', '#84FAD2', '#FFFFFF'
@@ -47,15 +43,16 @@ const themes = exports.themes = [
 ]
 
 exports.fgbgThemes = [
-  ['#aaaaaa', '#000000'], // grey_on_black
-  ['#000000', '#ffffdd'], // black_on_yellow
-  ['#000000', '#ffffff'], // black_on_white
-  ['#ffffff', '#000000'], // white_on_black
-  ['#00ff00', '#000000'], // green_on_black
-  ['#e53c00', '#000000'], // orange_on_black
-  ['#ffffff', '#300a24'], // ambience
-  ['#657b83', '#fdf6e3'], // solarized_light
-  ['#839496', '#002b36']  // solarized_dark
+  ['#AAAAAA', '#000000'], // GREY_ON_BLACK
+  ['#EFF0F1', '#31363B'], // BREEZE
+  ['#FFFFFF', '#000000'], // WHITE_ON_BLACK
+  ['#00FF00', '#000000'], // GREEN_ON_BLACK
+  ['#E53C00', '#000000'], // ORANGE_ON_BLACK
+  ['#FFFFFF', '#300A24'], // AMBIENCE
+  ['#839496', '#002B36'], // SOLARIZED_DARK
+  ['#657B83', '#FDF6E3'], // SOLARIZED_LIGHT
+  ['#000000', '#FFFFDD'], // BLACK_ON_YELLOW
+  ['#000000', '#FFFFFF']  // BLACK_ON_WHITE
 ]
 
 let colorTable256 = null
@@ -91,13 +88,24 @@ exports.buildColorTable = function () {
 exports.SELECTION_FG = '#333'
 exports.SELECTION_BG = '#b2d7fe'
 
+function resolveColor (themeN, shade) {
+  shade = +shade
+  if (shade < 16) shade = themes[themeN][shade]
+  else {
+    shade = exports.buildColorTable()[shade]
+  }
+  return shade
+}
+
 exports.themePreview = function (n) {
   document.querySelectorAll('[data-fg]').forEach((elem) => {
-    let shade = +elem.dataset.fg
-    elem.style.color = themes[n][shade]
+    let shade = elem.dataset.fg
+    if (/^\d+$/.test(shade)) shade = resolveColor(n, shade)
+    elem.style.color = shade
   })
   document.querySelectorAll('[data-bg]').forEach((elem) => {
-    let shade = +elem.dataset.bg
-    elem.style.backgroundColor = themes[n][shade]
+    let shade = elem.dataset.bg
+    if (/^\d+$/.test(shade)) shade = resolveColor(n, shade)
+    elem.style.backgroundColor = shade
   })
 }

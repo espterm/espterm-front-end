@@ -23,6 +23,17 @@ form { @include naked(); }
 	align-items: center;
 	flex-wrap: wrap;
 
+	.SubRow {
+		display: flex;
+		flex-direction: row;
+
+		@include media($phone) {
+			flex-direction: column;
+			margin: 6px auto;
+			width: 100%;
+		}
+	}
+
 	&:first-child {
 		margin-top: 0;
 	}
@@ -54,7 +65,7 @@ form { @include naked(); }
 	}
 
 	// buttons2 is the same style, but different selector for use in the admin page
-	&.buttons, &.buttons2 {
+	&.buttons {
 		margin: 16px auto;
 		input, .button {
 			margin-right: dist(-1);

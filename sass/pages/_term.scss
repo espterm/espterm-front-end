@@ -267,20 +267,35 @@ body.term {
 }
 //
 
-.Row.color-preview {
+.color-example {
 	font-family: monospace;
-	font-size: 16pt;
-	display: block;
-	margin-bottom: 0;
+	font-size: 14pt;
+	padding: 4px 6px;
+}
 
-	padding-left: $form-label-w;
+.preset {
+	cursor: pointer;
+	font-family: monospace;
+	font-size: 14pt;
+}
+
+.Row.color-preview {
+	label {
+		align-self: center;
+	}
 
 	@include media($phone) {
-		padding-left: 0;
-		font-size: 14pt;
+		font-size: 12pt;
+		align-items: flex-start;
+
+		label {
+			align-self: flex-start;
+		}
 	}
 
 	.colorprev {
+		font-family: monospace;
+		font-size: 14pt;
 		display:block;
 		margin: 0;
 		cursor: pointer;

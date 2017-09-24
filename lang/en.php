@@ -45,10 +45,18 @@ return [
 
 	'term.example' => 'Default colors preview',
 
+	'term.explain_scheme' => '
+		To select default text and background color, click on the
+		preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard 
+		colors and hex (#FFF or #FFFFFF) for True Color (24-bit).
+		',
+
+	'term.fgbg_presets' => 'Presets',
+	'term.color_scheme' => 'Color Scheme',
 	'term.reset_screen' => 'Reset screen & parser',
 	'term.term_title' => 'Header text',
-	'term.term_width' => 'Width / height',
-	'term.default_fg_bg' => 'Text / background',
+	'term.term_width' => 'Width',
+	'term.term_height' => 'Height',
 	'term.buttons' => 'Button labels',
 	'term.theme' => 'Color scheme',
 	'term.cursor_shape' => 'Cursor style',
@@ -62,6 +70,9 @@ return [
 	'term.crlf_mode' => 'Enter sends CR+LF',
 	'term.want_all_fn' => 'Capture all keys<br>(F5, F11, F12…)',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
+	'term.color_fg' => 'Foreground',
+	'term.color_bg' => 'Background',
+	'term.colors_preview' => 'Preview',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
@@ -70,23 +81,23 @@ return [
     'cursor.bar_blink' => 'I-bar, blinking',
     'cursor.bar_steady' => 'I-bar, steady',
 
-	// terminal color labels
-	'color.0' => 'Black',
-	'color.1' => 'Red',
-	'color.2' => 'Green',
-	'color.3' => 'Yellow',
-	'color.4' => 'Blue',
-	'color.5' => 'Purple',
-	'color.6' => 'Cyan',
-	'color.7' => 'Silver',
-	'color.8' => 'Gray',
-	'color.9' => 'Light Red',
-	'color.10' => 'Light Green',
-	'color.11' => 'Light Yellow',
-	'color.12' => 'Light Blue',
-	'color.13' => 'Light Purple',
-	'color.14' => 'Light Cyan',
-	'color.15' => 'White',
+//	// terminal color labels
+//	'color.0' => 'Black',
+//	'color.1' => 'Red',
+//	'color.2' => 'Green',
+//	'color.3' => 'Yellow',
+//	'color.4' => 'Blue',
+//	'color.5' => 'Purple',
+//	'color.6' => 'Cyan',
+//	'color.7' => 'Silver',
+//	'color.8' => 'Gray',
+//	'color.9' => 'Light Red',
+//	'color.10' => 'Light Green',
+//	'color.11' => 'Light Yellow',
+//	'color.12' => 'Light Blue',
+//	'color.13' => 'Light Purple',
+//	'color.14' => 'Light Cyan',
+//	'color.15' => 'White',
 
 	'net.explain_sta' => '
 		Switch off Dynamic IP to configure the static IP address.',

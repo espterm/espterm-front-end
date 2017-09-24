@@ -2,10 +2,14 @@
 
 #{$all-text-inputs}, select, label.select-wrap {
 	width: $form-field-w;
+	margin-right: 3px;
 }
 
 input[type="number"], input.short, select.short {
-	width: $form-field-w/2;
+	width: 123.5px;
+}
+input.tiny, select.tiny {
+	width: 90px;
 }
 
 #{$all-text-inputs}, select {

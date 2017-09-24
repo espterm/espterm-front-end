@@ -5,7 +5,7 @@
 		<?= tr('system.explain_persist') ?>
 	</div>
 
-	<div class="Row buttons2">
+	<div class="Row buttons">
 		<a class="button icn-restore"
 		   onclick="return confirm('<?= tr('system.confirm_restore') ?>');"
 		   href="<?= e(url('restore_defaults')) ?>">
@@ -13,11 +13,11 @@
 		</a>
 	</div>
 
-	<div class="Row buttons2">
+	<div class="Row buttons">
 		<a onclick="writeDefaults(); return false;" href="#"><?= tr('system.write_defaults') ?></a>
 	</div>
 
-	<div class="Row buttons2">
+	<div class="Row buttons">
 		<a onclick="return confirm('<?= tr('system.confirm_restore_hard') ?>');"
 		   href="<?= e(url('restore_hard')) ?>">
 			<?= tr('system.restore_hard') ?>
