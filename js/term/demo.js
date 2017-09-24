@@ -294,7 +294,7 @@ class ScrollingTerminal {
   scheduleLoad () {
     clearTimeout(this._scheduledLoad)
     if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
-      this.termScreen.load(this.serialize(), this.theme)
+      this.termScreen.load(this.serialize(), { theme: this.theme })
       this.theme = -1 // prevent useless theme setting next time
     } else {
       this._scheduledLoad = setTimeout(() => {

@@ -1,6 +1,6 @@
 const $ = require('../lib/chibi')
-const { qs, parse2B, parse3B } = require('../utils')
-const { themes } = require('./themes')
+const { qs } = require('../utils')
+const { themes, defThemes } = require('./themes')
 
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
@@ -23,6 +23,8 @@ module.exports = class ScreenParser {
   loadContent (str) {
     // current index
     let i = 0
+    let strArray = Array.from ? Array.from(str) : str.split('')
+
     // Uncomment to capture screen content for the demo page
     // console.log(JSON.stringify(`S${str}`))
 
@@ -33,16 +35,17 @@ module.exports = class ScreenParser {
     }
 
     // window size
-    const newHeight = parse2B(str, i)
-    const newWidth = parse2B(str, i + 2)
+    const newHeight = strArray[i++].codePointAt(0) - 1
+    const newWidth = strArray[i++].codePointAt(0) - 1
     const resized = (this.screen.window.height !== newHeight) || (this.screen.window.width !== newWidth)
     this.screen.window.height = newHeight
     this.screen.window.width = newWidth
-    i += 4
 
     // cursor position
-    let [cursorY, cursorX] = [parse2B(str, i), parse2B(str, i + 2)]
-    i += 4
+    let [cursorY, cursorX] = [
+      strArray[i++].codePointAt(0) - 1,
+      strArray[i++].codePointAt(0) - 1
+    ]
     let cursorMoved = (cursorX !== this.screen.cursor.x || cursorY !== this.screen.cursor.y)
     this.screen.cursor.x = cursorX
     this.screen.cursor.y = cursorY
@@ -53,8 +56,7 @@ module.exports = class ScreenParser {
     }
 
     // attributes
-    let attributes = parse3B(str, i)
-    i += 3
+    let attributes = strArray[i++].codePointAt(0) - 1
 
     this.screen.cursor.visible = !!(attributes & 1)
     this.screen.cursor.hanging = !!(attributes & (1 << 1))
@@ -105,6 +107,7 @@ module.exports = class ScreenParser {
     $('#action-buttons').toggleClass('hidden', !showButtons)
 
     this.screen.bracketedPaste = !!(attributes & (1 << 13))
+    this.screen.reverseVideo = !!(attributes & (1 << 14))
 
     // content
     let fg = 7
@@ -120,10 +123,8 @@ module.exports = class ScreenParser {
       this.screen.screen = new Array(screenLength).fill(' ')
       this.screen.screenFG = new Array(screenLength).fill(' ')
       this.screen.screenBG = new Array(screenLength).fill(' ')
-      this.screen.screenAttrs = new Array(screenLength).fill(' ')
+      this.screen.screenAttrs = new Array(screenLength).fill(0)
     }
-
-    let strArray = Array.from ? Array.from(str) : str.split('')
 
     const MASK_LINE_ATTR = 0xC8
     const MASK_BLINK = 1 << 4
@@ -157,8 +158,7 @@ module.exports = class ScreenParser {
       let data
       switch (charCode) {
         case SEQ_REPEAT:
-          let count = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
+          let count = strArray[i++].codePointAt(0) - 1
           for (let j = 0; j < count; j++) {
             setCellContent(cell)
             if (++cell > screenLength) break
@@ -166,27 +166,23 @@ module.exports = class ScreenParser {
           break
 
         case SEQ_SET_COLORS:
-          data = parse3B(strArray[i] + strArray[i + 1] + strArray[i + 2])
-          i += 3
+          data = strArray[i++].codePointAt(0) - 1
           fg = data & 0xFF
           bg = (data >> 8) & 0xFF
           break
 
         case SEQ_SET_ATTRS:
-          data = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
-          attrs = data & 0xFF
+          data = strArray[i++].codePointAt(0) - 1
+          attrs = data & 0xFFFF
           break
 
         case SEQ_SET_FG:
-          data = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
+          data = strArray[i++].codePointAt(0) - 1
           fg = data & 0xFF
           break
 
         case SEQ_SET_BG:
-          data = parse2B(strArray[i] + strArray[i + 1])
-          i += 2
+          data = strArray[i++].codePointAt(0) - 1
           bg = data & 0xFF
           break
 
@@ -227,12 +223,21 @@ module.exports = class ScreenParser {
   /**
    * Loads a message from the server, and optionally a theme.
    * @param {string} str - the message
-   * @param {number} [theme] - the new theme index
+   * @param {object} [opts] - options { [int] theme, [int] defaultFg, [int] defaultBg }
    */
-  load (str, theme = -1) {
+  load (str, opts = null) {
     const content = str.substr(1)
-    if (theme >= 0 && theme < themes.length) {
-      this.screen.renderer.palette = themes[theme]
+
+    if (opts) {
+      if (typeof opts.defaultFg !== 'undefined' && typeof opts.defaultBg !== 'undefined') {
+        this.screen.renderer.setDefaultColors(opts.defaultFg, opts.defaultBg)
+      }
+
+      if (typeof opts.theme !== 'undefined') {
+        if (opts.theme >= 0 && opts.theme < themes.length) {
+          this.screen.renderer.palette = themes[opts.theme]
+        }
+      }
     }
 
     switch (str[0]) {
