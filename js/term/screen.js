@@ -164,7 +164,7 @@ module.exports = class TermScreen extends EventEmitter {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
-    })
+    }, { passive: true })
 
     this.canvas.addEventListener('touchmove', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
