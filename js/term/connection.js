@@ -129,7 +129,7 @@ module.exports = class TermConnection extends EventEmitter {
   closeSocket () {
     if (this.ws) {
       this.forceClosing = true
-      this.ws.close()
+      if (this.ws.readyState === 1) this.ws.close()
       this.ws = null
     }
   }
