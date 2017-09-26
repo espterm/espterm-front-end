@@ -97,7 +97,11 @@ function je($s)
 function tr($key)
 {
 	global $_messages;
-	return isset($_messages[$key]) ? $_messages[$key] : ('??' . $key . '??');
+	if (isset($_messages[$key])) return $_messages[$key];
+	else {
+		ob_end_clean();
+		die('??' . $key . '??');
+	}
 }
 
 /** Like eval, but allows <?php and ?> */

@@ -2,7 +2,8 @@
 	<a href="<?= e(url('reset_screen')) ?>"><?= tr('term.reset_screen') ?></a>
 </div>
 
-<form class="Box fold desktop-expanded str" action="<?= e(url('term_set')) ?>" method="GET" id='form-scheme'>
+<!-- Theme -->
+<form class="Box mobcol str" action="<?= e(url('term_set')) ?>" method="GET" id='form-scheme'>
 	<h2><?= tr('term.color_scheme') ?></h2>
 
 	<div class="Row explain">
@@ -119,7 +120,8 @@
 	</div>
 </form>
 
-<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id='form-initial'>
+<!-- Initials -->
+<form class="Box mobcol str" action="<?= e(url('term_set')) ?>" method="GET" id='form-initial'>
 	<h2><?= tr('term.defaults') ?></h2>
 
 	<div class="Row explain">
@@ -183,11 +185,12 @@
 	</div>
 </form>
 
-<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id="form-uart">
-	<h2 tabindex=0><?= tr('system.uart') ?></h2>
+<!-- UART -->
+<form class="Box mobcol str" action="<?= e(url('term_set')) ?>" method="GET" id="form-uart">
+	<h2 tabindex=0><?= tr('uart.title') ?></h2>
 
 	<div class="Row explain">
-		<?= tr('system.explain_uart') ?>
+		<?= tr('uart.explain') ?>
 	</div>
 
 	<div class="Row">
@@ -237,7 +240,8 @@
 	</div>
 </form>
 
-<form class="Box fold str" action="<?= e(url('term_set')) ?>" method="GET" id='form-expert'>
+<!-- Expert terminal opts -->
+<form class="Box mobcol str" action="<?= e(url('term_set')) ?>" method="GET" id='form-expert'>
 	<h2><?= tr('term.expert') ?></h2>
 
 	<div class="Row explain">

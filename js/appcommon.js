@@ -33,7 +33,11 @@ $.ready(function () {
     let h = x.querySelector('h2')
 
     let hdl = function () {
-      $(x).toggleClass('expanded')
+      if ($(x).hasClass('d-expanded')) {
+        $(x).removeClass('d-expanded')
+      } else {
+        $(x).toggleClass('expanded')
+      }
     }
     $(h).on('click', hdl).on('keypress', cr(hdl))
   })

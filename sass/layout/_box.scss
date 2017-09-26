@@ -139,6 +139,7 @@
 	&.expanded {
 		.Row {
 			display: flex;
+			&.explain { display: block; }
 
 			&.v {
 				display: block;
@@ -146,10 +147,12 @@
 		}
 	}
 
+	// desktop-expanded
 	@include media($tablet-min) {
-		&.desktop-expanded {
+		&.d-expanded {
 			.Row {
 				display: flex;
+				&.explain { display: block; }
 
 				&.v {
 					display: block;
