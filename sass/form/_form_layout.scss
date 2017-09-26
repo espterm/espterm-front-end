@@ -12,6 +12,11 @@ form { @include naked(); }
 	}
 }
 
+.Box.message {
+	font-weight: bold;
+	color: #0fca50;
+}
+
 .Row {
 	vertical-align: middle;
 	margin: 12px auto;

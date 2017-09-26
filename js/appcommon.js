@@ -90,22 +90,30 @@ $.ready(function () {
   // (a way to pass errors back from server via redirect)
   let errAt = window.location.search.indexOf('err=')
   if (errAt !== -1 && qs('.Box.errors')) {
-    let errs = window.location.search.substr(errAt + 4).split(',')
+    let errs = decodeURIComponent(window.location.search.substr(errAt + 4)).split(',')
     let humanReadableErrors = []
     errs.forEach(function (er) {
       let lbls = qsa('label[for="' + er + '"]')
-      for (let i = 0; i < lbls.length; i++) {
-        let lbl = lbls[i]
-        lbl.classList.add('error')
-        if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+      if (lbls) {
+        for (let i = 0; i < lbls.length; i++) {
+          let lbl = lbls[i]
+          lbl.classList.add('error')
+          if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+        }
+      } else {
+        humanReadableErrors.push(er)
       }
-      // else {
-      //   hres.push(er)
-      // }
     })
 
     qs('.Box.errors .list').innerHTML = humanReadableErrors.join(', ')
     qs('.Box.errors').classList.remove('hidden')
+  }
+
+  let msgAt = window.location.search.indexOf('msg=')
+  if (msgAt !== -1 && qs('.Box.message')) {
+    let msg = decodeURIComponent(window.location.search.substr(msgAt + 4))
+    qs('.Box.message').innerHTML = msg
+    qs('.Box.message').classList.remove('hidden')
   }
 
   modal.init()
