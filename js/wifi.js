@@ -7,8 +7,8 @@ const tr = require('./lang')
   let curSSID
 
   // Get XX % for a slider input
-  function rangePt (inp) {
-    return Math.round(((inp.value / inp.max) * 100)) + '%'
+  function calc_dBm (inp) {
+    return `+${(inp.value * 0.25).toFixed(2)} dBm`
   }
 
   // Display selected STA SSID etc
@@ -142,11 +142,11 @@ const tr = require('./lang')
       let inp = x.querySelector('input')
       let disp1 = x.querySelector('.x-disp1')
       let disp2 = x.querySelector('.x-disp2')
-      let t = rangePt(inp)
+      let t = calc_dBm(inp)
       $(disp1).html(t)
       $(disp2).html(t)
       $(inp).on('input', function () {
-        t = rangePt(inp)
+        t = calc_dBm(inp)
         $(disp1).html(t)
         $(disp2).html(t)
       })
