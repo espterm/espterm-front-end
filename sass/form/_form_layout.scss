@@ -12,6 +12,16 @@ form { @include naked(); }
 	}
 }
 
+.Box.message {
+	font-weight: bold;
+	color: #0fca50;
+	transition: opacity linear 1s;
+	opacity: 1;
+	&.hiding {
+		opacity: 0;
+	}
+}
+
 .Row {
 	vertical-align: middle;
 	margin: 12px auto;
@@ -65,11 +75,15 @@ form { @include naked(); }
 	}
 
 	// buttons2 is the same style, but different selector for use in the admin page
-	&.buttons {
+	&.buttons, &.buttons2 {
 		margin: 16px auto;
 		input, .button {
 			margin-right: dist(-1);
 		}
+	}
+
+	&.buttons2 {
+		display:block;
 	}
 
 	&.centered {

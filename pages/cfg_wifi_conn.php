@@ -1,13 +1,13 @@
 <h1><?= tr('menu.cfg_wifi_conn') ?></h1>
 
 <div class="Box">
-	<p><b><?= tr('wifi.conn.status') ?></b> <span id="status"></span><span class="anim-dots">.</span></p>
-	<a href="<?= e(url('cfg_wifi')) ?>" id="backbtn" class="button"><?= tr('wifi.conn.back_to_config') ?></a>
+	<p><b><?= tr('wificonn.status') ?></b> <span id="status"></span><span class="anim-dots">.</span></p>
+	<a href="<?= e(url('cfg_wifi')) ?>" id="backbtn" class="button"><?= tr('wificonn.back_to_config') ?></a>
 </div>
 
 <div class="Box">
-	<p><?= tr('wifi.conn.explain_android_sucks') ?></p>
-	<p><?= tr('wifi.conn.explain_reset') ?></p>
+	<p><?= tr('wificonn.explain_android_sucks') ?></p>
+	<p><?= tr('wificonn.explain_reset') ?></p>
 </div>
 
 <script>
@@ -16,15 +16,15 @@
 	var failCounter = 0;
 
 	var messages = <?= json_encode([
-		'disabled' => tr('wifi.conn.disabled'),
-		'idle' => tr('wifi.conn.idle'),
-		'success' => tr('wifi.conn.success'),
-		'working' => tr('wifi.conn.working'),
-		'fail' => tr('wifi.conn.fail'),
+		'disabled' => tr('wificonn.disabled'),
+		'idle' => tr('wificonn.idle'),
+		'success' => tr('wificonn.success'),
+		'working' => tr('wificonn.working'),
+		'fail' => tr('wificonn.fail'),
 	]) ?>;
 
 	function onFail() {
-		$("#status").html(<?= json_encode(tr('wifi.conn.telemetry_lost')) ?>);
+		$("#status").html(<?= json_encode(tr('wificonn.telemetry_lost')) ?>);
 		$('.anim-dots').addClass('hidden');
 	}
 

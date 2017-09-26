@@ -2,6 +2,7 @@
 $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 ?>
 
+<!-- STA -->
 <form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-netsta">
 	<h2 tabindex=0><?= tr('net.sta') ?></h2>
 
@@ -35,6 +36,7 @@ $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 	</div>
 </form>
 
+<!-- AP -->
 <form class="Box str mobcol" action="<?= e(url('network_set')) ?>" method="GET" id="form-netap">
 	<h2 tabindex=0><?= tr('net.ap') ?></h2>
 
@@ -73,6 +75,7 @@ $ipmask='pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"';
 	</div>
 </form>
 
+<!-- MACs -->
 <div class="Box mobcol">
 	<h2><?= tr('net.details') ?></h2>
 

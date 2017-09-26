@@ -30,6 +30,15 @@ module.exports = class TermScreen extends EventEmitter {
         return () => console.warn('TermScreen#input not set!')
       }
     })
+    // dummy. Handle for Conn
+    this.conn = new Proxy({}, {
+      get () {
+        return () => console.warn('TermScreen#conn not set!')
+      },
+      set (a, b) {
+        return () => console.warn('TermScreen#conn not set!')
+      }
+    })
 
     this.cursor = {
       x: 0,

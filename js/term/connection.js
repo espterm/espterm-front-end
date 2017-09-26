@@ -19,12 +19,18 @@ module.exports = class TermConnection extends EventEmitter {
 
     this.pageShown = false
 
+    this.disconnectTimeout = null
+
     document.addEventListener('visibilitychange', () => {
       if (document.hidden === true) {
         console.info('Window lost focus, freeing socket')
-        this.closeSocket()
-        clearTimeout(this.heartbeatTimeout)
+        // Delayed, avoid disconnecting if the background time is short
+        this.disconnectTimeout = setTimeout(() => {
+          this.closeSocket()
+          clearTimeout(this.heartbeatTimeout)
+        }, 1000)
       } else {
+        clearTimeout(this.disconnectTimeout)
         console.info('Window got focus, re-connecting')
         this.init()
       }
@@ -80,7 +86,6 @@ module.exports = class TermConnection extends EventEmitter {
           break
 
         default:
-          this.emit('load')
           this.screen.load(evt.data)
           if (!this.pageShown) {
             window.showPage()
@@ -118,7 +123,7 @@ module.exports = class TermConnection extends EventEmitter {
       console.error('Socket not ready')
       return false
     }
-    if (typeof message != 'string') {
+    if (typeof message !== 'string') {
       message = JSON.stringify(message)
     }
     this.ws.send(message)
@@ -161,7 +166,7 @@ module.exports = class TermConnection extends EventEmitter {
 
   heartbeat () {
     clearTimeout(this.heartbeatTimeout)
-    this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), 2000)
+    this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), 2500)
   }
 
   onHeartbeatFail () {

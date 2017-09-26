@@ -1,107 +1,131 @@
+<!-- Persist -->
 <div class="Box str mobcol">
-	<h2 tabindex=0><?= tr('system.save_restore') ?></h2>
+	<h2 tabindex=0><?= tr('persist.title') ?></h2>
 
 	<div class="Row explain nomargintop">
-		<?= tr('system.explain_persist') ?>
+		<?= tr('persist.explain') ?>
 	</div>
 
-	<div class="Row buttons">
+	<div class="Row buttons2">
 		<a class="button icn-restore"
-		   onclick="return confirm('<?= tr('system.confirm_restore') ?>');"
+		   onclick="return confirm('<?= tr('persist.confirm_restore') ?>');"
 		   href="<?= e(url('restore_defaults')) ?>">
-			<?= tr('system.restore_defaults') ?>
+			<?= tr('persist.restore_defaults') ?>
 		</a>
 	</div>
 
-	<div class="Row buttons">
-		<a onclick="writeDefaults(); return false;" href="#"><?= tr('system.write_defaults') ?></a>
+	<div class="Row buttons2">
+		<a onclick="writeDefaults(); return false;" href="#"><?= tr('persist.write_defaults') ?></a>
 	</div>
 
-	<div class="Row buttons">
-		<a onclick="return confirm('<?= tr('system.confirm_restore_hard') ?>');"
+	<div class="Row buttons2">
+		<a onclick="return confirm('<?= tr('persist.confirm_restore_hard') ?>');"
 		   href="<?= e(url('restore_hard')) ?>">
-			<?= tr('system.restore_hard') ?>
-		</a>
+			<?= tr('persist.restore_hard') ?>
+		</a><br>
+		<?= tr('persist.restore_hard_explain') ?>
 	</div>
 </div>
+
+<!-- Overclock -->
+<form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-hw">
+	<h2 tabindex=0><?= tr('hwtuning.title') ?></h2>
+
+	<div class="Row explain">
+		<?= tr('hwtuning.explain') ?>
+	</div>
+
+	<div class="Row checkbox" >
+		<label><?= tr('hwtuning.overclock') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="overclock" name="overclock" value="%overclock%">
+	</div>
+
+	<div class="Row buttons">
+		<a class="button icn-ok" href="#" onclick="qs('#form-hw').submit()"><?= tr('apply') ?></a>
+	</div>
+</form>
+
 
 <?php
 $NOFILL = 'readonly onfocus="this.removeAttribute(\'readonly\')" style="cursor:text" autocomplete="off"';
 ?>
 
-<form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-2">
-	<h2 tabindex=0><?= tr('system.security') ?></h2>
+<!-- Access perms -->
+<form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-access">
+	<h2 tabindex=0><?= tr('pwlock.title') ?></h2>
 
 	<div class="Row explain">
-		<?= tr('system.explain_security') ?>
+		<?= tr('pwlock.explain') ?>
 	</div>
 
 	<div class="Row">
-		<label for="pwlock"><?= tr("system.pwlock") ?></label>
+		<label for="pwlock"><?= tr("pwlock.region") ?></label>
 		<select name="pwlock" id="pwlock">
-			<option value="0"><?= tr("system.pwlock.none") ?></option>
-			<option value="1"><?= tr("system.pwlock.settings_noterm") ?></option>
-			<option value="2"><?= tr("system.pwlock.settings") ?></option>
-			<option value="3"><?= tr("system.pwlock.menus") ?></option>
-			<option value="4"><?= tr("system.pwlock.all") ?></option>
+			<option value="0"><?= tr("pwlock.region.none") ?></option>
+			<option value="1"><?= tr("pwlock.region.settings_noterm") ?></option>
+			<option value="2"><?= tr("pwlock.region.settings") ?></option>
+			<option value="3"><?= tr("pwlock.region.menus") ?></option>
+			<option value="4"><?= tr("pwlock.region.all") ?></option>
 		</select>
 	</div>
 
 	<div class="Row">
-		<label for="access_name"><?= tr('system.access_name') ?></label>
+		<label for="access_name"><?= tr('pwlock.access_name') ?></label>
 		<input type="text" name="access_name" id="access_name" value="%h:access_name%">
 	</div>
 
 	<div class="Row">
-		<label for="access_pw"><?= tr('system.new_access_pw') ?></label>
+		<label for="access_pw"><?= tr('pwlock.new_access_pw') ?></label>
 		<input type="password" name="access_pw" id="access_pw" <?=$NOFILL?>>
 	</div>
 
 	<div class="Row">
-		<label for="access_pw2"><?= tr('system.new_access_pw2') ?></label>
+		<label for="access_pw2"><?= tr('pwlock.new_access_pw2') ?></label>
 		<input type="password" name="access_pw2" id="access_pw2" <?=$NOFILL?>>
 	</div>
 
 	<div class="Row">
-		<label for="pw"><?= tr('system.admin_pw') ?></label>
+		<label for="pw"><?= tr('pwlock.admin_pw') ?></label>
 		<input type="password" name="pw" id="pw" required>
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-2').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-access').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
-<form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-3">
-	<h2 tabindex=0><?= tr('system.change_adminpw') ?></h2>
+<!-- Admin pw -->
+<form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-admin">
+	<h2 tabindex=0><?= tr('adminpw.title') ?></h2>
 
 	<div class="Row explain">
-		<?= tr('system.explain_adminpw') ?>
+		<?= tr('adminpw.explain') ?>
 	</div>
 
 	<div class="Row">
-		<label for="admin_pw"><?= tr('system.new_admin_pw') ?></label>
+		<label for="admin_pw"><?= tr('adminpw.new_admin_pw') ?></label>
 		<input type="password" name="admin_pw" id="admin_pw">
 	</div>
 
 	<div class="Row">
-		<label for="admin_pw2"><?= tr('system.new_admin_pw2') ?></label>
+		<label for="admin_pw2"><?= tr('adminpw.new_admin_pw2') ?></label>
 		<input type="password" name="admin_pw2" id="admin_pw2">
 	</div>
 
 	<div class="Row">
-		<label for="pw"><?= tr('system.old_admin_pw') ?></label>
+		<label for="pw"><?= tr('adminpw.old_admin_pw') ?></label>
 		<input type="password" name="pw" id="pw" required>
 	</div>
 
 	<div class="Row buttons">
-		<a class="button icn-ok" href="#" onclick="qs('#form-3').submit()"><?= tr('apply') ?></a>
+		<a class="button icn-ok" href="#" onclick="qs('#form-admin').submit()"><?= tr('apply') ?></a>
 	</div>
 </form>
 
 <script>
 	function writeDefaults() {
-		var pw = prompt('<?= tr('system.confirm_store_defaults') ?>');
+		var pw = prompt('<?= tr('persist.confirm_store_defaults') ?>');
 		if (!pw) return;
 		location.href = <?=json_encode(url('write_defaults')) ?> + '?pw=' + pw;
 	}

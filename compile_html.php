@@ -22,9 +22,22 @@ ob_start();
 foreach($_pages as $_k => $p) {
 	if ($p->bodyclass == 'api') {
 		if (ESP_DEMO) {
-			$target = 'term.html';
-			echo "Generating: ~$_k.html -> $target\n";
-			$s = "<!DOCTYPE HTML><meta http-equiv=\"refresh\" content=\"0;url=$target\">";
+			echo "Generating: ~$_k.html (bounce)\n";
+
+			if ($_k=='index') {
+				$s = "<!DOCTYPE HTML><meta http-equiv=\"refresh\" content=\"0;url=term.html\">";
+			}
+			else {
+				$s = "<!DOCTYPE HTML>
+			<script>
+				var ref = document.referrer;
+				var qat = document.referrer.indexOf('?');
+				if (qat !== -1) ref = ref.substring(0, qat)
+				location.href=ref+'?msg=Request ignored, this is a demo.';
+			</script>";
+			}
+
+
 		} else {
 			continue;
 		}

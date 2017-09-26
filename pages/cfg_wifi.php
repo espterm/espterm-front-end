@@ -1,3 +1,4 @@
+<!-- AP -->
 <form class="Box str mobcol" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-ap">
 	<h2 tabindex=0><?= tr('wifi.ap') ?></h2>
 
@@ -42,6 +43,7 @@
 	</div>
 </form>
 
+<!-- STA -->
 <form class="Box str mobcol expanded" action="<?= e(url('wifi_set')) ?>" method="GET" id="form-sta">
 	<h2 tabindex=0><?= tr('wifi.sta') ?></h2>
 

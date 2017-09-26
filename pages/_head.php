@@ -32,4 +32,6 @@ if (strpos($_GET['BODYCLASS'], 'cfg') !== false) {
 	<span class="lead"><?= tr('form_errors') ?></span>&nbsp;<span class="list"></span>
 </div>
 
+<div class="Box message hidden"></div>
+
 <?php endif; ?>

@@ -14,8 +14,8 @@
 			<tr>
 				<td>`\ec`</td>
 				<td>
-					Clear screen, reset attributes and cursor.
-					The screen size, title and button labels remain unchanged.
+					Clear screen, reset attributes and cursor. This command also restores the default
+					screen size, title, button labels and messages.
 				</td>
 			</tr>
 			<tr>
