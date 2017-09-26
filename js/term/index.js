@@ -14,33 +14,47 @@ module.exports = function (opts) {
   const input = TermInput(conn, screen)
   const termUpload = TermUpload(conn, input, screen)
   screen.input = input
+  screen.conn = conn
   input.termUpload = termUpload
 
-  // we delay the display of "connecting" to avoid flash when changing tabs with the terminal open
-  let showConnectingTimeout = -1
+  let showSplashTimeout = null
+  let showSplash = (obj, delay = 250) => {
+    clearTimeout(showSplashTimeout)
+    showSplashTimeout = setTimeout(() => {
+      screen.window.statusScreen = obj
+    }, delay)
+  }
+
   conn.on('open', () => {
-    showConnectingTimeout = setTimeout(() => {
-      screen.window.statusScreen = { title: 'Connecting', loading: true }
-    }, 250)
+    // console.log('*open')
+    showSplash({ title: 'Connecting', loading: true })
   })
   conn.on('connect', () => {
-    clearTimeout(showConnectingTimeout)
-    screen.window.statusScreen = { title: 'Waiting for content', loading: true }
+    // console.log('*connect')
+    showSplash({ title: 'Waiting for content', loading: true })
   })
   conn.on('load', () => {
+    // console.log('*load')
+    clearTimeout(showSplashTimeout)
     if (screen.window.statusScreen) screen.window.statusScreen = null
   })
   conn.on('disconnect', () => {
-    clearTimeout(showConnectingTimeout)
-    screen.window.statusScreen = { title: 'Disconnected' }
+    // console.log('*disconnect')
+    showSplash({ title: 'Disconnected' })
     screen.screen = []
     screen.screenFG = []
     screen.screenBG = []
     screen.screenAttrs = []
   })
-  conn.on('silence', () => { screen.window.statusScreen = { title: 'Waiting for server', loading: true } })
+  conn.on('silence', () => {
+    // console.log('*silence')
+    showSplash({ title: 'Waiting for server', loading: true }, 0)
+  })
   // conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
-  conn.on('ping-success', () => { screen.window.statusScreen = { title: 'Re-connecting', loading: true } })
+  conn.on('ping-success', () => {
+    // console.log('*ping-success')
+    showSplash({ title: 'Re-connecting', loading: true }, 0)
+  })
 
   conn.init()
   input.init(opts)

@@ -199,7 +199,7 @@ module.exports = class ScreenParser {
     if (this.screen.window.debug) console.log(`Blinky cells: ${this.screen.blinkingCellCount}`)
 
     this.screen.renderer.scheduleDraw('load', 16)
-    this.screen.emit('load')
+    this.screen.conn.emit('load')
   }
 
   /**
