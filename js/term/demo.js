@@ -1,3 +1,7 @@
+const EventEmitter = require('events')
+const { parse2B } = require('../utils')
+const { themes } = require('./themes')
+
 class ANSIParser {
   constructor (handler) {
     this.reset()
@@ -47,8 +51,8 @@ class ANSIParser {
         else if (type === 20) this.handler('add-attrs', 1 << 5) // fraktur
         else if (type >= 30 && type <= 37) this.handler('set-color-fg', type % 10)
         else if (type >= 40 && type <= 47) this.handler('set-color-bg', type % 10)
-        else if (type === 39) this.handler('set-color-fg', 7)
-        else if (type === 49) this.handler('set-color-bg', 0)
+        else if (type === 39) this.handler('reset-color-fg')
+        else if (type === 49) this.handler('reset-color-bg')
         else if (type >= 90 && type <= 98) this.handler('set-color-fg', (type % 10) + 8)
         else if (type >= 100 && type <= 108) this.handler('set-color-bg', (type % 10) + 8)
         else if (type === 38 || type === 48) {
@@ -87,6 +91,7 @@ class ANSIParser {
       else if (code <= 0x06) this.handler('_null')
       else if (code === 0x07) this.handler('bell')
       else if (code === 0x08) this.handler('back')
+      else if (code === 0x09) this.handler('tab')
       else if (code === 0x0a) this.handler('new-line')
       else if (code === 0x0d) this.handler('return')
       else if (code === 0x15) this.handler('delete-line')
@@ -96,7 +101,7 @@ class ANSIParser {
     if (!this.joinChunks) this.reset()
   }
 }
-const TERM_DEFAULT_STYLE = 7
+const TERM_DEFAULT_STYLE = 0
 const TERM_MIN_DRAW_DELAY = 10
 
 let getRainbowColor = t => {
@@ -116,13 +121,15 @@ class ScrollingTerminal {
     this.reset()
 
     this._lastLoad = Date.now()
-    this.termScreen.load(this.serialize(), 0)
+    this.termScreen.load(this.serialize())
+
+    window.showPage()
   }
   reset () {
     this.style = TERM_DEFAULT_STYLE
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
-    this.theme = 0
+    this.theme = -1
     this.rainbow = false
     this.parser.reset()
     this.clear()
@@ -172,7 +179,7 @@ class ScrollingTerminal {
       }
     }
   }
-  deleteChar () {
+  deleteChar () {  // FIXME unused?
     this.moveBack()
     this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE])
     this.screen.splice(this.cursor.y * this.width + this.cursor.x, 1)
@@ -194,11 +201,11 @@ class ScrollingTerminal {
     } else if (action === 'delete') {
       this.deleteForward(args[0])
     } else if (action === 'insert-blanks') {
-      this.insertBlanks(args[0])
+      this.insertBlanks(args[0]) // FIXME undefined?
     } else if (action === 'clear') {
       this.clear()
     } else if (action === 'bell') {
-      this.terminal.load('B')
+      this.termScreen.load('B')
     } else if (action === 'back') {
       this.moveBack()
     } else if (action === 'new-line') {
@@ -226,15 +233,15 @@ class ScrollingTerminal {
     } else if (action === 'reset-style') {
       this.style = TERM_DEFAULT_STYLE
     } else if (action === 'add-attrs') {
-      if (args[0] === -1) {
-        this.style = (this.style & 0xFF0000) | ((this.style >> 8) & 0xFF) | ((this.style & 0xFF) << 8)
-      } else {
-        this.style |= (args[0] << 16)
-      }
+      this.style |= (args[0] << 16)
     } else if (action === 'set-color-fg') {
-      this.style = (this.style & 0xFFFF00) | args[0]
+      this.style = (this.style & 0xFFFFFF00) | (1 << 8 << 16) | args[0]
     } else if (action === 'set-color-bg') {
-      this.style = (this.style & 0xFF00FF) | (args[0] << 8)
+      this.style = (this.style & 0xFFFF00FF) | (1 << 9 << 16) | (args[0] << 8)
+    } else if (action === 'reset-color-fg') {
+      this.style = this.style & 0xFFFEFF00
+    } else if (action === 'reset-color-bg') {
+      this.style = this.style & 0xFFFD00FF
     } else if (action === 'hide-cursor') {
       this.cursor.visible = false
     } else if (action === 'show-cursor') {
@@ -247,14 +254,14 @@ class ScrollingTerminal {
   }
   serialize () {
     let serialized = 'S'
-    serialized += encode2B(this.height) + encode2B(this.width)
-    serialized += encode2B(this.cursor.y) + encode2B(this.cursor.x)
+    serialized += String.fromCodePoint(this.height + 1) + String.fromCodePoint(this.width + 1)
+    serialized += String.fromCodePoint(this.cursor.y + 1) + String.fromCodePoint(this.cursor.x + 1)
 
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
     attributes |= (this.cursor.style << 9)
-    serialized += encode3B(attributes)
+    serialized += String.fromCodePoint(attributes + 1)
 
     let lastStyle = null
     let index = 0
@@ -263,22 +270,22 @@ class ScrollingTerminal {
       if (this.rainbow) {
         let x = index % this.width
         let y = Math.floor(index / this.width)
-        style = (style & 0xFF0000) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        // C instead of F in mask and 1 << 8 in attrs to change attr bits 8 and 9
+        style = (style & 0xFFFC0000) | (1 << 8 << 16) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
         index++
       }
       if (style !== lastStyle) {
         let foreground = style & 0xFF
         let background = (style >> 8) & 0xFF
-        let attributes = (style >> 16) & 0xFF
+        let attributes = (style >> 16) & 0xFFFF
         let setForeground = foreground !== (lastStyle & 0xFF)
         let setBackground = background !== ((lastStyle >> 8) & 0xFF)
-        let setAttributes = attributes !== ((lastStyle >> 16) & 0xFF)
+        let setAttributes = attributes !== ((lastStyle >> 16) & 0xFFFF)
 
-        if (setForeground && setBackground) serialized += '\x03' + encode3B(style & 0xFFFF)
-        else if (setForeground) serialized += '\x05' + encode2B(foreground)
-        else if (setBackground) serialized += '\x06' + encode2B(background)
-        if (setAttributes) serialized += '\x04' + encode2B(attributes)
-
+        if (setForeground && setBackground) serialized += '\x03' + String.fromCodePoint((style & 0xFFFF) + 1)
+        else if (setForeground) serialized += '\x05' + String.fromCodePoint(foreground + 1)
+        else if (setBackground) serialized += '\x06' + String.fromCodePoint(background + 1)
+        if (setAttributes) serialized += '\x04' + String.fromCodePoint(attributes + 1)
         lastStyle = style
       }
       serialized += cell[0]
@@ -288,7 +295,8 @@ class ScrollingTerminal {
   scheduleLoad () {
     clearTimeout(this._scheduledLoad)
     if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
-      this.termScreen.load(this.serialize(), this.theme)
+      this.termScreen.load(this.serialize(), { theme: this.theme })
+      this.theme = -1 // prevent useless theme setting next time
     } else {
       this._scheduledLoad = setTimeout(() => {
         this.termScreen.load(this.serialize())
@@ -304,47 +312,7 @@ class ScrollingTerminal {
   }
 }
 
-class Process {
-  constructor (args) {
-    // event listeners
-    this._listeners = {}
-  }
-  on (event, listener) {
-    if (!this._listeners[event]) this._listeners[event] = []
-    this._listeners[event].push({ listener })
-  }
-  once (event, listener) {
-    if (!this._listeners[event]) this._listeners[event] = []
-    this._listeners[event].push({ listener, once: true })
-  }
-  off (event, listener) {
-    let listeners = this._listeners[event]
-    if (listeners) {
-      for (let i in listeners) {
-        if (listeners[i].listener === listener) {
-          listeners.splice(i, 1)
-          break
-        }
-      }
-    }
-  }
-  emit (event, ...args) {
-    let listeners = this._listeners[event]
-    if (listeners) {
-      let remove = []
-      for (let listener of listeners) {
-        try {
-          listener.listener(...args)
-          if (listener.once) remove.push(listener)
-        } catch (err) {
-          console.error(err)
-        }
-      }
-      for (let listener of remove) {
-        listeners.splice(listeners.indexOf(listener), 1)
-      }
-    }
-  }
+class Process extends EventEmitter {
   write (data) {
     this.emit('in', data)
   }
@@ -452,6 +420,13 @@ let demoshIndex = {
         '*': 17,
         '#': 24
       }
+      let characters = {
+        ' ': ' ',
+        '.': '░',
+        '-': '▒',
+        '*': '▓',
+        '#': '█'
+      }
       for (let i in splash) {
         if (splash[i].length < 79) splash[i] += ' '.repeat(79 - splash[i].length)
       }
@@ -472,9 +447,11 @@ let demoshIndex = {
       let drawCell = (x, y) => {
         moveTo(x, y)
         if (splash[y][x] === '@') {
-          this.emit('write', '\x1b[48;5;8m\x1b[38;5;255m▄\b')
+          this.emit('write', '\x1b[48;5;238m\x1b[38;5;255m▄\b')
         } else {
-          this.emit('write', `\x1b[48;5;${231 + levels[splash[y][x]]}m \b`)
+          let level = 231 + levels[splash[y][x]]
+          let character = characters[splash[y][x]]
+          this.emit('write', `\x1b[48;5;${level}m\x1b[38;5;${level}m${character}\b`)
         }
       }
       return new Promise((resolve, reject) => {
@@ -487,7 +464,7 @@ let demoshIndex = {
             if (dx > 0) drawCell(dx, y)
           }
 
-          if (++x < 79) {
+          if (++x < 69) {
             if (++cycles >= 3) {
               setTimeout(loop, 20)
               cycles = 0
@@ -577,9 +554,10 @@ let demoshIndex = {
       this.shell = shell
     }
     run (...args) {
-      let theme = args[0] | 0
-      if (!args.length || !Number.isFinite(theme) || theme < 0 || theme > 5) {
-        this.emit('write', '\x1b[31mUsage: theme [0–5]\r\n')
+      let theme = +args[0] | 0
+      const maxnum = themes.length
+      if (!args.length || !Number.isFinite(theme) || theme < 0 || theme >= maxnum) {
+        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum - 1}]\r\n`)
         this.destroy()
         return
       }
@@ -594,7 +572,7 @@ let demoshIndex = {
     run (...args) {
       let steady = args.includes('--steady')
       if (args.includes('block')) {
-        this.emit('write', `\x1b[${0 + 2 * steady} q`)
+        this.emit('write', `\x1b[${2 * steady} q`)
       } else if (args.includes('line')) {
         this.emit('write', `\x1b[${3 + steady} q`)
       } else if (args.includes('bar') || args.includes('beam')) {
@@ -681,9 +659,15 @@ let demoshIndex = {
     }
   },
   sudo: class Sudo extends Process {
+    constructor (shell) {
+      super()
+      this.shell = shell
+    }
     run (...args) {
-      if (args.length === 0) this.emit('write', '\x1b[31musage: sudo <command>\x1b[0m\n')
-      else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
+      if (args.length === 0) {
+        this.emit('write', '\x1b[31mUsage: sudo <command>\x1b[m\r\n')
+        this.destroy()
+      } else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
         const b = '\x1b[33m'
         const r = '\x1b[0m'
         const l = '\x1b[32m'
@@ -708,11 +692,29 @@ let demoshIndex = {
           `${b}         ~-._\\.        _.-~_/\r\n` +
           `${b}             \\\`--...--~_.-~\r\n` +
           `${b}              \`--...--~${r}\r\n`)
+        this.destroy()
       } else {
-        this.emit('exec', args.join(' '))
-        return
+        let name = args.shift()
+        if (this.shell.index[name]) {
+          let Process = this.shell.index[name]
+          if (Process instanceof Function) {
+            let child = new Process(this)
+            let write = data => this.emit('write', data)
+            child.on('write', write)
+            child.on('exit', code => {
+              child.removeListener('write', write)
+              this.destroy()
+            })
+            child.run(...args)
+          } else {
+            this.emit('write', Process)
+            this.destroy()
+          }
+        } else {
+          this.emit('write', `sudo: ${name}: command not found\r\n`)
+          this.destroy()
+        }
       }
-      this.destroy()
     }
   },
   make: class Make extends Process {
@@ -791,8 +793,10 @@ class DemoShell {
       this.history[0] = this.history[0].substr(0, this.cursorPos - 1) + this.history[0].substr(this.cursorPos)
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
+    } else if (action === 'tab') {
+      console.warn('TAB not implemented') // TODO completion
     } else if (action === 'move-cursor-x') {
-      this.cursorPos = Math.max(0, Math.min(this.history[0].length, this.cursorPos + args[0]))
+      this.cursorPos = Math.max(0, Math.min(this.history[this.historyIndex].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
       this.copyFromHistoryIndex()
       this.history[0] = ''
@@ -842,6 +846,7 @@ class DemoShell {
     }
 
     let name = parts.shift()
+
     if (name in this.index) {
       this.spawn(name, parts)
     } else {
@@ -854,12 +859,9 @@ class DemoShell {
     if (Process instanceof Function) {
       this.child = new Process(this)
       let write = data => this.terminal.write(data)
-      let exec = line => this.run(line)
       this.child.on('write', write)
-      this.child.on('exec', exec)
       this.child.on('exit', code => {
-        if (this.child) this.child.off('write', write)
-        if (this.child) this.child.off('exec', exec)
+        if (this.child) this.child.removeListener('write', write)
         this.child = null
         this.prompt(!code)
       })
@@ -871,7 +873,7 @@ class DemoShell {
   }
 }
 
-window.demoInterface = {
+window.demoInterface = module.exports = {
   input (data) {
     let type = data[0]
     let content = data.substr(1)
@@ -898,7 +900,10 @@ window.demoInterface = {
       }
     }
   },
+  didInit: false,
   init (screen) {
+    if (this.didInit) return
+    this.didInit = true
     this.terminal = new ScrollingTerminal(screen)
     this.shell = new DemoShell(this.terminal, true)
   }

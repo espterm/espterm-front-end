@@ -5,4 +5,4 @@ let _tr = {
     "wifi.enter_passwd": "Enter password for \":ssid:\""
 };
 
-function tr (key) { return _tr[key] || '?' + key + '?' }
+module.exports = function tr (key) { return _tr[key] || '?' + key + '?' }

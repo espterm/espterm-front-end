@@ -66,6 +66,10 @@ body.term {
 			display: block;
 		}
 	}
+
+	.debug-toolbar {
+		line-height: 1.5;
+	}
 }
 
 #action-buttons {
@@ -83,6 +87,13 @@ body.term {
 			outline: 0 none !important;
 		}
 	}
+}
+
+#load-failed {
+	color: red;
+	font-size: 18px;
+	font-weight: bold;
+	margin: 10px 5px 14px 5px;
 }
 
 #term-nav {
@@ -196,75 +207,33 @@ body.term {
 	}
 }
 
-// Tango
-.theme-0 {
-	$term-colors:
-			#111213, #CC0000, #4E9A06, #C4A000, #3465A4, #75507B, #06989A, #D3D7CF,
-			#555753, #EF2929, #8AE234, #FCE94F, #729FCF, #AD7FA8, #34E2E2, #EEEEEC;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors, $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
-	}
-}
+// shortcut bar on iOS
+#keyboard-shortcut-bar {
+	border-radius: 4px;
+	width: calc(100vw - 20px);
+	background: #d1d5db;
+	padding: 5px 10px;
+	overflow-x: auto;
 
-// Linux
-.theme-1 {
-	$term-colors:
-			#000000, #aa0000, #00aa00, #aa5500, #0000aa, #aa00aa, #00aaaa, #aaaaaa,
-			#555555, #ff5555, #55ff55, #ffff55, #5555ff, #ff55ff, #55ffff, #ffffff;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors, $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
+	&:not(.open) {
+		display: none;
 	}
-}
 
-// xterm
-.theme-2 {
-	$term-colors:
-			#000000, #cd0000, #00cd00, #cdcd00, #0000ee, #cd00cd, #00cdcd, #e5e5e5,
-			#7f7f7f, #ff0000, #00ff00, #ffff00, #5c5cff, #ff00ff, #00ffff, #ffffff;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors,  $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
-	}
-}
+	.shortcut-button {
+		background: #fff;
+		color: #000;
+		padding: 10px 20px;
+		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+		text-shadow: none;
+		border-radius: 4px;
+		margin: 0 10px 0 0;
+		font-family: -apple-system, sans-serif;
+		min-width: 2em;
 
-// rxvt
-.theme-3 {
-	$term-colors:
-			#000000, #cd0000, #00cd00, #cdcd00, #0000cd, #cd00cd, #00cdcd, #faebd7,
-			#404040, #ff0000, #00ff00, #ffff00, #0000ff, #ff00ff, #00ffff, #ffffff;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors,  $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
-	}
-}
-
-// Ambience
-.theme-4 {
-	$term-colors:
-			#2e3436, #cc0000, #4e9a06, #c4a000, #3465a4, #75507b, #06989a, #d3d7cf,
-			#555753, #ef2929, #8ae234, #fce94f, #729fcf, #ad7fa8, #34e2e2, #eeeeec;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors,  $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
-	}
-}
-
-// Solarized
-.theme-5 {
-	$term-colors:
-			#073642, #dc322f, #859900, #b58900, #268bd2, #d33682, #2aa198, #eee8d5,
-			#002b36, #cb4b16, #586e75, #657b83, #839496, #6c71c4, #93a1a1, #fdf6e3;
-	@for $i from 1 through length($term-colors) {
-		$c: nth($term-colors,  $i);
-		.fg#{$i - 1} { color: $c; }
-		.bg#{$i - 1} { background-color: $c; }
+		&.modifier:not(.enabled) {
+			background: #9ea6b1;
+			color: #000;
+		}
 	}
 }
 
@@ -298,20 +267,35 @@ body.term {
 }
 //
 
-.Row.color-preview {
+.color-example {
 	font-family: monospace;
-	font-size: 16pt;
-	display: block;
-	margin-bottom: 0;
+	font-size: 14pt;
+	padding: 4px 6px;
+}
 
-	padding-left: $form-label-w;
+.preset {
+	cursor: pointer;
+	font-family: monospace;
+	font-size: 14pt;
+}
+
+.Row.color-preview {
+	label {
+		align-self: center;
+	}
 
 	@include media($phone) {
-		padding-left: 0;
-		font-size: 14pt;
+		font-size: 12pt;
+		align-items: flex-start;
+
+		label {
+			align-self: flex-start;
+		}
 	}
 
 	.colorprev {
+		font-family: monospace;
+		font-size: 14pt;
 		display:block;
 		margin: 0;
 		cursor: pointer;

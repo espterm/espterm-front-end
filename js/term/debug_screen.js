@@ -1,4 +1,6 @@
-window.attachDebugScreen = function (screen) {
+const { mk } = require('../utils')
+
+module.exports = function attachDebugScreen (screen) {
   const debugCanvas = mk('canvas')
   const ctx = debugCanvas.getContext('2d')
 
@@ -25,6 +27,7 @@ window.attachDebugScreen = function (screen) {
 
   let startTime, endTime, lastReason
   let cells = new Map()
+  let clippedRects = []
 
   let startDrawing
 
@@ -32,6 +35,7 @@ window.attachDebugScreen = function (screen) {
     drawStart (reason) {
       lastReason = reason
       startTime = Date.now()
+      clippedRects = []
     },
     drawEnd () {
       endTime = Date.now()
@@ -40,13 +44,38 @@ window.attachDebugScreen = function (screen) {
     },
     setCell (cell, flags) {
       cells.set(cell, [flags, Date.now()])
+    },
+    clipRect (...args) {
+      clippedRects.push(args)
     }
+  }
+
+  let clipPattern
+  {
+    let patternCanvas = document.createElement('canvas')
+    patternCanvas.width = patternCanvas.height = 12
+    let pctx = patternCanvas.getContext('2d')
+    pctx.lineWidth = 1
+    pctx.strokeStyle = '#00f'
+    pctx.beginPath()
+    pctx.moveTo(0, 0)
+    pctx.lineTo(0 - 4, 12)
+    pctx.moveTo(4, 0)
+    pctx.lineTo(4 - 4, 12)
+    pctx.moveTo(8, 0)
+    pctx.lineTo(8 - 4, 12)
+    pctx.moveTo(12, 0)
+    pctx.lineTo(12 - 4, 12)
+    pctx.moveTo(16, 0)
+    pctx.lineTo(16 - 4, 12)
+    pctx.stroke()
+    clipPattern = ctx.createPattern(patternCanvas, 'repeat')
   }
 
   let isDrawing = false
 
   let drawLoop = function () {
-    if (isDrawing) requestAnimationFrame(drawLoop)
+    if (isDrawing) window.requestAnimationFrame(drawLoop)
 
     let { devicePixelRatio, width, height } = screen.window
     let { width: cellWidth, height: cellHeight } = screen.getCellSize()
@@ -90,6 +119,18 @@ window.attachDebugScreen = function (screen) {
       }
     }
 
+    if (clippedRects.length) {
+      ctx.globalAlpha = 0.5
+      ctx.beginPath()
+
+      for (let rect of clippedRects) {
+        ctx.rect(...rect)
+      }
+
+      ctx.fillStyle = clipPattern
+      ctx.fill()
+    }
+
     if (activeCells === 0) {
       isDrawing = false
       removeCanvas()
@@ -103,4 +144,37 @@ window.attachDebugScreen = function (screen) {
     isDrawing = true
     drawLoop()
   }
+
+  // debug toolbar
+  const toolbar = mk('div')
+  toolbar.classList.add('debug-toolbar')
+  let toolbarAttached = false
+
+  const attachToolbar = function () {
+    screen.canvas.parentNode.appendChild(toolbar)
+  }
+  const detachToolbar = function () {
+    toolbar.parentNode.removeChild(toolbar)
+  }
+
+  screen.on('update-window:debug', debug => {
+    if (debug !== toolbarAttached) {
+      toolbarAttached = debug
+      if (debug) attachToolbar()
+      else detachToolbar()
+    }
+  })
+
+  screen.on('draw', () => {
+    if (!toolbarAttached) return
+    let cursorCell = screen.cursor.y * screen.window.width + screen.cursor.x
+    let cellFG = screen.screenFG[cursorCell]
+    let cellBG = screen.screenBG[cursorCell]
+    let cellCode = (screen.screen[cursorCell] || '').codePointAt(0)
+    let cellAttrs = screen.screenAttrs[cursorCell]
+    let hexcode = cellCode.toString(16).toUpperCase()
+    if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
+    hexcode = `U+${hexcode}`
+    toolbar.textContent = `Cursor cell (${cursorCell}): ${hexcode} FG: ${cellFG} BG: ${cellBG} Attrs: ${cellAttrs.toString(2)}`
+  })
 }

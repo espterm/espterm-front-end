@@ -45,10 +45,18 @@ return [
 
 	'term.example' => 'Default colors preview',
 
+	'term.explain_scheme' => '
+		To select default text and background color, click on the
+		preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard 
+		colors and hex (#FFFFFF) for True Color (24-bit).
+		',
+
+	'term.fgbg_presets' => 'Presets',
+	'term.color_scheme' => 'Color Scheme',
 	'term.reset_screen' => 'Reset screen & parser',
 	'term.term_title' => 'Header text',
-	'term.term_width' => 'Width / height',
-	'term.default_fg_bg' => 'Text / background',
+	'term.term_width' => 'Width',
+	'term.term_height' => 'Height',
 	'term.buttons' => 'Button labels',
 	'term.theme' => 'Color scheme',
 	'term.cursor_shape' => 'Cursor style',
@@ -62,6 +70,11 @@ return [
 	'term.crlf_mode' => 'Enter sends CR+LF',
 	'term.want_all_fn' => 'Capture all keys<br>(F5, F11, F12…)',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
+	'term.color_fg' => 'Default fg.',
+	'term.color_bg' => 'Default bg.',
+	'term.color_fg_prev' => 'Fg. colors',
+	'term.color_bg_prev' => 'Bg. colors',
+	'term.colors_preview' => 'Defaults',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
@@ -70,23 +83,23 @@ return [
     'cursor.bar_blink' => 'I-bar, blinking',
     'cursor.bar_steady' => 'I-bar, steady',
 
-	// terminal color labels
-	'color.0' => 'Black',
-	'color.1' => 'Red',
-	'color.2' => 'Green',
-	'color.3' => 'Yellow',
-	'color.4' => 'Blue',
-	'color.5' => 'Purple',
-	'color.6' => 'Cyan',
-	'color.7' => 'Silver',
-	'color.8' => 'Gray',
-	'color.9' => 'Light Red',
-	'color.10' => 'Light Green',
-	'color.11' => 'Light Yellow',
-	'color.12' => 'Light Blue',
-	'color.13' => 'Light Purple',
-	'color.14' => 'Light Cyan',
-	'color.15' => 'White',
+//	// terminal color labels
+//	'color.0' => 'Black',
+//	'color.1' => 'Red',
+//	'color.2' => 'Green',
+//	'color.3' => 'Yellow',
+//	'color.4' => 'Blue',
+//	'color.5' => 'Purple',
+//	'color.6' => 'Cyan',
+//	'color.7' => 'Silver',
+//	'color.8' => 'Gray',
+//	'color.9' => 'Light Red',
+//	'color.10' => 'Light Green',
+//	'color.11' => 'Light Yellow',
+//	'color.12' => 'Light Blue',
+//	'color.13' => 'Light Purple',
+//	'color.14' => 'Light Cyan',
+//	'color.15' => 'White',
 
 	'net.explain_sta' => '
 		Switch off Dynamic IP to configure the static IP address.',
@@ -156,20 +169,50 @@ return [
 		'Restore to firmware default settings? This will reset ' .
 		'all active settings and switch to AP mode with the default SSID.',
 	'system.confirm_store_defaults' =>
-		'Enter admin password to confirm you want to store the current settings as defaults.',
+		'Enter admin password to confirm you want to overwrite the default settings.',
 	'system.password' => 'Admin password:',
-	'system.restore_defaults' => 'Reset active settings to defaults',
+	'system.restore_defaults' => 'Reset to saved defaults',
 	'system.write_defaults' => 'Save active settings as defaults',
 	'system.restore_hard' => 'Reset active settings to firmware defaults',
 	'system.explain_persist' => '
-		ESPTerm contains two persistent memory banks, one for default and 
-		one for active settings. Active settings can be stored as defaults 
-		by the administrator (password required).
+		ESPTerm saves all settings in Flash. The active settings can be copied to
+		the "defaults area" and restored later using the blue button below.
 		',
 	'system.uart' => 'Serial Port',
 	'system.explain_uart' => '
-		This form controls the primary, communication UART. The debug UART is fixed at 115.200 baud, one stop-bit and no parity.
+		This form controls the primary, communication UART. The debug UART is fixed 
+		at 115.200 baud, one stop-bit and no parity.
 		',
+
+	'system.security' => 'Access Restrictions',
+	'system.explain_security' => '
+		Some parts, or all of the web interface can be protected by a password prompt.
+		Leave the new password fields empty if you do not wish to change it.
+	',
+	'system.pwlock' => 'Protected pages',
+	'system.pwlock.none' => 'None, all open',
+	'system.pwlock.settings_noterm' => 'WiFi, Net & System settings',
+	'system.pwlock.settings' => 'All settings pages',
+	'system.pwlock.menus' => 'This entire menu section',
+	'system.pwlock.all' => 'Everything, even terminal',
+	'system.new_access_pw' => 'New password',
+	'system.new_access_pw2' => 'New pass., repeat',
+	'system.admin_pw' => 'Admin password',
+	'system.access_name' => 'Username',
+
+	'system.change_adminpw' => 'Change Admin Password',
+	'system.explain_adminpw' =>
+		'
+		The "admin password" is used to manipulate the stored default settings
+		and to change access restrictions. This password is not saved as part 
+		of the main config, i.e. using save / restore does not affect this 
+		password. When the admin password is forgotten, the easiest way to
+		re-gain access is to wipe and re-flash the chip. 
+		',
+	'system.new_admin_pw' => 'New admin pass.',
+	'system.new_admin_pw2' => 'New pass., repeat',
+	'system.old_admin_pw' => 'Old admin pass.',
+
 	'uart.baud' => 'Baud rate',
 	'uart.parity' => 'Parity',
 	'uart.parity.none' => 'None',

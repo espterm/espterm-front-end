@@ -22,4 +22,7 @@
 	function hpfold(yes) {
 		$('.fold').toggleClass('expanded', !!yes);
 	}
+
+	// show theme colors - but this is a static page, so we don't know the current theme.
+    themes.themePreview(1)
 </script>

@@ -1,5 +1,18 @@
+const $ = require('./lib/chibi')
+const { mk, qs, qsa, cr } = require('./utils')
+const modal = require('./modal')
+const notify = require('./notif')
+
 /** Global generic init */
 $.ready(function () {
+  // Opening menu on mobile / narrow screen
+  function menuOpen () {
+    $('#menu').toggleClass('expanded')
+  }
+  $('#brand')
+    .on('click', menuOpen)
+    .on('keypress', cr(menuOpen))
+
   // Checkbox UI (checkbox CSS and hidden input with int value)
   $('.Row.checkbox').forEach(function (x) {
     let inp = x.querySelector('input')
@@ -58,8 +71,8 @@ $.ready(function () {
       val -= step
     }
 
-    if (undef(min)) val = Math.max(val, +min)
-    if (undef(max)) val = Math.min(val, +max)
+    if (!Number.isFinite(min)) val = Math.max(val, +min)
+    if (!Number.isFinite(max)) val = Math.min(val, +max)
     $this.val(val)
 
     if ('createEvent' in document) {
@@ -75,15 +88,16 @@ $.ready(function () {
 
   // populate the form errors box from GET arg ?err=...
   // (a way to pass errors back from server via redirect)
-  let errAt = location.search.indexOf('err=')
+  let errAt = window.location.search.indexOf('err=')
   if (errAt !== -1 && qs('.Box.errors')) {
-    let errs = location.search.substr(errAt + 4).split(',')
+    let errs = window.location.search.substr(errAt + 4).split(',')
     let humanReadableErrors = []
     errs.forEach(function (er) {
-      let lbl = qs('label[for="' + er + '"]')
-      if (lbl) {
+      let lbls = qsa('label[for="' + er + '"]')
+      for (let i = 0; i < lbls.length; i++) {
+        let lbl = lbls[i]
         lbl.classList.add('error')
-        humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+        if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
       }
       // else {
       //   hres.push(er)
@@ -94,8 +108,8 @@ $.ready(function () {
     qs('.Box.errors').classList.remove('hidden')
   }
 
-  Modal.init()
-  Notify.init()
+  modal.init()
+  notify.init()
 
   // remove tabindices from h2 if wide
   if (window.innerWidth > 550) {
@@ -106,7 +120,7 @@ $.ready(function () {
     // brand works as a link back to term in widescreen mode
     let br = qs('#brand')
     br && br.addEventListener('click', function () {
-      location.href = '/' // go to terminal
+      window.location.href = '/' // go to terminal
     })
   }
 })
@@ -116,14 +130,30 @@ $._loader = function (vis) {
   $('#loader').toggleClass('show', vis)
 }
 
+let pageShown = false
 // reveal content on load
 function showPage () {
+  pageShown = true
   $('#content').addClass('load')
 }
+// HACKITY HACK: fix this later
+window.showPage = showPage
 
 // Auto reveal pages other than the terminal (sets window.noAutoShow)
 $.ready(function () {
-  if (window.noAutoShow !== true) {
+  if (window.noAutoShow === true) {
+    setTimeout(function () {
+      if (!pageShown) {
+        let bnr = mk('P')
+        bnr.id = 'load-failed'
+        bnr.innerHTML =
+          'Server connection failed! Trying again' +
+          '<span class="anim-dots" style="width:1.5em;text-align:left;display:inline-block">.</span>'
+        qs('#screen').appendChild(bnr)
+        showPage()
+      }
+    }, 2000)
+  } else {
     setTimeout(function () {
       showPage()
     }, 1)

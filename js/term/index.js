@@ -1,13 +1,49 @@
+const { qs, mk } = require('../utils')
+const Notify = require('../notif')
+const TermScreen = require('./screen')
+const TermConnection = require('./connection')
+const TermInput = require('./input')
+const TermUpload = require('./upload')
+const initSoftKeyboard = require('./soft_keyboard')
+const attachDebugScreen = require('./debug_screen')
+
 /** Init the terminal sub-module - called from HTML */
-window.termInit = function ({ labels, theme, allFn }) {
+module.exports = function (opts) {
   const screen = new TermScreen()
-  const conn = Conn(screen)
-  const input = Input(conn)
-  const termUpload = TermUpl(conn, input, screen)
+  const conn = new TermConnection(screen)
+  const input = TermInput(conn, screen)
+  const termUpload = TermUpload(conn, input, screen)
   screen.input = input
+  input.termUpload = termUpload
+
+  // we delay the display of "connecting" to avoid flash when changing tabs with the terminal open
+  let showConnectingTimeout = -1
+  conn.on('open', () => {
+    showConnectingTimeout = setTimeout(() => {
+      screen.window.statusScreen = { title: 'Connecting', loading: true }
+    }, 250)
+  })
+  conn.on('connect', () => {
+    clearTimeout(showConnectingTimeout)
+    screen.window.statusScreen = { title: 'Waiting for content', loading: true }
+  })
+  conn.on('load', () => {
+    if (screen.window.statusScreen) screen.window.statusScreen = null
+  })
+  conn.on('disconnect', () => {
+    clearTimeout(showConnectingTimeout)
+    screen.window.statusScreen = { title: 'Disconnected' }
+    screen.screen = []
+    screen.screenFG = []
+    screen.screenBG = []
+    screen.screenAttrs = []
+  })
+  conn.on('silence', () => { screen.window.statusScreen = { title: 'Waiting for server', loading: true } })
+  // conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
+  conn.on('ping-success', () => { screen.window.statusScreen = { title: 'Re-connecting', loading: true } })
 
   conn.init()
-  input.init({ allFn })
+  input.init(opts)
   termUpload.init()
   Notify.init()
 
@@ -17,10 +53,10 @@ window.termInit = function ({ labels, theme, allFn }) {
   }
 
   qs('#screen').appendChild(screen.canvas)
-  screen.load(labels, theme) // load labels and theme
+  screen.load(opts.labels, opts) // load labels and theme
 
-  window.initSoftKeyboard(screen, input)
-  if (window.attachDebugScreen) window.attachDebugScreen(screen)
+  initSoftKeyboard(screen, input)
+  if (attachDebugScreen) attachDebugScreen(screen)
 
   let isFullscreen = false
   let fitScreen = false
@@ -55,10 +91,10 @@ window.termInit = function ({ labels, theme, allFn }) {
   })
 
   // add fullscreen mode & button
-  if (Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen) {
+  if (window.Element.prototype.requestFullscreen || window.Element.prototype.webkitRequestFullscreen) {
     let checkForFullscreen = function () {
       // document.fullscreenElement is not really supported yet, so here's a hack
-      if (isFullscreen && (innerWidth !== window.screen.width || innerHeight !== window.screen.height)) {
+      if (isFullscreen && (window.innerWidth !== window.screen.width || window.innerHeight !== window.screen.height)) {
         isFullscreen = false
         fitScreenIfNeeded()
       }

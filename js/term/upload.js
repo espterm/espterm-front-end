@@ -1,5 +1,9 @@
+const $ = require('../lib/chibi')
+const { qs } = require('../utils')
+const modal = require('../modal')
+
 /** File upload utility */
-window.TermUpl = function (conn, input, screen) {
+module.exports = function (conn, input, screen) {
   let lines, // array of lines without newlines
     line_i, // current line index
     fuTout, // timeout handle for line sending
@@ -14,7 +18,7 @@ window.TermUpl = function (conn, input, screen) {
 
   function openUploadDialog () {
     updateStatus('Ready...')
-    Modal.show('#fu_modal', onDialogClose)
+    modal.show('#fu_modal', onDialogClose)
     $('#fu_form').toggleClass('busy', false)
     input.blockKeys(true)
   }
@@ -125,19 +129,19 @@ window.TermUpl = function (conn, input, screen) {
   }
 
   function fuClose () {
-    Modal.hide('#fu_modal')
+    modal.hide('#fu_modal')
   }
 
   return {
     init: function () {
       qs('#fu_file').addEventListener('change', function (evt) {
-        let reader = new FileReader()
+        let reader = new window.FileReader()
         let file = evt.target.files[0]
         let ftype = file.type || 'application/octet-stream'
         console.log('Selected file type: ' + ftype)
         if (!ftype.match(/text\/.*|application\/(json|csv|.*xml.*|.*script.*|x-php)/)) {
           // Deny load of blobs like img - can crash browser and will get corrupted anyway
-          if (!confirm(`This does not look like a text file: ${ftype}\nReally load?`)) {
+          if (!window.confirm(`This does not look like a text file: ${ftype}\nReally load?`)) {
             qs('#fu_file').value = ''
             return
           }
@@ -164,6 +168,10 @@ window.TermUpl = function (conn, input, screen) {
         fuClose()
         return false
       })
+    },
+    open: openUploadDialog,
+    setContent (content) {
+      qs('#fu_text').value = content
     }
   }
 }

@@ -43,7 +43,11 @@
 <div class="Box">
 	<h2>Issues</h2>
 	<p>
-		Please report any issues to the <a href="%githubrepo%/issues">bugtracker</a> or send them by e-mail (see above).
+		Please report any issues to our <a href="%githubrepo%/issues">bugtracker</a> or send them by e-mail.
+	</p>
+	<p>
+		ESPTerm has a <a href="https://groups.google.com/forum/#!forum/espterm-dev">mailing list</a> for
+		troubleshooting and release announcements.
 	</p>
 	<p>
 		Firmware updates can be downloaded from the <a href="%githubrepo%/releases">releases page</a> and flashed
@@ -65,12 +69,24 @@
 
 <div class="Box">
 	<h2>Thanks</h2>
-	<p>
-		The webserver is based on a <a href="https://github.com/MightyPork/libesphttpd">fork</a> of the
-		<a href="https://github.com/Spritetm/esphttpd">esphttpd</a> library by Jeroen Domburg (Sprite_tm).
-	</p>
-	<p>
-		Using (modified) JS library <a href="https://github.com/kylebarrow/chibi">chibi.js</a> by
-		Kyle Barrow as a lightweight jQuery alternative.
-	</p>
+	<p><i>…for making this project possible, in no particular order, go to:</i></p>
+	<ul style="padding-left: 20px">
+		<li>
+			*Jeroen "SpriteTM" Domburg,* for writing the <a href="https://github.com/Spritetm/esphttpd">esphttpd</a>
+			server library we use (as a <a href="https://github.com/MightyPork/libesphttpd">fork</a>)
+		</li>
+		<li>
+			*Kyle Barrow,* for writing the <a href="https://github.com/kylebarrow/chibi">chibi.js</a> library
+			we use instead of jQuery
+		</li>
+		<li>
+			*cpsdqs,* for rewriting the front-end to use HTML5 canvas and other JS improvements
+		</li>
+		<li>
+			*Guenter Honisch,* for finding bugs and suggesting many improvements
+		</li>
+		<li>
+			*doc. Jan Fischer,* who came up with the original idea
+		</li>
+	</ul>
 </div>
