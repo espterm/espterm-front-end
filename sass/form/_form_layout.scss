@@ -15,6 +15,11 @@ form { @include naked(); }
 .Box.message {
 	font-weight: bold;
 	color: #0fca50;
+	transition: opacity linear 1s;
+	opacity: 1;
+	&.hiding {
+		opacity: 0;
+	}
 }
 
 .Row {

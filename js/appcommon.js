@@ -112,8 +112,15 @@ $.ready(function () {
   let msgAt = window.location.search.indexOf('msg=')
   if (msgAt !== -1 && qs('.Box.message')) {
     let msg = decodeURIComponent(window.location.search.substr(msgAt + 4))
-    qs('.Box.message').innerHTML = msg
-    qs('.Box.message').classList.remove('hidden')
+    let box = qs('.Box.message')
+    box.innerHTML = msg
+    box.classList.remove('hidden')
+    setTimeout(() => {
+      box.classList.add('hiding')
+      setTimeout(() => {
+        box.classList.add('hidden')
+      }, 1000)
+    }, 2000)
   }
 
   modal.init()
