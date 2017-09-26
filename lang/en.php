@@ -36,8 +36,8 @@ return [
 	'term.expert' => 'Expert Options',
 	'term.explain_initials' => '
 		Those are the initial settings used after ESPTerm powers on, or when the screen
-		reset command is received. They can be changed later by control commands by the
-		terminal application.
+		reset command is received. They can be changed later by the terminal application
+		via control commands.
 		',
 	'term.explain_expert' => '
 		Those are advanced config options that usually don\'t need to be changed.
