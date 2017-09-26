@@ -41,7 +41,7 @@
 			}
 		?>
 
-		<h3>Switching commands</h3>
+		<h3>Codepage switching commands</h3>
 
 		<p>
 			There are two character set slots, G0 and G1.

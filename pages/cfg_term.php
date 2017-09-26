@@ -2,7 +2,7 @@
 	<a href="<?= e(url('reset_screen')) ?>"><?= tr('term.reset_screen') ?></a>
 </div>
 
-<form class="Box mobopen str" action="<?= e(url('term_set')) ?>" method="GET" id='form-scheme'>
+<form class="Box fold desktop-expanded str" action="<?= e(url('term_set')) ?>" method="GET" id='form-scheme'>
 	<h2><?= tr('term.color_scheme') ?></h2>
 
 	<div class="Row explain">
@@ -166,6 +166,18 @@
 		<input class="tiny" type="text" name="bm5" id="bm5" value="%h:bm5%">
 	</div>
 
+	<div class="Row checkbox" >
+		<label><?= tr('term.crlf_mode') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="crlf_mode" name="crlf_mode" value="%crlf_mode%">
+	</div>
+
+	<div class="Row checkbox" >
+		<label><?= tr('term.loopback') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="loopback" name="loopback" value="%loopback%">
+	</div>
+
 	<div class="Row buttons">
 		<a class="button icn-ok" href="#" onclick="qs('#form-initial').submit()"><?= tr('apply') ?></a>
 	</div>
@@ -263,21 +275,9 @@
 	</div>
 
 	<div class="Row checkbox" >
-		<label><?= tr('term.crlf_mode') ?></label><!--
-		--><span class="box" tabindex=0 role=checkbox></span>
-		<input type="hidden" id="crlf_mode" name="crlf_mode" value="%crlf_mode%">
-	</div>
-
-	<div class="Row checkbox" >
 		<label><?= tr('term.show_config_links') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="show_config_links" name="show_config_links" value="%show_config_links%">
-	</div>
-
-	<div class="Row checkbox" >
-		<label><?= tr('term.loopback') ?></label><!--
-		--><span class="box" tabindex=0 role=checkbox></span>
-		<input type="hidden" id="loopback" name="loopback" value="%loopback%">
 	</div>
 
 	<div class="Row buttons">

@@ -35,9 +35,9 @@ return [
 	'term.defaults' => 'Initial Settings',
 	'term.expert' => 'Expert Options',
 	'term.explain_initials' => '
-		Those are the initial settings used after ESPTerm powers on or when the screen
-		reset command is received. Some options can be changed by the application via escape sequences, 
-		those changes won\'t be saved in Flash.
+		Those are the initial settings used after ESPTerm powers on, or when the screen
+		reset command is received. They can be later changed by control commands by the
+		terminal application.
 		',
 	'term.explain_expert' => '
 		Those are advanced config options that usually don\'t need to be changed.
@@ -66,8 +66,8 @@ return [
 	'term.fn_alt_mode' => 'SS3 Fn keys',
 	'term.show_config_links' => 'Show nav links',
 	'term.show_buttons' => 'Show buttons',
-	'term.loopback' => 'Local Echo',
-	'term.crlf_mode' => 'Enter sends CR+LF',
+	'term.loopback' => 'Local Echo (<span style="text-decoration:overline">SRM</span>)',
+	'term.crlf_mode' => 'CR+LF enter (LNM)',
 	'term.want_all_fn' => 'Capture all keys<br>(F5, F11, F12…)',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
 	'term.color_fg' => 'Default fg.',
@@ -173,21 +173,23 @@ return [
 	'system.password' => 'Admin password:',
 	'system.restore_defaults' => 'Reset to saved defaults',
 	'system.write_defaults' => 'Save active settings as defaults',
-	'system.restore_hard' => 'Reset active settings to firmware defaults',
+	'system.restore_hard' => 'Reset active settings to factory defaults',
+	'system.restore_hard_explain' => '(This clears the WiFi config! Does not affect saved defaults or admin password.)',
 	'system.explain_persist' => '
 		ESPTerm saves all settings in Flash. The active settings can be copied to
 		the "defaults area" and restored later using the blue button below.
 		',
 	'system.uart' => 'Serial Port',
 	'system.explain_uart' => '
-		This form controls the primary, communication UART. The debug UART is fixed 
+		This form controls the communication UART. The debug UART is fixed 
 		at 115.200 baud, one stop-bit and no parity.
 		',
 
 	'system.security' => 'Access Restrictions',
 	'system.explain_security' => '
 		Some parts, or all of the web interface can be protected by a password prompt.
-		Leave the new password fields empty if you do not wish to change it.
+		Leave the new password fields empty if you do not wish to change it.<br>
+		The default password is "%def_access_pw%".
 	',
 	'system.pwlock' => 'Protected pages',
 	'system.pwlock.none' => 'None, all open',
@@ -207,7 +209,8 @@ return [
 		and to change access restrictions. This password is not saved as part 
 		of the main config, i.e. using save / restore does not affect this 
 		password. When the admin password is forgotten, the easiest way to
-		re-gain access is to wipe and re-flash the chip. 
+		re-gain access is to wipe and re-flash the chip.<br>
+		The default admin password is "%def_admin_pw%".
 		',
 	'system.new_admin_pw' => 'New admin pass.',
 	'system.new_admin_pw2' => 'New pass., repeat',

@@ -145,6 +145,18 @@
 			}
 		}
 	}
+
+	@include media($tablet-min) {
+		&.desktop-expanded {
+			.Row {
+				display: flex;
+
+				&.v {
+					display: block;
+				}
+			}
+		}
+	}
 }
 
 .Box.fold {

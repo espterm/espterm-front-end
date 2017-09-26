@@ -65,11 +65,15 @@ form { @include naked(); }
 	}
 
 	// buttons2 is the same style, but different selector for use in the admin page
-	&.buttons {
+	&.buttons, &.buttons2 {
 		margin: 16px auto;
 		input, .button {
 			margin-right: dist(-1);
 		}
+	}
+
+	&.buttons2 {
+		display:block;
 	}
 
 	&.centered {
