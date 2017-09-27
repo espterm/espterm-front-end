@@ -4,11 +4,7 @@ module.exports = function attachDebugScreen (screen) {
   const debugCanvas = mk('canvas')
   const ctx = debugCanvas.getContext('2d')
 
-  debugCanvas.style.position = 'absolute'
-  // hackity hack should probably set this in CSS
-  debugCanvas.style.top = '6px'
-  debugCanvas.style.left = '6px'
-  debugCanvas.style.pointerEvents = 'none'
+  debugCanvas.classList.add('debug-canvas')
 
   let addCanvas = function () {
     if (!debugCanvas.parentNode) screen.canvas.parentNode.appendChild(debugCanvas)
