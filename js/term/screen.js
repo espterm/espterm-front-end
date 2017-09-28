@@ -55,6 +55,7 @@ module.exports = class TermScreen extends EventEmitter {
       devicePixelRatio: 1,
       fontFamily: '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace',
       fontSize: 20,
+      padding: 6,
       gridScaleX: 1.0,
       gridScaleY: 1.2,
       fitIntoWidth: 0,
@@ -67,11 +68,15 @@ module.exports = class TermScreen extends EventEmitter {
     // scaling caused by fitIntoWidth/fitIntoHeight
     this._windowScale = 1
 
+    // actual padding, as it may be disabled by fullscreen mode etc.
+    this._padding = 0
+
     // properties of this.window that require updating size and redrawing
     this.windowState = {
       width: 0,
       height: 0,
       devicePixelRatio: 0,
+      padding: 0,
       gridScaleX: 0,
       gridScaleY: 0,
       fontFamily: '',
@@ -313,8 +318,8 @@ module.exports = class TermScreen extends EventEmitter {
     let cellSize = this.getCellSize()
 
     return [
-      Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
-      Math.floor(y / cellSize.height)
+      Math.floor((x - this._padding + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
+      Math.floor((y - this._padding) / cellSize.height)
     ]
   }
 
@@ -328,7 +333,7 @@ module.exports = class TermScreen extends EventEmitter {
   gridToScreen (x, y, withScale = false) {
     let cellSize = this.getCellSize()
 
-    return [x * cellSize.width, y * cellSize.height].map(v => withScale ? v * this._windowScale : v)
+    return [x * cellSize.width, y * cellSize.height].map(v => this._padding + (withScale ? v * this._windowScale : v))
   }
 
   /**
@@ -378,13 +383,14 @@ module.exports = class TermScreen extends EventEmitter {
         width,
         height,
         fitIntoWidth,
-        fitIntoHeight
+        fitIntoHeight,
+        padding
       } = this.window
       const cellSize = this.getCellSize()
 
       // real height of the canvas element in pixels
-      let realWidth = width * cellSize.width
-      let realHeight = height * cellSize.height
+      let realWidth = width * cellSize.width + 2 * padding
+      let realHeight = height * cellSize.height + 2 * padding
 
       if (fitIntoWidth && fitIntoHeight) {
         let terminalAspect = realWidth / realHeight
@@ -409,13 +415,16 @@ module.exports = class TermScreen extends EventEmitter {
 
       // store new window scale
       this._windowScale = realWidth / (width * cellSize.width)
+      // and padding
+      // TODO: disable in fullscreen mode
+      this._padding = padding
 
       // the DPR must be rounded to a very nice value to prevent gaps between cells
       let devicePixelRatio = this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
-      this.canvas.width = width * devicePixelRatio * cellSize.width
+      this.canvas.width = (width * cellSize.width + 2 * padding) * devicePixelRatio
       this.canvas.style.width = `${realWidth}px`
-      this.canvas.height = height * devicePixelRatio * cellSize.height
+      this.canvas.height = (height * cellSize.height + 2 * padding) * devicePixelRatio
       this.canvas.style.height = `${realHeight}px`
 
       // the screen has been cleared (by changing canvas width)

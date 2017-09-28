@@ -159,9 +159,26 @@ module.exports = class ScreenRenderer {
    */
   drawBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
+    const { width, height } = this.screen.window
     ctx.fillStyle = this.getColor(bg)
-    ctx.clearRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
-    ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+    let screenX = x * cellWidth + this.screen._padding
+    let screenY = y * cellHeight + this.screen._padding
+    let isBorderCell = x === 0 || y === 0 || x === width - 1 || y === height - 1
+    if (isBorderCell) {
+      let left = screenX
+      let top = screenY
+      let right = screenX + cellWidth
+      let bottom = screenY + cellHeight
+      if (x === 0) left -= this.screen._padding
+      else if (x === width - 1) right += this.screen._padding
+      if (y === 0) top -= this.screen._padding
+      else if (y === height - 1) bottom += this.screen._padding
+      ctx.clearRect(left, top, right - left, bottom - top)
+      ctx.fillRect(left, top, right - left, bottom - top)
+    } else {
+      ctx.clearRect(screenX, screenY, cellWidth, cellHeight)
+      ctx.fillRect(screenX, screenY, cellWidth, cellHeight)
+    }
   }
 
   /**
@@ -194,12 +211,15 @@ module.exports = class ScreenRenderer {
 
     ctx.fillStyle = this.getColor(fg)
 
+    let screenX = x * cellWidth + this.screen._padding
+    let screenY = y * cellHeight + this.screen._padding
+
     let codePoint = text.codePointAt(0)
     if (codePoint >= 0x2580 && codePoint <= 0x259F) {
       // block elements
       ctx.beginPath()
-      const left = x * cellWidth
-      const top = y * cellHeight
+      const left = screenX
+      const top = screenY
       const cw = cellWidth
       const ch = cellHeight
       const c2w = cellWidth / 2
@@ -251,16 +271,16 @@ module.exports = class ScreenRenderer {
           for (let dx = 0; dx < cw; dx += dotSpacingX) {
             // prevent overflow
             let dotSizeY = Math.min(dotSize, ch - dy)
-            ctx.rect(x * cw + (alignRight ? cw - dx - dotSize : dx), y * ch + dy, dotSize, dotSizeY)
+            ctx.rect(left + (alignRight ? cw - dx - dotSize : dx), top + dy, dotSize, dotSizeY)
           }
           alignRight = !alignRight
         }
       } else if (codePoint === 0x2594) {
         // upper one eighth block >▔<
-        ctx.rect(x * cw, y * ch, cw, ch / 8)
+        ctx.rect(left, top, cw, ch / 8)
       } else if (codePoint === 0x2595) {
         // right one eighth block >▕<
-        ctx.rect((x + 7 / 8) * cw, y * ch, cw / 8, ch)
+        ctx.rect(left + (7 / 8) * cw, top, cw / 8, ch)
       } else if (codePoint === 0x2596) {
         // left bottom quadrant >▖<
         ctx.rect(left, top + c2h, c2w, c2h)
@@ -302,7 +322,7 @@ module.exports = class ScreenRenderer {
       ctx.fill()
     } else {
       // Draw other characters using the text renderer
-      ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
+      ctx.fillText(text, screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
     }
 
     // -- line drawing - a reference for a possible future rect/line implementation ---
@@ -324,21 +344,21 @@ module.exports = class ScreenRenderer {
       ctx.beginPath()
 
       if (underline) {
-        let lineY = Math.round(y * cellHeight + charSize.height) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY + charSize.height) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       if (strike) {
-        let lineY = Math.round((y + 0.5) * cellHeight) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY + 0.5 * cellHeight) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       if (overline) {
-        let lineY = Math.round(y * cellHeight) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       ctx.stroke()
@@ -570,17 +590,19 @@ module.exports = class ScreenRenderer {
           if (isCursor && !inSelection) {
             ctx.save()
             ctx.beginPath()
+            let screenX = x * cellWidth + this.screen._padding
+            let screenY = y * cellHeight + this.screen._padding
             if (this.screen.cursor.style === 'block') {
               // block
-              ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+              ctx.rect(screenX, screenY, cellWidth, cellHeight)
             } else if (this.screen.cursor.style === 'bar') {
               // vertical bar
               let barWidth = 2
-              ctx.rect(x * cellWidth, y * cellHeight, barWidth, cellHeight)
+              ctx.rect(screenX, screenY, barWidth, cellHeight)
             } else if (this.screen.cursor.style === 'line') {
               // underline
               let lineHeight = 2
-              ctx.rect(x * cellWidth, y * cellHeight + charSize.height, cellWidth, lineHeight)
+              ctx.rect(screenX, screenY + charSize.height, cellWidth, lineHeight)
             }
             ctx.clip()
 
