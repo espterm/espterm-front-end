@@ -35,6 +35,7 @@ if (!file_exists(__DIR__ . '/_env.php')) {
 define('JS_WEB_ROOT', $root);
 
 
+define('ESP_PROD', (bool)getenv('ESP_PROD'));
 define('ESP_DEMO', (bool)getenv('ESP_DEMO'));
 if (ESP_DEMO) {
 	define('DEMO_APS', <<<APS
