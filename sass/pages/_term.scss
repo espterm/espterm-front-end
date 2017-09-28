@@ -34,6 +34,7 @@ body.term {
 		// #111213 as rgb
 		background: rgba(17, 18, 19, 0.2);
 		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
 
 		&.top {
 			top: 0;
