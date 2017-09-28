@@ -49,6 +49,10 @@
 		<div id="touch-select-menu">
 			<button id="touch-select-copy-btn">Copy</button>
 		</div>
+		<div class="screen-margin top"></div>
+		<div class="screen-margin left"></div>
+		<div class="screen-margin right"></div>
+		<div class="screen-margin bottom"></div>
 	</div>
 
 	<div id="action-buttons">

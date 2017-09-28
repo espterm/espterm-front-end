@@ -29,6 +29,36 @@ body.term {
 		cursor: text;
 	}
 
+	.screen-margin {
+		position: absolute;
+		// #111213 as rgb
+		background: rgba(17, 18, 19, 0.2);
+		-webkit-backdrop-filter: blur(10px);
+
+		&.top {
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 6px;
+		}
+		&.left, &.right {
+			top: 6px;
+			left: 0;
+			bottom: 0;
+			width: 6px;
+		}
+		&.right {
+			left: auto;
+			right: 0;
+		}
+		&.bottom {
+			left: 6px;
+			right: 6px;
+			bottom: 0;
+			height: 6px;
+		}
+	}
+
 	@include noselect();
 
 	// Dummy input field used to open soft keyboard
@@ -220,6 +250,7 @@ body.term {
 	background: #d1d5db;
 	padding: 5px 10px;
 	overflow-x: auto;
+	margin: 6px;
 
 	&:not(.open) {
 		display: none;
