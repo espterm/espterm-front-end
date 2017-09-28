@@ -67,7 +67,6 @@ module.exports = function (opts) {
   }
 
   qs('#screen').appendChild(screen.canvas)
-  screen.load(opts.labels, opts) // load labels and theme
 
   initSoftKeyboard(screen, input)
   if (attachDebugScreen) attachDebugScreen(screen)
