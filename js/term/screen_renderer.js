@@ -320,6 +320,30 @@ module.exports = class ScreenRenderer {
       }
 
       ctx.fill()
+    } else if (codePoint >= 0xE0B0 && codePoint <= 0xE0B3) {
+      // powerline symbols, except branch, line, and lock. Basically, just the triangles
+      ctx.beginPath()
+
+      if (codePoint === 0xE0B0 || codePoint === 0xE0B1) {
+        // right-pointing triangle
+        ctx.moveTo(screenX, screenY)
+        ctx.lineTo(screenX + cellWidth, screenY + cellHeight / 2)
+        ctx.lineTo(screenX, screenY + cellHeight)
+      } else if (codePoint === 0xE0B2 || codePoint === 0xE0B3) {
+        // left-pointing triangle
+        ctx.moveTo(screenX + cellWidth, screenY)
+        ctx.lineTo(screenX, screenY + cellHeight / 2)
+        ctx.lineTo(screenX + cellWidth, screenY + cellHeight)
+      }
+
+      if (codePoint % 2 === 0) {
+        // triangle
+        ctx.fill()
+      } else {
+        // chevron
+        ctx.strokeStyle = ctx.fillStyle
+        ctx.stroke()
+      }
     } else {
       // Draw other characters using the text renderer
       ctx.fillText(text, screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
