@@ -457,11 +457,10 @@ module.exports = class ScreenRenderer {
     for (let cell = 0; cell < screenLength; cell++) {
       let x = cell % width
       let y = Math.floor(cell / width)
-      let isCursor = !this.screen.cursor.hanging &&
+      let isCursor = this.cursorBlinkOn &&
         this.screen.cursor.x === x &&
         this.screen.cursor.y === y &&
-        this.screen.cursor.visible &&
-        this.cursorBlinkOn
+        this.screen.cursor.visible
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
@@ -494,7 +493,8 @@ module.exports = class ScreenRenderer {
         bg !== this.drawnScreenBG[cell] || // background updated
         attrs !== this.drawnScreenAttrs[cell] || // attributes updated
         isCursor !== wasCursor || // cursor blink/position updated
-        (isCursor && this.screen.cursor.style !== this.drawnCursor[2]) // cursor style updated
+        (isCursor && this.screen.cursor.style !== this.drawnCursor[2]) || // cursor style updated
+        (isCursor && this.screen.cursor.hanging !== this.drawnCursor[3]) // cursor hanging updated
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -609,13 +609,23 @@ module.exports = class ScreenRenderer {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
-          if (isCursor) this.drawnCursor = [x, y, this.screen.cursor.style]
+          if (isCursor) this.drawnCursor = [x, y, this.screen.cursor.style, this.screen.cursor.hanging]
 
+          // draw cursor
           if (isCursor && !inSelection) {
             ctx.save()
             ctx.beginPath()
-            let screenX = x * cellWidth + this.screen._padding
-            let screenY = y * cellHeight + this.screen._padding
+
+            let cursorX = x
+            let cursorY = y
+
+            if (this.screen.cursor.hanging) {
+              // draw hanging cursor in the margin
+              cursorX += 1
+            }
+
+            let screenX = cursorX * cellWidth + this.screen._padding
+            let screenY = cursorY * cellHeight + this.screen._padding
             if (this.screen.cursor.style === 'block') {
               // block
               ctx.rect(screenX, screenY, cellWidth, cellHeight)
@@ -636,9 +646,9 @@ module.exports = class ScreenRenderer {
             // HACK: ensure cursor is visible
             if (fg === bg) bg = fg === 0 ? 7 : 0
 
-            this.drawBackground({ x, y, cellWidth, cellHeight, bg })
+            this.drawBackground({ x: cursorX, y: cursorY, cellWidth, cellHeight, bg })
             this.drawCharacter({
-              x, y, charSize, cellWidth, cellHeight, text, fg, attrs
+              x: cursorX, y: cursorY, charSize, cellWidth, cellHeight, text, fg, attrs
             })
             ctx.restore()
           }
