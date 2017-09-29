@@ -237,12 +237,12 @@ module.exports = class ScreenParser {
         // TODO do something with those
 
       } else if (topic === TOPIC_CONTENT) {
+        // set screen content
 
-        const window_y = du(strArray[ci++])
-        const window_x = du(strArray[ci++])
-        const window_h = du(strArray[ci++])
-        const window_w = du(strArray[ci++])
-        // TODO use
+        const frameY = du(strArray[ci++])
+        const frameX = du(strArray[ci++])
+        const frameHeight = du(strArray[ci++]) // FIXME unused, useless data!
+        const frameWidth = du(strArray[ci++])
 
         // content
         let fg = 7
@@ -264,7 +264,7 @@ module.exports = class ScreenParser {
         const MASK_LINE_ATTR = ATTR_UNDERLINE | ATTR_OVERLINE | ATTR_STRIKE
         const MASK_BLINK = ATTR_BLINK
 
-        let setCellContent = () => {
+        let pushCell = () => {
           // Remove blink attribute if it wouldn't have any effect
           let myAttrs = attrs
           let hasFG = attrs & ATTR_FG
@@ -282,10 +282,14 @@ module.exports = class ScreenParser {
             else this.screen.blinkingCellCount--
           }
 
-          this.screen.screen[cell] = lastChar
-          this.screen.screenFG[cell] = fg
-          this.screen.screenBG[cell] = bg
-          this.screen.screenAttrs[cell] = myAttrs
+          let cellXInFrame = cell % frameWidth
+          let cellYInFrame = Math.floor(cell / frameWidth)
+          let index = (frameY + cellYInFrame) * this.screen.window.width + frameX + cellXInFrame
+
+          this.screen.screen[index] = lastChar
+          this.screen.screenFG[index] = fg
+          this.screen.screenBG[index] = bg
+          this.screen.screenAttrs[index] = myAttrs
         }
 
         while (ci < strArray.length && cell < screenLength) {
@@ -297,7 +301,7 @@ module.exports = class ScreenParser {
             case SEQ_REPEAT:
               let count = strArray[ci++].codePointAt(0) - 1
               for (let j = 0; j < count; j++) {
-                setCellContent()
+                pushCell()
                 if (++cell > screenLength) break
               }
               break
@@ -326,7 +330,7 @@ module.exports = class ScreenParser {
             default:
               if (charCode < 32) character = '\ufffd'
               lastChar = character
-              setCellContent()
+              pushCell()
               cell++
           }
         }
