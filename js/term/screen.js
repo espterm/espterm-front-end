@@ -371,7 +371,7 @@ module.exports = class TermScreen extends EventEmitter {
    */
   updateSize () {
     // see below (this is just updating it)
-    this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
+    this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
 
     let didChange = false
     for (let key in this.windowState) {
@@ -421,7 +421,7 @@ module.exports = class TermScreen extends EventEmitter {
       this._padding = padding * (originalWidth / realWidth)
 
       // the DPR must be rounded to a very nice value to prevent gaps between cells
-      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
+      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
 
       this.canvas.width = (width * cellSize.width + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.width = `${realWidth}px`
