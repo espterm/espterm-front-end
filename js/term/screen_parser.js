@@ -1,6 +1,5 @@
 const $ = require('../lib/chibi')
 const { qs } = require('../utils')
-const { themes } = require('./themes')
 
 // constants for decoding the update blob
 const SEQ_REPEAT = 2
@@ -84,7 +83,6 @@ module.exports = class ScreenParser {
       console.log(`topic ${topic}`)
 
       if (topic === TOPIC_SCREEN_OPTS) {
-
         const newHeight = du(strArray[ci++])
         const newWidth = du(strArray[ci++])
         const theme = du(strArray[ci++])
@@ -92,10 +90,8 @@ module.exports = class ScreenParser {
         const defBg = du(strArray[ci++]) | (du(strArray[ci++]) << 12)
         const attributes = du(strArray[ci++])
 
-        // themeing
-        if (theme >= 0 && theme < themes.length) {
-          this.screen.renderer.palette = themes[theme]
-        }
+        // theming
+        this.screen.renderer.loadTheme(theme)
         this.screen.renderer.setDefaultColors(defFg, defBg)
 
         // apply size

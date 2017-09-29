@@ -76,6 +76,10 @@ module.exports = class ScreenRenderer {
     }
   }
 
+  loadTheme (i) {
+    if (i in themes) this.palette = themes[i]
+  }
+
   setDefaultColors (fg, bg) {
     this.defaultFgNum = fg
     this.defaultBgNum = bg
