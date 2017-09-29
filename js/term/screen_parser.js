@@ -173,6 +173,7 @@ module.exports = class ScreenParser {
           this.screen.emit('cursor-moved')
         }
 
+        this.screen.renderer.scheduleDraw('cursor-moved')
       } else if (topic === TOPIC_TITLE) {
 
         // TODO optimize this
