@@ -317,9 +317,12 @@ module.exports = class TermScreen extends EventEmitter {
   screenToGrid (x, y, rounded = false) {
     let cellSize = this.getCellSize()
 
+    x = x / this._windowScale - this._padding
+    y = y / this._windowScale - this._padding
+
     return [
-      Math.floor((x - this._padding + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
-      Math.floor((y - this._padding) / cellSize.height)
+      Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
+      Math.floor(y / cellSize.height)
     ]
   }
 
@@ -389,8 +392,9 @@ module.exports = class TermScreen extends EventEmitter {
       const cellSize = this.getCellSize()
 
       // real height of the canvas element in pixels
-      let realWidth = width * cellSize.width + 2 * padding
-      let realHeight = height * cellSize.height + 2 * padding
+      let realWidth = width * cellSize.width
+      let realHeight = height * cellSize.height
+      let originalWidth = realWidth
 
       if (fitIntoWidth && fitIntoHeight) {
         let terminalAspect = realWidth / realHeight
@@ -398,33 +402,30 @@ module.exports = class TermScreen extends EventEmitter {
 
         if (terminalAspect < fitAspect) {
           // align heights
-          realHeight = fitIntoHeight
+          realHeight = fitIntoHeight - 2 * padding
           realWidth = realHeight * terminalAspect
         } else {
           // align widths
-          realWidth = fitIntoWidth
+          realWidth = fitIntoWidth - 2 * padding
           realHeight = realWidth / terminalAspect
         }
-      } else if (fitIntoWidth) {
-        realHeight = fitIntoWidth / (realWidth / realHeight)
-        realWidth = fitIntoWidth
-      } else if (fitIntoHeight) {
-        realWidth = fitIntoHeight * (realWidth / realHeight)
-        realHeight = fitIntoHeight
       }
 
       // store new window scale
-      this._windowScale = realWidth / (width * cellSize.width)
-      // and padding
-      // TODO: disable in fullscreen mode
-      this._padding = padding
+      this._windowScale = realWidth / originalWidth
+
+      realWidth += 2 * padding
+      realHeight += 2 * padding
+
+      // store padding
+      this._padding = padding * (originalWidth / realWidth)
 
       // the DPR must be rounded to a very nice value to prevent gaps between cells
-      let devicePixelRatio = this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
+      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
 
-      this.canvas.width = (width * cellSize.width + 2 * padding) * devicePixelRatio
+      this.canvas.width = (width * cellSize.width + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.width = `${realWidth}px`
-      this.canvas.height = (height * cellSize.height + 2 * padding) * devicePixelRatio
+      this.canvas.height = (height * cellSize.height + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.height = `${realHeight}px`
 
       // the screen has been cleared (by changing canvas width)

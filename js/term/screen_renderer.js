@@ -179,19 +179,20 @@ module.exports = class ScreenRenderer {
   drawBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
     const { width, height } = this.screen.window
+    const padding = Math.round(this.screen._padding)
     ctx.fillStyle = this.getColor(bg)
-    let screenX = x * cellWidth + this.screen._padding
-    let screenY = y * cellHeight + this.screen._padding
+    let screenX = x * cellWidth + padding
+    let screenY = y * cellHeight + padding
     let isBorderCell = x === 0 || y === 0 || x === width - 1 || y === height - 1
     if (isBorderCell) {
       let left = screenX
       let top = screenY
       let right = screenX + cellWidth
       let bottom = screenY + cellHeight
-      if (x === 0) left -= this.screen._padding
-      else if (x === width - 1) right += this.screen._padding
-      if (y === 0) top -= this.screen._padding
-      else if (y === height - 1) bottom += this.screen._padding
+      if (x === 0) left -= padding
+      else if (x === width - 1) right += padding
+      if (y === 0) top -= padding
+      else if (y === height - 1) bottom += padding
       ctx.clearRect(left, top, right - left, bottom - top)
       ctx.fillRect(left, top, right - left, bottom - top)
     } else {
@@ -218,6 +219,7 @@ module.exports = class ScreenRenderer {
     if (!text) return
 
     const ctx = this.ctx
+    const padding = Math.round(this.screen._padding)
 
     let underline = false
     let strike = false
@@ -230,8 +232,8 @@ module.exports = class ScreenRenderer {
 
     ctx.fillStyle = this.getColor(fg)
 
-    let screenX = x * cellWidth + this.screen._padding
-    let screenY = y * cellHeight + this.screen._padding
+    let screenX = x * cellWidth + padding
+    let screenY = y * cellHeight + padding
 
     let codePoint = text.codePointAt(0)
     if (codePoint >= 0x2580 && codePoint <= 0x259F) {
@@ -695,14 +697,15 @@ module.exports = class ScreenRenderer {
     this.drawnScreen = []
 
     const cellSize = this.screen.getCellSize()
-    const screenWidth = width * cellSize.width
-    const screenHeight = height * cellSize.height
+    const screenWidth = width * cellSize.width + 2 * this.screen._padding
+    const screenHeight = height * cellSize.height + 2 * this.screen._padding
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-    ctx.clearRect(0, 0, screenWidth, screenHeight)
+    ctx.fillStyle = this.getColor(this.defaultBgNum)
+    ctx.fillRect(0, 0, screenWidth, screenHeight)
 
     ctx.font = `24px ${fontFamily}`
-    ctx.fillStyle = '#fff'
+    ctx.fillStyle = this.getColor(this.defaultFgNum)
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 50)
@@ -712,7 +715,7 @@ module.exports = class ScreenRenderer {
       ctx.save()
       ctx.translate(screenWidth / 2, screenHeight / 2 + 20)
 
-      ctx.strokeStyle = '#fff'
+      ctx.strokeStyle = this.getColor(this.defaultFgNum)
       ctx.lineWidth = 5
       ctx.lineCap = 'round'
 

@@ -73,13 +73,16 @@ module.exports = function (opts) {
 
   let isFullscreen = false
   let fitScreen = false
+  let screenPadding = screen.window.padding
   let fitScreenIfNeeded = function fitScreenIfNeeded () {
     if (isFullscreen) {
       screen.window.fitIntoWidth = window.screen.width
       screen.window.fitIntoHeight = window.screen.height
+      screen.window.padding = 0
     } else {
-      screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 20 : 0
+      screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
       screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
+      screen.window.padding = screenPadding
     }
   }
   fitScreenIfNeeded()
