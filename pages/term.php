@@ -76,13 +76,7 @@
 <script>
   try {
     window.noAutoShow = true;
-    termInit({
-      labels: '%j:labels_seq%',
-	  theme: +'%theme%',
-      defaultFg: +'%default_fg%',
-	  defaultBg: +'%default_bg%',
-	  allFn: !!+'%want_all_fn%',
-    });
+    termInit({ allFn: !!+'%want_all_fn%', });
   } catch (e) {
     console.error(e);
 	  <?php if (!DEBUG): ?>

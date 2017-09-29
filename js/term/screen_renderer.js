@@ -9,6 +9,21 @@ const frakturExceptions = {
   'Z': '\u2128'
 }
 
+// TODO do not repeat - this is also defined in screen_parser ...
+/* eslint-disable no-multi-spaces */
+const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
+const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
+const ATTR_BOLD      = (1 << 2)  // Bold font
+const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
+const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
+const ATTR_BLINK     = (1 << 5)  // Blinking
+const ATTR_ITALIC    = (1 << 6)  // Italic font
+const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
+const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
+const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
+const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
+/* eslint-enable no-multi-spaces */
+
 module.exports = class ScreenRenderer {
   constructor (screen) {
     this.screen = screen
@@ -203,11 +218,11 @@ module.exports = class ScreenRenderer {
     let underline = false
     let strike = false
     let overline = false
-    if (attrs & (1 << 1)) ctx.globalAlpha = 0.5
-    if (attrs & (1 << 3)) underline = true
-    if (attrs & (1 << 5)) text = ScreenRenderer.alphaToFraktur(text)
-    if (attrs & (1 << 6)) strike = true
-    if (attrs & (1 << 7)) overline = true
+    if (attrs & ATTR_FAINT) ctx.globalAlpha = 0.5
+    if (attrs & ATTR_UNDERLINE) underline = true
+    if (attrs & ATTR_FRAKTUR) text = ScreenRenderer.alphaToFraktur(text)
+    if (attrs & ATTR_STRIKE) strike = true
+    if (attrs & ATTR_OVERLINE) overline = true
 
     ctx.fillStyle = this.getColor(fg)
 
@@ -446,7 +461,7 @@ module.exports = class ScreenRenderer {
     ctx.textBaseline = 'middle'
 
     // bits in the attr value that affect the font
-    const FONT_MASK = 0b101
+    const FONT_MASK = ATTR_BOLD | ATTR_ITALIC
 
     // Map of (attrs & FONT_MASK) -> Array of cell indices
     let fontGroups = new Map()
@@ -471,13 +486,13 @@ module.exports = class ScreenRenderer {
       let bg = this.screen.screenBG[cell] | 0
       let attrs = this.screen.screenAttrs[cell] | 0
 
-      if (!(attrs & (1 << 8))) fg = this.defaultFgNum
-      if (!(attrs & (1 << 9))) bg = this.defaultBgNum
+      if (!(attrs & ATTR_FG)) fg = this.defaultFgNum
+      if (!(attrs & ATTR_BG)) bg = this.defaultBgNum
 
-      if (attrs & (1 << 10)) [fg, bg] = [bg, fg] // swap - reversed character colors
+      if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
       if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
 
-      if (attrs & (1 << 4) && !this.blinkStyleOn) {
+      if (attrs & ATTR_BLINK && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
         // set text to nothing so drawCharacter doesn't draw anything
         text = ''
@@ -592,8 +607,8 @@ module.exports = class ScreenRenderer {
       // set font once because in Firefox, this is a really slow action for some
       // reason
       let modifiers = {}
-      if (font & 1) modifiers.weight = 'bold'
-      if (font & 1 << 2) modifiers.style = 'italic'
+      if (font & ATTR_BOLD) modifiers.weight = 'bold'
+      if (font & ATTR_ITALIC) modifiers.style = 'italic'
       ctx.font = this.screen.getFont(modifiers)
 
       for (let data of fontGroups.get(font)) {
