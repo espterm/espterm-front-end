@@ -220,7 +220,7 @@ module.exports = class TermScreen extends EventEmitter {
           selectionPos[1]}px)`
       }
 
-      if (!touchDidMove) {
+      if (!touchDidMove && !this.mouseMode.clicks) {
         this.emit('tap', Object.assign(e, {
           x: touchPosition[0],
           y: touchPosition[1]
