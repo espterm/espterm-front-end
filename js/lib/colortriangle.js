@@ -293,32 +293,12 @@ module.exports = class ColorTriangle {
   }
 
   _getRelativeCoordinates (evt) {
-    let pos = {}
-    let offset = {}
-    let ref
-
-    // FIXME this doesn't really work with scroll
-    // this.triangle is the canvas element
-
-    ref = this.triangle.offsetParent
-
-    pos.x = evt.touches ? evt.touches[0].pageX : evt.pageX
-    pos.y = evt.touches ? evt.touches[0].pageY : evt.pageY
-
-    offset.left = this.triangle.offsetLeft
-    offset.top = this.triangle.offsetTop
-
-    while (ref) {
-
-      offset.left += ref.offsetLeft
-      offset.top += ref.offsetTop
-
-      ref = ref.offsetParent
-    }
+    let elem = this.triangle
+    let rect = elem.getBoundingClientRect()
 
     return {
-      x: pos.x - offset.left,
-      y: pos.y - offset.top
+      x: evt.clientX - rect.x,
+      y: evt.clientY - rect.y
     }
   }
 
