@@ -212,8 +212,8 @@ module.exports = class ScreenParser {
         this.screen.beep()
 
       } else if (topic === TOPIC_INTERNAL) {
-
         // debug info
+
         const flags = du(strArray[ci++])
         const cursorAttrs = du(strArray[ci++])
         const regionStart = du(strArray[ci++])
@@ -222,15 +222,25 @@ module.exports = class ScreenParser {
         const charsetG0 = strArray[ci++]
         const charsetG1 = strArray[ci++]
         const freeHeap = du(strArray[ci++])
-        const numClients = du(strArray[ci++])
-        // TODO do something with those
+        const clientCount = du(strArray[ci++])
 
+        this.emit('internal', {
+          flags,
+          cursorAttrs,
+          regionStart,
+          regionEnd,
+          charsetGx,
+          charsetG0,
+          charsetG1,
+          freeHeap,
+          clientCount
+        })
       } else if (topic === TOPIC_CONTENT) {
         // set screen content
 
         const frameY = du(strArray[ci++])
         const frameX = du(strArray[ci++])
-        const frameHeight = du(strArray[ci++]) // FIXME unused, useless data!
+        const frameHeight = du(strArray[ci++])
         const frameWidth = du(strArray[ci++])
 
         // content
@@ -239,7 +249,7 @@ module.exports = class ScreenParser {
         let attrs = 0
         let cell = 0 // cell index
         let lastChar = ' '
-        let screenLength = this.screen.window.width * this.screen.window.height
+        let screenLength = frameWidth * frameHeight
 
         if (resized) {
           this.screen.updateSize()
@@ -258,11 +268,13 @@ module.exports = class ScreenParser {
           let myAttrs = attrs
           let hasFG = attrs & ATTR_FG
           let hasBG = attrs & ATTR_BG
+          let cellFG = fg
+          let cellBG = bg
 
           // use 0,0 if no fg/bg. this is to match back-end implementation
           // and allow leaving out fg/bg setting for cells with none
-          if (!hasFG) fg = 0
-          if (!hasBG) bg = 0
+          if (!hasFG) cellFG = 0
+          if (!hasBG) cellBG = 0
 
           if ((myAttrs & MASK_BLINK) !== 0 &&
             ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
@@ -281,16 +293,14 @@ module.exports = class ScreenParser {
           let cellYInFrame = Math.floor(cell / frameWidth)
           let index = (frameY + cellYInFrame) * this.screen.window.width + frameX + cellXInFrame
 
-          let cellFg = fg
-
           // 8 dark system colors turn bright when bold
-          if ((myAttrs & ATTR_BOLD) && !(myAttrs & ATTR_FAINT) && hasFG && fg < 8) {
-            cellFg += 8
+          if ((myAttrs & ATTR_BOLD) && !(myAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
+            cellFG += 8
           }
 
           this.screen.screen[index] = lastChar
-          this.screen.screenFG[index] = cellFg
-          this.screen.screenBG[index] = bg
+          this.screen.screenFG[index] = cellFG
+          this.screen.screenBG[index] = cellBG
           this.screen.screenAttrs[index] = myAttrs
         }
 

@@ -34,7 +34,6 @@ module.exports = function initButtons (input) {
 
   // sync with DOM
   let update = function updateButtons () {
-    console.log(labels)
     if (labels.length > buttons.length) {
       for (let i = buttons.length; i < labels.length; i++) {
         pushButton()

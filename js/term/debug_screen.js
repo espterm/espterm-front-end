@@ -247,14 +247,30 @@ module.exports = function attachDebugScreen (screen) {
     return `((${y},${x})=${cell}:${hexcode}:F${cellFG}:B${cellBG}:A${cellAttrs.toString(2)})`
   }
 
+  let internalInfo = {}
+
   updateToolbar = () => {
     if (!toolbarAttached) return
     let text = `C((${screen.cursor.y},${screen.cursor.x}),hang:${screen.cursor.hanging},vis:${screen.cursor.visible})`
     if (mouseHoverCell) {
       text += ' m' + getCellData(mouseHoverCell[1] * screen.window.width + mouseHoverCell[0])
     }
+    if ('flags' in internalInfo) {
+      // we got ourselves some internal data
+      text += ' '
+      text += ` flags:${internalInfo.flags}`
+      text += ` curAttrs:${internalInfo.cursorAttrs}`
+      text += ` Region:${internalInfo.regionStart}->${internalInfo.regionEnd}`
+      text += ` Charset:${internalInfo.charsetGx} (0:${internalInfo.charsetG0},1:${internalInfo.charsetG1})`
+      text += ` Heap:${internalInfo.freeHeap}`
+      text += ` Clients:${internalInfo.clientCount}`
+    }
     dataDisplay.textContent = text
   }
 
   screen.on('draw', updateToolbar)
+  screen.on('internal', data => {
+    internalInfo = data
+    updateToolbar()
+  })
 }
