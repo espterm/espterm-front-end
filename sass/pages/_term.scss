@@ -381,3 +381,23 @@ body.pseudo-fullscreen {
 	display: inline-block;
 	padding: 5px;
 }
+
+.theme-nav-btn {
+	width: 2em;
+	height: 2em;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	background: #4c4c4c;
+	color: #eaeaea;
+	margin: 5px;
+	border-radius: 5px;
+
+	@include noselect();
+
+	cursor: pointer;
+	position: relative;
+	&:active {
+		top: 1px;
+	}
+}

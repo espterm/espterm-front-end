@@ -86,11 +86,9 @@ module.exports = class ScreenParser {
         const newHeight = du(strArray[ci++])
         const newWidth = du(strArray[ci++])
         const theme = du(strArray[ci++])
-        const defFg = du(strArray[ci++]) | (du(strArray[ci++]) << 12)
-        const defBg = du(strArray[ci++]) | (du(strArray[ci++]) << 12)
+        const defFg = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
+        const defBg = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
         const attributes = du(strArray[ci++])
-
-        console.log(`set colors ${defFg}, ${defBg}, theme ${theme}`)
 
         // theming
         this.screen.renderer.loadTheme(theme)
@@ -323,8 +321,8 @@ module.exports = class ScreenParser {
             case SEQ_SET_FG:
               data = du(strArray[ci++])
               if (data & 0x10000) {
-                data ^= 0x10000
-                data |= du(strArray[ci++]) << 12
+                data &= 0xFFF
+                data |= (du(strArray[ci++]) & 0xFFF) << 12
                 data += 256
               }
               fg = data
@@ -333,8 +331,8 @@ module.exports = class ScreenParser {
             case SEQ_SET_BG:
               data = du(strArray[ci++])
               if (data & 0x10000) {
-                data ^= 0x10000
-                data |= du(strArray[ci++]) << 12
+                data &= 0xFFF
+                data |= (du(strArray[ci++]) & 0xFFF) << 12
                 data += 256
               }
               bg = data

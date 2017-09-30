@@ -98,24 +98,26 @@ exports.buildColorTable = function () {
 exports.SELECTION_FG = '#333'
 exports.SELECTION_BG = '#b2d7fe'
 
-function resolveColor (themeN, shade) {
-  shade = +shade
-  if (shade < 16) shade = themes[themeN][shade]
-  else {
-    shade = exports.buildColorTable()[shade]
-  }
-  return shade
-}
-
-exports.themePreview = function (n) {
+exports.themePreview = function (themeN) {
   document.querySelectorAll('[data-fg]').forEach((elem) => {
     let shade = elem.dataset.fg
-    if (/^\d+$/.test(shade)) shade = resolveColor(n, shade)
+    if (/^\d+$/.test(shade)) shade = exports.toCss(shade, themeN)
     elem.style.color = shade
   })
   document.querySelectorAll('[data-bg]').forEach((elem) => {
     let shade = elem.dataset.bg
-    if (/^\d+$/.test(shade)) shade = resolveColor(n, shade)
+    if (/^\d+$/.test(shade)) shade = exports.toCss(shade, themeN)
     elem.style.backgroundColor = shade
   })
+}
+
+exports.toCss = function (shade, themeN) {
+  if (/^\d+$/.test(shade)) {
+    shade = +shade
+    if (shade < 16) shade = themes[themeN][shade]
+    else {
+      shade = exports.buildColorTable()[shade]
+    }
+  }
+  return shade
 }
