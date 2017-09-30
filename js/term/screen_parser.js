@@ -249,7 +249,8 @@ module.exports = class ScreenParser {
         let attrs = 0
         let cell = 0 // cell index
         let lastChar = ' '
-        let screenLength = frameWidth * frameHeight
+        let frameLength = frameWidth * frameHeight
+        let screenLength = this.screen.window.width * this.screen.window.height
 
         if (resized) {
           this.screen.updateSize()
@@ -304,7 +305,7 @@ module.exports = class ScreenParser {
           this.screen.screenAttrs[index] = myAttrs
         }
 
-        while (ci < strArray.length && cell < screenLength) {
+        while (ci < strArray.length && cell < frameLength) {
           let character = strArray[ci++]
           let charCode = character.codePointAt(0)
 
@@ -314,7 +315,7 @@ module.exports = class ScreenParser {
               count = du(strArray[ci++])
               for (let j = 0; j < count; j++) {
                 pushCell()
-                if (++cell > screenLength) break
+                if (++cell > frameLength) break
               }
               break
 
