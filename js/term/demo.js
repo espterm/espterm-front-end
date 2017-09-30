@@ -2,6 +2,8 @@ const EventEmitter = require('events')
 const { parse2B } = require('../utils')
 const { themes } = require('./themes')
 
+const encodeAsCodePoint = i => String.fromCodePoint(i + (i >= 0xD800 ? 0x801 : 1))
+
 class ANSIParser {
   constructor (handler) {
     this.reset()
@@ -113,7 +115,6 @@ class ANSIParser {
   }
 }
 const TERM_DEFAULT_STYLE = [0, 0, 0]
-const TERM_MIN_DRAW_DELAY = 10
 
 let getRainbowColor = t => {
   let r = Math.floor(Math.sin(t) * 2.5 + 2.5)
@@ -270,45 +271,45 @@ class ScrollingTerminal {
   }
   getScreenOpts () {
     let data = 'O'
-    data += String.fromCodePoint(26)
-    data += String.fromCodePoint(81)
-    data += String.fromCodePoint(this.theme + 1)
-    data += String.fromCodePoint(8)
-    data += String.fromCodePoint(1)
-    data += String.fromCodePoint(1)
-    data += String.fromCodePoint(1)
+    data += encodeAsCodePoint(25)
+    data += encodeAsCodePoint(80)
+    data += encodeAsCodePoint(this.theme)
+    data += encodeAsCodePoint(7)
+    data += encodeAsCodePoint(0)
+    data += encodeAsCodePoint(0)
+    data += encodeAsCodePoint(0)
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
     attributes |= (this.cursor.style << 9)
-    data += String.fromCodePoint(attributes + 1)
+    data += encodeAsCodePoint(attributes)
     return data
   }
   getButtons () {
     let data = 'B'
-    data += String.fromCodePoint(6)
+    data += encodeAsCodePoint(5)
     data += this.buttonLabels.map(x => x + '\x01').join('')
     return data
   }
   getCursor () {
     let data = 'C'
-    data += String.fromCodePoint(this.cursor.y + 1)
-    data += String.fromCodePoint(this.cursor.x + 1)
-    data += String.fromCodePoint(1)
+    data += encodeAsCodePoint(this.cursor.y)
+    data += encodeAsCodePoint(this.cursor.x)
+    data += encodeAsCodePoint(0)
     return data
   }
   encodeColor (color) {
     if (color < 256) {
-      return String.fromCodePoint(color + 1)
+      return encodeAsCodePoint(color)
     } else {
       color -= 256
-      return String.fromCodePoint(((color & 0xFFF) | 0x10000) + 1) + String.fromCodePoint((color >> 12) + 1)
+      return encodeAsCodePoint((color & 0xFFF) | 0x10000) + encodeAsCodePoint(color >> 12)
     }
   }
   serializeScreen () {
     let serialized = 'S'
-    serialized += String.fromCodePoint(1) + String.fromCodePoint(1)
-    serialized += String.fromCodePoint(this.height + 1) + String.fromCodePoint(this.width + 1)
+    serialized += encodeAsCodePoint(0) + encodeAsCodePoint(0)
+    serialized += encodeAsCodePoint(this.height) + encodeAsCodePoint(this.width)
 
     let lastStyle = [null, null, null]
     let index = 0
@@ -334,14 +335,14 @@ class ScrollingTerminal {
 
       if (setForeground && setBackground) {
         if (foreground < 256 && background < 256) {
-          serialized += '\x03' + String.fromCodePoint(((background << 8) | foreground) + 1)
+          serialized += '\x03' + encodeAsCodePoint((background << 8) | foreground)
         } else {
           serialized += '\x05' + this.encodeColor(foreground)
           serialized += '\x06' + this.encodeColor(background)
         }
       } else if (setForeground) serialized += '\x05' + this.encodeColor(foreground)
       else if (setBackground) serialized += '\x06' + this.encodeColor(background)
-      if (setAttributes) serialized += '\x04' + String.fromCodePoint(attributes + 1)
+      if (setAttributes) serialized += '\x04' + encodeAsCodePoint(attributes)
       lastStyle = style
 
       serialized += cell[0]
@@ -372,7 +373,7 @@ class ScrollingTerminal {
       topicData.push(screen)
     }
     if (!topicData.length) return ''
-    return 'U' + String.fromCodePoint(topics + 1) + topicData.join('')
+    return 'U' + encodeAsCodePoint(topics) + topicData.join('')
   }
   loadTimer () {
     clearInterval(this._loadTimer)
