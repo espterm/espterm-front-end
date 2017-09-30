@@ -26,11 +26,6 @@ exports.cr = function cr (hdl) {
   }
 }
 
-/** Convert any to bool safely */
-exports.bool = function bool (x) {
-  return (x === 1 || x === '1' || x === true || x === 'true')
-}
-
 /** Decode number from 2B encoding */
 exports.parse2B = function parse2B (s, i = 0) {
   return (s.charCodeAt(i++) - 1) + (s.charCodeAt(i) - 1) * 127

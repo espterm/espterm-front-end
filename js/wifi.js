@@ -1,9 +1,11 @@
 const $ = require('./lib/chibi')
-const { mk, bool } = require('./utils')
+const { mk } = require('./utils')
 const tr = require('./lang')
 
-;(function (w) {
-  const authStr = ['Open', 'WEP', 'WPA', 'WPA2', 'WPA/WPA2']
+{
+  const w = window.WiFi = {}
+
+  const authTypes = ['Open', 'WEP', 'WPA', 'WPA2', 'WPA/WPA2']
   let curSSID
 
   // Get XX % for a slider input
@@ -20,9 +22,13 @@ const tr = require('./lang')
     $('#sta-nw-nil').toggleClass('hidden', name.length > 0)
 
     $('#sta-nw .essid').html($.htmlEscape(name))
-    const nopw = !password || password.length === 0
-    $('#sta-nw .passwd').toggleClass('hidden', nopw)
-    $('#sta-nw .nopasswd').toggleClass('hidden', !nopw)
+    const hasPassword = !!password
+
+    // (the following is kind of confusing with the double-double negations,
+    // but it works)
+    $('#sta-nw .passwd').toggleClass('hidden', !hasPassword)
+    $('#sta-nw .nopasswd').toggleClass('hidden', hasPassword)
+
     $('#sta-nw .ip').html(ip.length > 0 ? tr('wifi.connected_ip_is') + ip : tr('wifi.not_conn'))
   }
 
@@ -40,7 +46,7 @@ const tr = require('./lang')
 
     if (status !== 200) {
       // bad response
-      rescan(5000) // wait 5sm then retry
+      rescan(5000) // wait 5s then retry
       return
     }
 
@@ -52,7 +58,7 @@ const tr = require('./lang')
       return
     }
 
-    const done = !bool(resp.result.inProgress) && (resp.result.APs.length > 0)
+    const done = !resp.result.inProgress && resp.result.APs.length > 0
     rescan(done ? 15000 : 1000)
     if (!done) return // no redraw yet
 
@@ -65,9 +71,7 @@ const tr = require('./lang')
     $('#ap-loader').toggleClass('hidden', done)
 
     // scan done
-    resp.result.APs.sort(function (a, b) {
-      return b.rssi - a.rssi
-    }).forEach(function (ap) {
+    resp.result.APs.sort((a, b) => b.rssi - a.rssi).forEach(function (ap) {
       ap.enc = parseInt(ap.enc)
 
       if (ap.enc > 4) return // hide unsupported auths
@@ -90,7 +94,7 @@ const tr = require('./lang')
       $(inner).addClass('inner')
         .htmlAppend(`<div class="rssi">${ap.rssi_perc}</div>`)
         .htmlAppend(`<div class="essid" title="${escapedSSID}">${escapedSSID}</div>`)
-        .htmlAppend(`<div class="auth">${authStr[ap.enc]}</div>`)
+        .htmlAppend(`<div class="auth">${authTypes[ap.enc]}</div>`)
 
       $item.on('click', function () {
         let $th = $(this)
@@ -164,4 +168,4 @@ const tr = require('./lang')
 
   w.init = wifiInit
   w.startScanning = startScanning
-})(window.WiFi = {})
+}
