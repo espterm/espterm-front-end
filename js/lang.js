@@ -1,14 +1,14 @@
 // Generated from PHP locale file
 let _tr = {
-    "wifi.connected_ip_is": "Verbunden, IP ist ",
-    "wifi.not_conn": "Nicht verbunden.",
-    "wifi.enter_passwd": "Passwort für \":ssid:\"",
-    "term_nav.fullscreen": "Vollbild",
-    "term_conn.connecting": "Verbinden",
-    "term_conn.waiting_content": "Warten auf Inhalt",
-    "term_conn.disconnected": "Nicht verbunden",
-    "term_conn.waiting_server": "Warten auf Server",
-    "term_conn.reconnecting": "Verbinden"
+    "wifi.connected_ip_is": "Connected, IP is ",
+    "wifi.not_conn": "Not connected.",
+    "wifi.enter_passwd": "Enter password for \":ssid:\"",
+    "term_nav.fullscreen": "Fullscreen",
+    "term_conn.connecting": "Connecting",
+    "term_conn.waiting_content": "Waiting for content",
+    "term_conn.disconnected": "Disconnected",
+    "term_conn.waiting_server": "Waiting for server",
+    "term_conn.reconnecting": "Reconnecting"
 };
 
 module.exports = function tr (key) { return _tr[key] || '?' + key + '?' }
