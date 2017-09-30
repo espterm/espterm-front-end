@@ -113,7 +113,7 @@ return [
 
 	// Wifi config page
 
-	'wifi.ap' => 'Vlastní hotspot (AP)',
+	'wifi.ap' => 'WiFi hotspot',
 	'wifi.sta' => 'Připojení k~externí síti',
 
 	'wifi.enable' => 'Zapnuto',
@@ -126,7 +126,7 @@ return [
 
 	'wifi.not_conn' => 'Nepřipojen.',
 	'wifi.sta_none' => 'Žádná',
-	'wifi.sta_active_pw' => '🔒 Heslo uloženo',
+	'wifi.sta_active_pw' => '🔒 Uložené heslo',
 	'wifi.sta_active_nopw' => '🔓 Bez hesla',
 	'wifi.connected_ip_is' => 'Připojen, IP: ',
 	'wifi.sta_password' => 'Heslo:',
@@ -142,114 +142,113 @@ return [
 
 	'wificonn.status' => 'Stav:',
 	'wificonn.back_to_config' => 'Zpět k~nastavení WiFi',
-	'wificonn.telemetry_lost' => 'Telemetry lost; something went wrong, or your device disconnected.',
+	'wificonn.telemetry_lost' => 'Spojení bylo přerušeno; připojování selhalo, nebo jste byli odpojeni od sítě.',
 	'wificonn.explain_android_sucks' => '
-		If you\'re configuring ESPTerm via a smartphone, or were connected 
-		from another external network, your device may lose connection and 
-		this progress indicator won\'t work. Please wait a while (~ 15 seconds), 
-		then check if the connection succeeded.',
+		Pokud ESPTerm konfigurujete pomocí mobilu nebo z~externí sítě, může se stát
+		že některé ze zařízení změní síť a~ukazatel průběhu přestane fungovat. 
+		Počkejte ~15s a pak zkontrolujte, zda se připojení zdařilo.
+		',
 
 	'wificonn.explain_reset' => '
-		To force enable the built-in AP, hold the BOOT button until the blue LED 
-		starts flashing. Hold the button longer (until the LED flashes rapidly) 
-		for a "factory reset".',
+		Interní hotspot lze kdykoliv vynutit podržením tlačítka BOOT, až modrá LED začne blikat.
+		Podržíte-li tlačítko déle (LED začne blikat rychleji), dojde k~obnovení do výchozích anstavení.',
 
-	'wificonn.disabled' =>"Station mode is disabled.",
-	'wificonn.idle' =>"Idle, not connected and has no IP.",
-	'wificonn.success' => "Connected! Received IP ",
-	'wificonn.working' => "Connecting to selected AP",
-	'wificonn.fail' => "Connection failed, check settings & try again. Cause: ",
+	'wificonn.disabled' => "Režim klienta není povolen.",
+	'wificonn.idle' => "Žádná IP adresa, připojování neprobíhá.",
+	'wificonn.success' => "Připijen! IP adresa je ",
+	'wificonn.working' => "Připojuji k zvolené síti",
+	'wificonn.fail' => "Připojení selhalo, zkontrolujte nastavení a~pokus opakujte. Důvod: ",
 
 	// Access restrictions form
 
-	'pwlock.title' => 'Access Restrictions',
+	'pwlock.title' => 'Omezení přístupu',
 	'pwlock.explain' => '
-		Some parts, or all of the web interface can be protected by a password prompt.
-		Leave the new password fields empty if you do not wish to change it.<br>
-		The default password is "%def_access_pw%".
+		Části webového rozhraní lze chránit heslem. Nemáte-li v úmyslu heslo měnit, 
+		do jeho políčka nic nevyplňujte.<br>
+		Výchozí přístupové heslo je "%def_access_pw%".
 	',
-	'pwlock.region' => 'Protected pages',
-	'pwlock.region.none' => 'None, all open',
-	'pwlock.region.settings_noterm' => 'WiFi, Net & System settings',
-	'pwlock.region.settings' => 'All settings pages',
-	'pwlock.region.menus' => 'This entire menu section',
-	'pwlock.region.all' => 'Everything, even terminal',
-	'pwlock.new_access_pw' => 'New password',
-	'pwlock.new_access_pw2' => 'Repeat',
-	'pwlock.admin_pw' => 'Admin password',
-	'pwlock.access_name' => 'Username',
+	'pwlock.region' => 'Chránit heslem',
+	'pwlock.region.none' => 'Nic, vše volně přístupné',
+	'pwlock.region.settings_noterm' => 'Nastavení, mimo terminál',
+	'pwlock.region.settings' => 'Všechna nastavení',
+	'pwlock.region.menus' => 'Celá admin. sekce',
+	'pwlock.region.all' => 'Vše, včetně terminálu',
+	'pwlock.new_access_pw' => 'Nové přístupové heslo',
+	'pwlock.new_access_pw2' => 'Zopakujte nové heslo',
+	'pwlock.admin_pw' => 'Systémové heslo',
+	'pwlock.access_name' => 'Uživatelské jméno',
 
 	// Setting admin password
 
-	'adminpw.title' => 'Change Admin Password',
+	'adminpw.title' => 'Změna systémového hesla',
 	'adminpw.explain' =>
 		'
-		The "admin password" is used to manipulate the stored default settings 
-		and to change access restrictions. This password is not saved as part 
-		of the main config, i.e. using save / restore does not affect this 
-		password. When the admin password is forgotten, the easiest way to 
-		re-gain access is to wipe and re-flash the chip.<br>
-		The default admin password is "%def_admin_pw%".
+		Systémové heslo slouží k úpravám uložených výchozích nastavení
+		a ke změně přístupových oprávnění.
+		Toto heslo je uloženo mimo ostatní data, obnovení do výchozách nastavení
+		na něj nemá vliv.
+		Toto heslo nelze jednoduše obnovit, v případě zapomenutí vymažte flash paměť a obnovte firmware.<br>
+		Vychozí systémové heslo je "%def_admin_pw%".
 		',
-	'adminpw.new_admin_pw' => 'New admin password',
-	'adminpw.new_admin_pw2' => 'Repeat',
-	'adminpw.old_admin_pw' => 'Old admin password',
+	'adminpw.new_admin_pw' => 'Nové systémové heslo',
+	'adminpw.new_admin_pw2' => 'Zopakujte nové heslo',
+	'adminpw.old_admin_pw' => 'Původní systémové heslo',
 
 	// Persist form
 
-	'persist.title' => 'Save & Restore',
+	'persist.title' => 'Záloha a~obnovení konfigurace',
 	'persist.explain' => '
-		ESPTerm saves all settings in Flash. The active settings can be copied to
-		the "defaults area" and restored later using the blue button below.
+		Všechna nastavení jsou ukládána do flash paměti. V~paměti jsou
+		vyhrazené dva oddíly, aktivní nastavení a záloha. Zálohu lze přepsat
+		za použití systémového hesla, původní nastavení z ní pak můžete kdykoliv obnovit.
+		Pro obnovení ze zálohy stačí podržet tlačítko BOOT, až modrá LED začne rychle blikat.
 		',
-	'persist.confirm_restore' => 'Restore all settings to their default values?',
+	'persist.confirm_restore' => 'Chcete obnovit všechna nastavení?',
 	'persist.confirm_restore_hard' =>
-		'Restore to firmware default settings? This will reset ' .
-		'all active settings and switch to AP mode with the default SSID.',
+		'Opravdu chcete načíst tovární nastavení? Všechna nastavení kromě zálohy a systémového hesla
+		 budou přepsána, včetně nastavení WiFi!',
 	'persist.confirm_store_defaults' =>
-		'Enter admin password to confirm you want to overwrite the default settings.',
-	'persist.password' => 'Admin password:',
-	'persist.restore_defaults' => 'Reset to saved defaults',
-	'persist.write_defaults' => 'Save active settings as defaults',
-	'persist.restore_hard' => 'Reset active settings to factory defaults',
+		'Zadejte systémové heslo pro přepsání zálohy aktuálními parametry.',
+	'persist.password' => 'Systémové heslo:',
+	'persist.restore_defaults' => 'Obnovit ze zálohy',
+	'persist.write_defaults' => 'Zálohovat aktuální nastavení',
+	'persist.restore_hard' => 'Načíst tovární nastavení',
 	'persist.restore_hard_explain' =>
-		'(This clears the WiFi config! Does not affect saved defaults or admin password.)',
+		'(Tímto vymažete nastavení WiFi! Záloha a systémové heslo zůstanou beze změny.)',
 
 	// UART settings form
 
-	'uart.title' => 'Serial Port Parameters',
+	'uart.title' => 'Sériový port',
 	'uart.explain' => '
-		This form controls the communication UART. The debug UART is fixed
-		at 115.200 baud, one stop-bit and no parity.
+		Tímto formulářem můžete upravit nastavení komunikačního UARTu. 
+		Ladicí výpisy jsou na pinu P2 s~pevnými parametry: 115200 baud, 1 stop bit, žádná parita. 
 		',
-	'uart.baud' => 'Baud rate',
-	'uart.parity' => 'Parity',
-	'uart.parity.none' => 'None',
-	'uart.parity.odd' => 'Odd',
-	'uart.parity.even' => 'Even',
-	'uart.stop_bits' => 'Stop-bits',
-	'uart.stop_bits.one' => 'One',
-	'uart.stop_bits.one_and_half' => 'One and half',
-	'uart.stop_bits.two' => 'Two',
+	'uart.baud' => 'Rychlost',
+	'uart.parity' => 'Parita',
+	'uart.parity.none' => 'Źádná',
+	'uart.parity.odd' => 'Lichá',
+	'uart.parity.even' => 'Sudá',
+	'uart.stop_bits' => 'Stop-bity',
+	'uart.stop_bits.one' => '1',
+	'uart.stop_bits.one_and_half' => '1.5',
+	'uart.stop_bits.two' => '2',
 
 	// HW tuning form
 
-	'hwtuning.title' => 'Hardware Tuning',
+	'hwtuning.title' => 'Tuning hardwaru',
 	'hwtuning.explain' => '
-		ESP8266 can be overclocked from 80&nbsp;MHz to 160&nbsp;MHz. This will make 
-		it more responsive and allow faster screen updates at the expense of slightly 
-		higher power consumption. This can also make it more susceptible to interference.
-		Use with care.
+		ESP8266 lze přetaktovat z~80~MHz na 160~MHz. Vyšší rychlost umožní rychlejší překreslování
+		obrazovky a stránky se budou načítat rychleji. Nevýhodou je vyšší spotřeba a citlivost k~rušení.
 		',
-	'hwtuning.overclock' => 'Overclock to 160MHz',
+	'hwtuning.overclock' => 'Přetaktovat na 160~MHz',
 
 	// Generic button / dialog labels
 
-	'apply' => 'Apply!',
-	'enabled' => 'Enabled',
-	'disabled' => 'Disabled',
-	'yes' => 'Yes',
-	'no' => 'No',
+	'apply' => 'Uložit!',
+	'enabled' => 'Zapnuto',
+	'disabled' => 'Vypnuto',
+	'yes' => 'Ano',
+	'no' => 'Ne',
 	'confirm' => 'OK',
-	'form_errors' => 'Validation errors for:',
+	'form_errors' => 'Neplatné hodnoty:',
 ];
