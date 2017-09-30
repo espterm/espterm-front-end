@@ -36,30 +36,41 @@ class ANSIParser {
         this.handler('insert-blanks', numOr1)
       } else if (type === 'q') this.handler('set-cursor-style', numOr1)
       else if (type === 'm') {
-        if (!numbers.length || numbers[0] === 0) {
+        if (!numbers.length) {
           this.handler('reset-style')
           return
         }
-        let type = numbers[0]
-        if (type === 1) this.handler('add-attrs', 1) // bold
-        else if (type === 2) this.handler('add-attrs', 1 << 1) // faint
-        else if (type === 3) this.handler('add-attrs', 1 << 2) // italic
-        else if (type === 4) this.handler('add-attrs', 1 << 3) // underline
-        else if (type === 5 || type === 6) this.handler('add-attrs', 1 << 4) // blink
-        else if (type === 7) this.handler('add-attrs', -1) // invert
-        else if (type === 9) this.handler('add-attrs', 1 << 6) // strike
-        else if (type === 20) this.handler('add-attrs', 1 << 5) // fraktur
-        else if (type >= 30 && type <= 37) this.handler('set-color-fg', type % 10)
-        else if (type >= 40 && type <= 47) this.handler('set-color-bg', type % 10)
-        else if (type === 39) this.handler('reset-color-fg')
-        else if (type === 49) this.handler('reset-color-bg')
-        else if (type >= 90 && type <= 98) this.handler('set-color-fg', (type % 10) + 8)
-        else if (type >= 100 && type <= 108) this.handler('set-color-bg', (type % 10) + 8)
-        else if (type === 38 || type === 48) {
-          if (numbers[1] === 5) {
-            let color = (numbers[2] | 0) & 0xFF
-            if (type === 38) this.handler('set-color-fg', color)
-            if (type === 48) this.handler('set-color-bg', color)
+        let type
+        while ((type = numbers.shift())) {
+          if (type === 0) this.handler('reset-style')
+          else if (type === 1) this.handler('add-attrs', 1 << 2) // bold
+          else if (type === 2) this.handler('add-attrs', 1 << 9) // faint
+          else if (type === 3) this.handler('add-attrs', 1 << 6) // italic
+          else if (type === 4) this.handler('add-attrs', 1 << 3) // underline
+          else if (type === 5 || type === 6) this.handler('add-attrs', 1 << 5) // blink
+          else if (type === 7) this.handler('add-attrs', 1 << 4) // invert
+          else if (type === 9) this.handler('add-attrs', 1 << 7) // strike
+          else if (type === 20) this.handler('add-attrs', 1 << 10) // fraktur
+          else if (type >= 30 && type <= 37) this.handler('set-color-fg', type % 10)
+          else if (type >= 40 && type <= 47) this.handler('set-color-bg', type % 10)
+          else if (type === 39) this.handler('reset-color-fg')
+          else if (type === 49) this.handler('reset-color-bg')
+          else if (type >= 90 && type <= 98) this.handler('set-color-fg', (type % 10) + 8)
+          else if (type >= 100 && type <= 108) this.handler('set-color-bg', (type % 10) + 8)
+          else if (type === 38 || type === 48) {
+            let mode = numbers.shift()
+            if (mode === 2) {
+              let r = numbers.shift()
+              let g = numbers.shift()
+              let b = numbers.shift()
+              let color = (r << 16 | g << 8 | b) + 256
+              if (type === 38) this.handler('set-color-fg', color)
+              if (type === 48) this.handler('set-color-bg', color)
+            } else if (mode === 5) {
+              let color = (numbers.shift() | 0) & 0xFF
+              if (type === 38) this.handler('set-color-fg', color)
+              if (type === 48) this.handler('set-color-bg', color)
+            }
           }
         }
       } else if (type === 'h' || type === 'l') {
@@ -101,7 +112,7 @@ class ANSIParser {
     if (!this.joinChunks) this.reset()
   }
 }
-const TERM_DEFAULT_STYLE = 0
+const TERM_DEFAULT_STYLE = [0, 0, 0]
 const TERM_MIN_DRAW_DELAY = 10
 
 let getRainbowColor = t => {
@@ -117,19 +128,20 @@ class ScrollingTerminal {
     this.height = 25
     this.termScreen = screen
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
+    this.buttonLabels = ['', '', '^C', '', 'Help']
 
     this.reset()
 
     this._lastLoad = Date.now()
-    this.termScreen.load(this.serialize())
+    this.loadTimer()
 
     window.showPage()
   }
   reset () {
-    this.style = TERM_DEFAULT_STYLE
+    this.style = TERM_DEFAULT_STYLE.slice()
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
-    this.theme = -1
+    this.theme = 0
     this.rainbow = false
     this.parser.reset()
     this.clear()
@@ -137,13 +149,13 @@ class ScrollingTerminal {
   clear () {
     this.screen = []
     for (let i = 0; i < this.width * this.height; i++) {
-      this.screen.push([' ', this.style])
+      this.screen.push([' ', this.style.slice()])
     }
   }
   scroll () {
     this.screen.splice(0, this.width)
     for (let i = 0; i < this.width; i++) {
-      this.screen.push([' ', TERM_DEFAULT_STYLE])
+      this.screen.push([' ', TERM_DEFAULT_STYLE.slice()])
     }
     this.cursor.y--
   }
@@ -152,7 +164,7 @@ class ScrollingTerminal {
     if (this.cursor.y >= this.height) this.scroll()
   }
   writeChar (character) {
-    this.screen[this.cursor.y * this.width + this.cursor.x] = [character, this.style]
+    this.screen[this.cursor.y * this.width + this.cursor.x] = [character, this.style.slice()]
     this.cursor.x++
     if (this.cursor.x >= this.width) {
       this.cursor.x = 0
@@ -181,12 +193,12 @@ class ScrollingTerminal {
   }
   deleteChar () {  // FIXME unused?
     this.moveBack()
-    this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE])
+    this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE.slice()])
     this.screen.splice(this.cursor.y * this.width + this.cursor.x, 1)
   }
   deleteForward (n) {
     n = Math.min(this.width, n)
-    for (let i = 0; i < n; i++) this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE])
+    for (let i = 0; i < n; i++) this.screen.splice((this.cursor.y + 1) * this.width, 0, [' ', TERM_DEFAULT_STYLE.slice()])
     this.screen.splice(this.cursor.y * this.width + this.cursor.x, n)
   }
   clampCursor () {
@@ -205,11 +217,12 @@ class ScrollingTerminal {
     } else if (action === 'clear') {
       this.clear()
     } else if (action === 'bell') {
-      this.termScreen.load('B')
+      this.termScreen.load('U\x01B')
     } else if (action === 'back') {
       this.moveBack()
     } else if (action === 'new-line') {
       this.newLine()
+      this.cursor.x = 0
     } else if (action === 'return') {
       this.cursor.x = 0
     } else if (action === 'set-cursor') {
@@ -231,17 +244,21 @@ class ScrollingTerminal {
     } else if (action === 'set-cursor-style') {
       this.cursor.style = Math.max(0, Math.min(6, args[0]))
     } else if (action === 'reset-style') {
-      this.style = TERM_DEFAULT_STYLE
+      this.style = TERM_DEFAULT_STYLE.slice()
     } else if (action === 'add-attrs') {
-      this.style |= (args[0] << 16)
+      this.style[2] |= args[0]
     } else if (action === 'set-color-fg') {
-      this.style = (this.style & 0xFFFFFF00) | (1 << 8 << 16) | args[0]
+      this.style[0] = args[0]
+      this.style[2] |= 1
     } else if (action === 'set-color-bg') {
-      this.style = (this.style & 0xFFFF00FF) | (1 << 9 << 16) | (args[0] << 8)
+      this.style[1] = args[0]
+      this.style[2] |= 1 << 1
     } else if (action === 'reset-color-fg') {
-      this.style = this.style & 0xFFFEFF00
+      this.style[0] = 0
+      if (this.style[2] & 1) this.style[2] ^= 1
     } else if (action === 'reset-color-bg') {
-      this.style = this.style & 0xFFFD00FF
+      this.style[1] = 0
+      if (this.style[2] & (1 << 1)) this.style[2] ^= (1 << 1)
     } else if (action === 'hide-cursor') {
       this.cursor.visible = false
     } else if (action === 'show-cursor') {
@@ -250,65 +267,119 @@ class ScrollingTerminal {
   }
   write (text) {
     this.parser.write(text)
-    this.scheduleLoad()
   }
-  serialize () {
-    let serialized = 'S'
-    serialized += String.fromCodePoint(this.height + 1) + String.fromCodePoint(this.width + 1)
-    serialized += String.fromCodePoint(this.cursor.y + 1) + String.fromCodePoint(this.cursor.x + 1)
-
+  getScreenOpts () {
+    let data = 'O'
+    data += String.fromCodePoint(26)
+    data += String.fromCodePoint(81)
+    data += String.fromCodePoint(this.theme + 1)
+    data += String.fromCodePoint(8)
+    data += String.fromCodePoint(1)
+    data += String.fromCodePoint(1)
+    data += String.fromCodePoint(1)
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
     attributes |= (this.cursor.style << 9)
-    serialized += String.fromCodePoint(attributes + 1)
+    data += String.fromCodePoint(attributes + 1)
+    return data
+  }
+  getButtons () {
+    let data = 'B'
+    data += String.fromCodePoint(6)
+    data += this.buttonLabels.map(x => x + '\x01').join('')
+    return data
+  }
+  getCursor () {
+    let data = 'C'
+    data += String.fromCodePoint(this.cursor.y + 1)
+    data += String.fromCodePoint(this.cursor.x + 1)
+    data += String.fromCodePoint(1)
+    return data
+  }
+  encodeColor (color) {
+    if (color < 256) {
+      return String.fromCodePoint(color + 1)
+    } else {
+      color -= 256
+      return String.fromCodePoint(((color & 0xFFF) | 0x10000) + 1) + String.fromCodePoint((color >> 12) + 1)
+    }
+  }
+  serializeScreen () {
+    let serialized = 'S'
+    serialized += String.fromCodePoint(1) + String.fromCodePoint(1)
+    serialized += String.fromCodePoint(this.height + 1) + String.fromCodePoint(this.width + 1)
 
-    let lastStyle = null
+    let lastStyle = [null, null, null]
     let index = 0
     for (let cell of this.screen) {
-      let style = cell[1]
+      let style = cell[1].slice()
       if (this.rainbow) {
         let x = index % this.width
         let y = Math.floor(index / this.width)
-        // C instead of F in mask and 1 << 8 in attrs to change attr bits 8 and 9
-        style = (style & 0xFFFC0000) | (1 << 8 << 16) | getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        // C instead of F in mask and 1 << 8 in attrs to change attr bits 1 and 2
+        style[0] = getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        style[1] = 0
+        style[2] = style[2] | 1
+        if (style[2] & (1 << 1)) style[2] ^= (1 << 1)
         index++
       }
-      if (style !== lastStyle) {
-        let foreground = style & 0xFF
-        let background = (style >> 8) & 0xFF
-        let attributes = (style >> 16) & 0xFFFF
-        let setForeground = foreground !== (lastStyle & 0xFF)
-        let setBackground = background !== ((lastStyle >> 8) & 0xFF)
-        let setAttributes = attributes !== ((lastStyle >> 16) & 0xFFFF)
 
-        if (setForeground && setBackground) serialized += '\x03' + String.fromCodePoint((style & 0xFFFF) + 1)
-        else if (setForeground) serialized += '\x05' + String.fromCodePoint(foreground + 1)
-        else if (setBackground) serialized += '\x06' + String.fromCodePoint(background + 1)
-        if (setAttributes) serialized += '\x04' + String.fromCodePoint(attributes + 1)
-        lastStyle = style
-      }
+      let foreground = style[0]
+      let background = style[1]
+      let attributes = style[2]
+      let setForeground = foreground !== lastStyle[0]
+      let setBackground = background !== lastStyle[1]
+      let setAttributes = attributes !== lastStyle[2]
+
+      if (setForeground && setBackground) {
+        if (foreground < 256 && background < 256) {
+          serialized += '\x03' + String.fromCodePoint(((background << 8) | foreground) + 1)
+        } else {
+          serialized += '\x05' + this.encodeColor(foreground)
+          serialized += '\x06' + this.encodeColor(background)
+        }
+      } else if (setForeground) serialized += '\x05' + this.encodeColor(foreground)
+      else if (setBackground) serialized += '\x06' + this.encodeColor(background)
+      if (setAttributes) serialized += '\x04' + String.fromCodePoint(attributes + 1)
+      lastStyle = style
+
       serialized += cell[0]
     }
     return serialized
   }
-  scheduleLoad () {
-    clearTimeout(this._scheduledLoad)
-    if (this._lastLoad < Date.now() - TERM_MIN_DRAW_DELAY) {
-      this.termScreen.load(this.serialize(), { theme: this.theme })
-      this.theme = -1 // prevent useless theme setting next time
-    } else {
-      this._scheduledLoad = setTimeout(() => {
-        this.termScreen.load(this.serialize())
-      }, TERM_MIN_DRAW_DELAY - this._lastLoad)
+  getUpdate () {
+    let topics = 0
+    let topicData = []
+    let screenOpts = this.getScreenOpts()
+    let buttons = this.getButtons()
+    let cursor = this.getCursor()
+    let screen = this.serializeScreen()
+    if (this._screenOpts !== screenOpts) {
+      this._screenOpts = screenOpts
+      topicData.push(screenOpts)
     }
+    if (this._buttons !== buttons) {
+      this._buttons = buttons
+      topicData.push(buttons)
+    }
+    if (this._cursor !== cursor) {
+      this._cursor = cursor
+      topicData.push(cursor)
+    }
+    if (this._screen !== screen) {
+      this._screen = screen
+      topicData.push(screen)
+    }
+    if (!topicData.length) return ''
+    return 'U' + String.fromCodePoint(topics + 1) + topicData.join('')
   }
-  rainbowTimer () {
-    if (!this.rainbow) return
-    clearInterval(this._rainbowTimer)
-    this._rainbowTimer = setInterval(() => {
-      if (this.rainbow) this.scheduleLoad()
-    }, 50)
+  loadTimer () {
+    clearInterval(this._loadTimer)
+    this._loadTimer = setInterval(() => {
+      let update = this.getUpdate()
+      if (update) this.termScreen.load(update)
+    }, 30)
   }
 }
 
@@ -329,7 +400,7 @@ let demoData = {
   buttons: {
     1: '',
     2: '',
-    3: '',
+    3: (terminal, shell) => shell.write('\x03'),
     4: '',
     5: function (terminal, shell) {
       if (shell.child) shell.child.destroy()
@@ -466,7 +537,7 @@ let demoshIndex = {
 
           if (++x < 69) {
             if (++cycles >= 3) {
-              setTimeout(loop, 20)
+              setTimeout(loop, 50)
               cycles = 0
             } else loop()
           } else {
@@ -557,7 +628,7 @@ let demoshIndex = {
       let theme = +args[0] | 0
       const maxnum = themes.length
       if (!args.length || !Number.isFinite(theme) || theme < 0 || theme >= maxnum) {
-        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum - 1}]\r\n`)
+        this.emit('write', `\x1b[31mUsage: theme [0–${maxnum - 1}]\n`)
         this.destroy()
         return
       }
@@ -565,6 +636,40 @@ let demoshIndex = {
       // HACK: reset drawn screen to prevent only partly redrawn screen
       this.shell.terminal.termScreen.drawnScreenFG = []
       this.emit('write', '')
+      this.destroy()
+    }
+  },
+  themes: class ShowThemes extends Process {
+    color (hex) {
+      hex = parseInt(hex.substr(1), 16)
+      let r = hex >> 16
+      let g = (hex >> 8) & 0xFF
+      let b = hex & 0xFF
+      this.emit('write', `\x1b[48;2;${r};${g};${b}m`)
+      if (((r + g + b) / 3) > 127) {
+        this.emit('write', '\x1b[38;5;16m')
+      } else {
+        this.emit('write', '\x1b[38;5;255m')
+      }
+    }
+    run (...args) {
+      for (let i in themes) {
+        let theme = themes[i]
+
+        let name = `  ${i}`.substr(-2)
+
+        this.emit('write', `Theme ${name}: `)
+
+        for (let col = 0; col < 16; col++) {
+          let text = `  ${col}`.substr(-2)
+          this.color(theme[col])
+          this.emit('write', text)
+          this.emit('write', '\x1b[m ')
+        }
+
+        this.emit('write', '\n')
+      }
+
       this.destroy()
     }
   },
@@ -590,7 +695,6 @@ let demoshIndex = {
     }
     run () {
       this.shell.terminal.rainbow = !this.shell.terminal.rainbow
-      this.shell.terminal.rainbowTimer()
       this.emit('write', '')
       this.destroy()
     }
@@ -618,7 +722,7 @@ let demoshIndex = {
     }
     render () {
       this.emit('write', '\x1b[m\x1b[2J\x1b[1;1H')
-      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMouse movement, clicking and scrolling!')
+      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMouse movement, clicking, and scrolling!')
 
       // render random data for scrolling
       for (let y = 0; y < 23; y++) {
