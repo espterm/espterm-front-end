@@ -26,8 +26,8 @@
 			<option value="8">Apple II</option>
 			<option value="9">Commodore</option>
 		</select>
-		<span onclick="prevTheme()" class="mq-no-phone theme-nav-btn">◀</span>
-		<span onclick="nextTheme()" class="mq-no-phone theme-nav-btn">▶</span>
+		<span onclick="TermConf.prevTheme()" class="mq-no-phone theme-nav-btn">◀</span>
+		<span onclick="TermConf.nextTheme()" class="mq-no-phone theme-nav-btn">▶</span>
 	</div>
 
 	<div class="Row color-preview">
@@ -300,30 +300,6 @@
 </form>
 
 <script>
-  function showColor() {
-    var ex = qs('.color-example');
-    var fg = $('#default_fg').val();
-    var bg = $('#default_bg').val();
-
-    if (/^\d+$/.test(fg)) fg = +fg;
-    else if (!/^#[\da-f]{6}$/i.test(fg)) {
-      fg = 'black';
-    }
-
-    if (/^\d+$/.test(bg)) bg = +bg;
-    else if (!/^#[\da-f]{6}$/i.test(bg)) {
-      bg = 'black';
-    }
-
-    var themeN = +$('#theme').val();
-    ex.dataset.fg = fg;
-    ex.dataset.bg = bg;
-
-    themes.themePreview(themeN);
-
-    $('.colorprev.fg span').css('background', themes.toCss(bg, themeN));
-  }
-
   $.ready(function () {
     $('#cursor_shape').val('%cursor_shape%');
     $('#theme').val('%theme%');
@@ -331,58 +307,6 @@
     $('#uart_parity').val('%uart_parity%');
     $('#uart_stopbits').val('%uart_stopbits%');
 
-    $('#theme').on('change', showColor);
-
-    $('#default_fg').on('input', showColor)
-    $('#default_bg').on('input', showColor)
-
-    $('.colorprev.bg span').on('click', function () {
-      var bg = this.dataset.bg;
-      if (typeof bg != 'undefined') $('#default_bg').val(bg);
-      showColor()
-    });
-
-    $('.colorprev.fg span').on('click', function () {
-      var fg = this.dataset.fg;
-      if (typeof fg != 'undefined') $('#default_fg').val(fg);
-      showColor()
-    });
-
-    var $presets = $('#fgbg_presets');
-    for (var i = 0; i < themes.fgbgThemes.length; i++) {
-      var thm = themes.fgbgThemes[i];
-      var fg = thm[0];
-      var bg = thm[1];
-      var lbl = thm[2];
-      var tit = thm[3];
-      $presets
-        .htmlAppend(
-          '<span class="preset" ' +
-          'data-xfg="' + fg + '" data-xbg="' + bg + '" ' +
-          'style="color:' + fg + ';background:' + bg + '" title="' + tit + '">&nbsp;' + lbl + '&nbsp;</span>');
-
-      if ((i + 1) % 5 == 0) $presets.htmlAppend('<br>');
-    }
-
-    $('.preset').on('click', function () {
-      $('#default_fg').val(this.dataset.xfg)
-      $('#default_bg').val(this.dataset.xbg)
-      showColor()
-    });
-
-    showColor();
-  })
-
-  function nextTheme() {
-    var sel = qs('#theme');
-    var i = sel.selectedIndex;
-    sel.options[++i % sel.options.length].selected = true;
-    showColor();
-  }
-  function prevTheme() {
-    var sel = qs('#theme');
-    var i = sel.selectedIndex;
-    sel.options[(sel.options.length+(--i)) % sel.options.length].selected = true;
-    showColor();
-  }
+    TermConf.init();
+  });
 </script>

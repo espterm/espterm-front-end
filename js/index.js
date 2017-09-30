@@ -14,3 +14,5 @@ window.$ = $
 window.qs = qs
 
 window.themes = require('./term/themes')
+
+window.TermConf = require('./term_conf')

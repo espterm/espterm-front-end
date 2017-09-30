@@ -6,13 +6,9 @@
           "last 2 versions",
           "> 4%",
           "ie 11",
-          "safari 8",
-          "android 4.4"
+          "safari 8"
         ]
       }
-    }],
-    ["minify", {
-      "mergeVars": false
     }]
   ]
 }

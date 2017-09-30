@@ -2,7 +2,8 @@
 out/**/*
 
 # libraries
-js/lib/*
+js/lib/chibi.js
+js/lib/polyfills.js
 
 # php generated file
 js/lang.js
