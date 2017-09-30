@@ -103,10 +103,12 @@ module.exports = class TermScreen extends EventEmitter {
     const self = this
     this.window = new Proxy(this._window, {
       set (target, key, value, receiver) {
-        target[key] = value
-        self.scheduleSizeUpdate()
-        self.renderer.scheduleDraw(`window:${key}=${value}`)
-        self.emit(`update-window:${key}`, value)
+        if (target[key] !== value) {
+          target[key] = value
+          self.scheduleSizeUpdate()
+          self.renderer.scheduleDraw(`window:${key}=${value}`)
+          self.emit(`update-window:${key}`, value)
+        }
         return true
       }
     })

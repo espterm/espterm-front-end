@@ -52,6 +52,9 @@ module.exports = class ScreenRenderer {
   resetDrawn () {
     // used to determine if a cell should be redrawn; storing the current state
     // as it is on screen
+    if (this.screen.window && this.screen.window.debug) {
+      console.log('Resetting drawn screen')
+    }
     this.drawnScreen = []
     this.drawnScreenFG = []
     this.drawnScreenBG = []
@@ -81,10 +84,12 @@ module.exports = class ScreenRenderer {
   }
 
   setDefaultColors (fg, bg) {
-    this.defaultFgNum = fg
-    this.defaultBgNum = bg
-    this.resetDrawn()
-    this.scheduleDraw('defaultColors')
+    if (fg !== this.defaultFgNum || bg !== this.defaultBgNum) {
+      this.resetDrawn()
+      this.defaultFgNum = fg
+      this.defaultBgNum = bg
+      this.scheduleDraw('default-colors')
+    }
   }
 
   /**
