@@ -46,6 +46,7 @@ module.exports = function attachDebugScreen (screen) {
   let startTime, endTime, lastReason
   let cells = new Map()
   let clippedRects = []
+  let updateFrames = []
 
   let startDrawing
 
@@ -65,6 +66,11 @@ module.exports = function attachDebugScreen (screen) {
     },
     clipRect (...args) {
       clippedRects.push(args)
+    },
+    pushFrame (frame) {
+      frame.push(Date.now())
+      updateFrames.push(frame)
+      startDrawing()
     }
   }
 
@@ -155,6 +161,26 @@ module.exports = function attachDebugScreen (screen) {
       ctx.fill()
     }
 
+    let didDrawUpdateFrames = false
+    if (updateFrames.length) {
+      let framesToDelete = []
+      for (let frame of updateFrames) {
+        let time = frame[4]
+        let elapsed = Date.now() - time
+        if (elapsed > 1000) framesToDelete.push(frame)
+        else {
+          didDrawUpdateFrames = true
+          ctx.globalAlpha = 1 - elapsed / 1000
+          ctx.strokeStyle = '#ff0'
+          ctx.lineWidth = 2
+          ctx.strokeRect(frame[0] * cellWidth, frame[1] * cellHeight, frame[2] * cellWidth, frame[3] * cellHeight)
+        }
+      }
+      for (let frame of framesToDelete) {
+        updateFrames.splice(updateFrames.indexOf(frame), 1)
+      }
+    }
+
     if (mouseHoverCell) {
       ctx.save()
       ctx.globalAlpha = 1
@@ -170,7 +196,7 @@ module.exports = function attachDebugScreen (screen) {
       ctx.restore()
     }
 
-    if (activeCells === 0 && !mouseHoverCell) {
+    if (activeCells === 0 && !mouseHoverCell && !didDrawUpdateFrames) {
       isDrawing = false
       removeCanvas()
     }

@@ -243,6 +243,10 @@ module.exports = class ScreenParser {
         const frameHeight = du(strArray[ci++])
         const frameWidth = du(strArray[ci++])
 
+        if (this.screen._debug && this.screen.window.debug) {
+          this.screen._debug.pushFrame([frameX, frameY, frameWidth, frameHeight])
+        }
+
         // content
         let fg = 7
         let bg = 0
