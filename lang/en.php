@@ -1,9 +1,6 @@
 <?php
 
 return [
-	'appname' => 'ESPTerm',
-	'appname_demo' => 'ESPTerm<sup> DEMO</sup>',
-
 	'menu.cfg_wifi' => 'WiFi Settings',
 	'menu.cfg_network' => 'Network Settings',
 	'menu.cfg_term' => 'Terminal Settings',
@@ -13,19 +10,6 @@ return [
 	'menu.cfg_system' => 'System Settings',
 	'menu.cfg_wifi_conn' => 'Connecting to Network',
 	'menu.settings' => 'Settings',
-
-	// not used - api etc. Added to suppress warnings
-	'menu.term_set' => '',
-	'menu.wifi_connstatus' => '',
-	'menu.wifi_set' => '',
-	'menu.wifi_scan' => '',
-	'menu.network_set' => '',
-	'menu.system_set' => '',
-	'menu.write_defaults' => '',
-	'menu.restore_defaults' => '',
-	'menu.restore_hard' => '',
-	'menu.reset_screen' => '',
-	'menu.index' => '',
 
 	// Terminal page
 

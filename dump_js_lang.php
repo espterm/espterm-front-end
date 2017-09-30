@@ -8,17 +8,17 @@ $selected = [
 	'wifi.connected_ip_is',
 	'wifi.not_conn',
 	'wifi.enter_passwd',
-  'term_nav.fullscreen',
-  'term_conn.connecting',
-  'term_conn.waiting_content',
-  'term_conn.disconnected',
-  'term_conn.waiting_server',
-  'term_conn.reconnecting'
+	'term_nav.fullscreen',
+	'term_conn.connecting',
+	'term_conn.waiting_content',
+	'term_conn.disconnected',
+	'term_conn.waiting_server',
+	'term_conn.reconnecting'
 ];
 
 $out = [];
 foreach ($selected as $key) {
-	$out[$key] = $_messages[$key];
+	$out[$key] = tr($key);
 }
 
 file_put_contents(__DIR__. '/js/lang.js',
