@@ -54,21 +54,6 @@ function each (obj, fn) {
   }
 }
 
-function getOffsets (el) {
-  let left = 0
-  let top = 0
-
-  while (el !== null) {
-    console.log(el)
-    console.log(el.offsetLeft, el.offsetTop)
-    left += el.offsetLeft
-    top += el.offsetTop
-    el = el.offsetParent
-  }
-
-  return [left, top]
-}
-
 module.exports = class ColorTriangle {
   /****************
    * ColorTriangle *
@@ -305,12 +290,35 @@ module.exports = class ColorTriangle {
   // The Element and the DOM
   inject (parent) {
     parent.appendChild(this.container)
+  }
 
-    // calculate canvas position on page
-    const offsets = getOffsets(this.triangle)
-    this.offset = {
-      x: offsets[0],
-      y: offsets[1]
+  _getRelativeCoordinates (evt) {
+    let pos = {}
+    let offset = {}
+    let ref
+
+    // FIXME this doesn't really work with scroll
+    // this.triangle is the canvas element
+
+    ref = this.triangle.offsetParent
+
+    pos.x = evt.touches ? evt.touches[0].pageX : evt.pageX
+    pos.y = evt.touches ? evt.touches[0].pageY : evt.pageY
+
+    offset.left = this.triangle.offsetLeft
+    offset.top = this.triangle.offsetTop
+
+    while (ref) {
+
+      offset.left += ref.offsetLeft
+      offset.top += ref.offsetTop
+
+      ref = ref.offsetParent
+    }
+
+    return {
+      x: pos.x - offset.left,
+      y: pos.y - offset.top
     }
   }
 
@@ -379,11 +387,14 @@ module.exports = class ColorTriangle {
 
       doc.body.addEventListener('mousemove', mousemove, false)
       doc.body.addEventListener('mouseup', mouseup, false)
-      this._map(evt.pageX, evt.pageY)
+
+      let xy = this._getRelativeCoordinates(evt)
+      this._map(xy.x, xy.y)
     }
 
     let mousemove = (evt) => {
-      this._move(evt.pageX, evt.pageY)
+      let xy = this._getRelativeCoordinates(evt)
+      this._move(xy.x, xy.y)
     }
 
     let mouseup = (evt) => {
@@ -400,23 +411,22 @@ module.exports = class ColorTriangle {
   }
 
   _map (x, y) {
-    const ox = x
-    const oy = y
-
-    x -= this.offset.x + this.wheelRadius
-    y -= this.offset.y + this.wheelRadius
+    let x0 = x
+    let y0 = y
+    x -= this.wheelRadius
+    y -= this.wheelRadius
 
     const r = M.sqrt(x * x + y * y) // Pythagoras
     if (r > this.triangleRadius && r < this.wheelRadius) {
       // Wheel
       this.down = 'wheel'
       this._fireEvent('dragstart')
-      this._move(ox, oy)
+      this._move(x0, y0)
     } else if (r < this.triangleRadius) {
       // Inner circle
       this.down = 'triangle'
       this._fireEvent('dragstart')
-      this._move(ox, oy)
+      this._move(x0, y0)
     }
   }
 
@@ -425,8 +435,8 @@ module.exports = class ColorTriangle {
       return
     }
 
-    x -= this.offset.x + this.wheelRadius
-    y -= this.offset.y + this.wheelRadius
+    x -= this.wheelRadius
+    y -= this.wheelRadius
 
     let rad = M.atan2(-y, x)
     if (rad < 0) {
