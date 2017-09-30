@@ -10,7 +10,9 @@ const SEQ_SET_BG = 6
 const SEQ_SET_ATTR_0 = 7
 
 function du (str) {
-  return str.codePointAt(0) - 1
+  let num = str.codePointAt(0)
+  if (num > 0xDFFF) num -= 0x800
+  return num - 1
 }
 
 /* eslint-disable no-multi-spaces */
@@ -152,10 +154,8 @@ module.exports = class ScreenParser {
       } else if (topic === TOPIC_CURSOR) {
 
         // cursor position
-        const [cursorY, cursorX] = [
-          strArray[ci++].codePointAt(0) - 1,
-          strArray[ci++].codePointAt(0) - 1
-        ]
+        const cursorY = du(strArray[ci++])
+        const cursorX = du(strArray[ci++])
         const hanging = du(strArray[ci++])
 
         const cursorMoved = (
@@ -296,7 +296,7 @@ module.exports = class ScreenParser {
           let data
           switch (charCode) {
             case SEQ_REPEAT:
-              let count = strArray[ci++].codePointAt(0) - 1
+              let count = du(strArray[ci++])
               for (let j = 0; j < count; j++) {
                 pushCell()
                 if (++cell > screenLength) break
