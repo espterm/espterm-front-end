@@ -569,6 +569,7 @@ module.exports = class ScreenRenderer {
     // mask to redrawing regions only
     if (this.screen.window.graphics >= 1) {
       let debug = this.screen.window.debug && this.screen._debug
+      let padding = Math.round(this.screen._padding)
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -578,13 +579,13 @@ module.exports = class ScreenRenderer {
           let redrawing = redrawMap.get(cell)
           if (redrawing && regionStart === null) regionStart = x
           if (!redrawing && regionStart !== null) {
-            ctx.rect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
           }
         }
         if (regionStart !== null) {
-          ctx.rect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
           if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
         }
       }
@@ -686,7 +687,7 @@ module.exports = class ScreenRenderer {
 
     if (this.screen.window.debug && this.screen._debug) this.screen._debug.drawEnd()
 
-    this.screen.emit('draw')
+    this.screen.emit('draw', why)
   }
 
   drawStatus (statusScreen) {

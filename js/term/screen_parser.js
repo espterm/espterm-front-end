@@ -167,7 +167,7 @@ module.exports = class ScreenParser {
         this.screen.cursor.x = cursorX
         this.screen.cursor.y = cursorY
 
-        this.screen.cursor.hanging = hanging
+        this.screen.cursor.hanging = !!hanging
 
         if (cursorMoved) {
           this.screen.renderer.resetCursorBlink()
