@@ -111,6 +111,9 @@ body.term {
 		padding: 6px;
 		font-family: $screen-stack;
 		font-size: 12px;
+		white-space: normal;
+		// close enough:
+		max-width: 400px;
 	}
 }
 
