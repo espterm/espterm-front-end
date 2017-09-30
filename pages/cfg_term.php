@@ -12,7 +12,7 @@
 
 	<div class="Row">
 		<label for="theme"><?= tr("term.theme") ?></label>
-		<select name="theme" id="theme" onchange="showColor()">
+		<select name="theme" id="theme">
 			<option value="0">Tango</option>
 			<option value="1">Linux (CGA)</option>
 			<option value="2">XTerm</option>
@@ -26,6 +26,8 @@
 			<option value="8">Apple II</option>
 			<option value="9">Commodore</option>
 		</select>
+		<span onclick="prevTheme()" class="mq-no-phone theme-nav-btn">◀</span>
+		<span onclick="nextTheme()" class="mq-no-phone theme-nav-btn">▶</span>
 	</div>
 
 	<div class="Row color-preview">
@@ -59,25 +61,25 @@
 		<label><?= tr("term.color_fg_prev") ?></label>
 		<div>
 			<div class="colorprev fg">
-				<span data-fg=0 data-bg=0 style="text-shadow: 0 0 4px white;">0</span><!--
-				--><span data-fg=1 data-bg=0>1</span><!--
-				--><span data-fg=2 data-bg=0>2</span><!--
-				--><span data-fg=3 data-bg=0>3</span><!--
-				--><span data-fg=4 data-bg=0>4</span><!--
-				--><span data-fg=5 data-bg=0>5</span><!--
-				--><span data-fg=6 data-bg=0>6</span><!--
-				--><span data-fg=7 data-bg=0>7</span>
+				<span data-fg=0>0</span><!--
+				--><span data-fg=1>1</span><!--
+				--><span data-fg=2>2</span><!--
+				--><span data-fg=3>3</span><!--
+				--><span data-fg=4>4</span><!--
+				--><span data-fg=5>5</span><!--
+				--><span data-fg=6>6</span><!--
+				--><span data-fg=7>7</span>
 			</div>
 
 			<div class="colorprev fg">
-				<span data-fg=8 data-bg=0>8</span><!--
-				--><span data-fg=9 data-bg=0>9</span><!--
-				--><span data-fg=10 data-bg=0>10</span><!--
-				--><span data-fg=11 data-bg=0>11</span><!--
-				--><span data-fg=12 data-bg=0>12</span><!--
-				--><span data-fg=13 data-bg=0>13</span><!--
-				--><span data-fg=14 data-bg=0>14</span><!--
-				--><span data-fg=15 data-bg=0>15</span>
+				<span data-fg=8>8</span><!--
+				--><span data-fg=9>9</span><!--
+				--><span data-fg=10>10</span><!--
+				--><span data-fg=11>11</span><!--
+				--><span data-fg=12>12</span><!--
+				--><span data-fg=13>13</span><!--
+				--><span data-fg=14>14</span><!--
+				--><span data-fg=15>15</span>
 			</div>
 		</div>
 	</div>
@@ -292,69 +294,89 @@
 </form>
 
 <script>
-	$('#cursor_shape').val(%cursor_shape%);
-	$('#theme').val(%theme%);
+  function showColor() {
+    var ex = qs('.color-example');
+    var fg = $('#default_fg').val();
+    var bg = $('#default_bg').val();
 
-    $('#uart_baud').val(%uart_baud%);
-    $('#uart_parity').val(%uart_parity%);
-    $('#uart_stopbits').val(%uart_stopbits%);
+    if (/^\d+$/.test(fg)) fg = +fg;
+    else if (!/^#[\da-f]{6}$/i.test(fg)) {
+      fg = 'black';
+    }
 
-	function showColor() {
-		var ex = qs('.color-example');
-		var fg = $('#default_fg').val();
-		var bg = $('#default_bg').val();
+    if (/^\d+$/.test(bg)) bg = +bg;
+    else if (!/^#[\da-f]{6}$/i.test(bg)) {
+      bg = 'black';
+    }
 
-		if (/^\d+$/.test(fg)) fg = +fg;
-		else if (!/^#[\da-f]{6}$/i.test(fg)) {
-		  fg = 'black';
-		}
+    var themeN = +$('#theme').val();
+    ex.dataset.fg = fg;
+    ex.dataset.bg = bg;
 
-		if (/^\d+$/.test(bg)) bg = +bg;
-		else if (!/^#[\da-f]{6}$/i.test(bg)) {
-		  bg = 'black';
-		}
+    themes.themePreview(themeN);
 
-		ex.dataset.fg = fg;
-		ex.dataset.bg = bg;
+    $('.colorprev.fg span').css('background', themes.toCss(bg, themeN));
+  }
 
-		themes.themePreview(+$('#theme').val())
-	}
-	showColor();
+  $.ready(function () {
+    $('#cursor_shape').val('%cursor_shape%');
+    $('#theme').val('%theme%');
+    $('#uart_baud').val('%uart_baud%');
+    $('#uart_parity').val('%uart_parity%');
+    $('#uart_stopbits').val('%uart_stopbits%');
 
-	$('#default_fg').on('input', showColor)
-	$('#default_bg').on('input', showColor)
+    $('#theme').on('change', showColor);
 
-	$('.colorprev.bg span').on('click', function() {
-		var bg = this.dataset.bg;
-		if (typeof bg != 'undefined') $('#default_bg').val(bg);
-		showColor()
-	});
+    $('#default_fg').on('input', showColor)
+    $('#default_bg').on('input', showColor)
 
-	$('.colorprev.fg span').on('click', function() {
-		var fg = this.dataset.fg;
-		if (typeof fg != 'undefined') $('#default_fg').val(fg);
-		showColor()
-	});
+    $('.colorprev.bg span').on('click', function () {
+      var bg = this.dataset.bg;
+      if (typeof bg != 'undefined') $('#default_bg').val(bg);
+      showColor()
+    });
 
-	var $presets = $('#fgbg_presets');
-	for(var i = 0; i < themes.fgbgThemes.length; i++) {
-	  var thm = themes.fgbgThemes[i];
-	  var fg = thm[0];
+    $('.colorprev.fg span').on('click', function () {
+      var fg = this.dataset.fg;
+      if (typeof fg != 'undefined') $('#default_fg').val(fg);
+      showColor()
+    });
+
+    var $presets = $('#fgbg_presets');
+    for (var i = 0; i < themes.fgbgThemes.length; i++) {
+      var thm = themes.fgbgThemes[i];
+      var fg = thm[0];
       var bg = thm[1];
       var lbl = thm[2];
       var tit = thm[3];
       $presets
         .htmlAppend(
           '<span class="preset" ' +
-          'data-xfg="'+fg+'" data-xbg="'+bg+'" ' +
-          'style="color:'+fg+';background:'+bg+'" title="'+tit+'">&nbsp;'+lbl+'&nbsp;</span>');
+          'data-xfg="' + fg + '" data-xbg="' + bg + '" ' +
+          'style="color:' + fg + ';background:' + bg + '" title="' + tit + '">&nbsp;' + lbl + '&nbsp;</span>');
 
-	  if ((i+1)%5==0) $presets.htmlAppend('<br>');
-	}
+      if ((i + 1) % 5 == 0) $presets.htmlAppend('<br>');
+    }
 
-	$('.preset').on('click', function() {
+    $('.preset').on('click', function () {
       $('#default_fg').val(this.dataset.xfg)
       $('#default_bg').val(this.dataset.xbg)
       showColor()
-	});
+    });
+
+    showColor();
+  })
+
+  function nextTheme() {
+    var sel = qs('#theme');
+    var i = sel.selectedIndex;
+    sel.options[++i % sel.options.length].selected = true;
+    showColor();
+  }
+  function prevTheme() {
+    var sel = qs('#theme');
+    var i = sel.selectedIndex;
+    sel.options[(sel.options.length+(--i)) % sel.options.length].selected = true;
+    showColor();
+  }
 </script>
