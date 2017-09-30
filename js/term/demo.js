@@ -850,7 +850,6 @@ let demoshIndex = {
     run (...args) {
       if (args.length === 0) this.emit('write', '\x1b[31mmake: *** No targets specified.  Stop.\x1b[0m\r\n')
       else if (args.length === 3 && args.join(' ').toLowerCase() === 'me a sandwich') {
-        console.log(this)
         if (this.su) {
           const b = '\x1b[33m'
           const r = '\x1b[0m'
