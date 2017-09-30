@@ -59,7 +59,7 @@ APS
 );
 }
 
-define('LOCALE', isset($_GET['locale']) ? $_GET['locale'] : 'en');
+define('LOCALE', isset($_GET['locale']) ? $_GET['locale'] : (getenv('ESP_LANG') ?: 'en'));
 
 $_messages = require(__DIR__ . '/lang/' . LOCALE . '.php');
 $_pages = require(__DIR__ . '/_pages.php');
