@@ -143,7 +143,7 @@ class ScrollingTerminal {
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
     this.theme = 0
-    this.rainbow = false
+    this.rainbow = this.superRainbow = false
     this.parser.reset()
     this.clear()
   }
@@ -291,6 +291,9 @@ class ScrollingTerminal {
     data += this.buttonLabels.map(x => x + '\x01').join('')
     return data
   }
+  getTitle () {
+    return 'TESPTerm Web UI Demo\x01'
+  }
   getCursor () {
     let data = 'C'
     data += encodeAsCodePoint(this.cursor.y)
@@ -319,10 +322,15 @@ class ScrollingTerminal {
         let x = index % this.width
         let y = Math.floor(index / this.width)
         // C instead of F in mask and 1 << 8 in attrs to change attr bits 1 and 2
-        style[0] = getRainbowColor((x + y) / 10 + Date.now() / 1000)
+        let t = (x + y) / 10 + Date.now() / 1000
+        if (this.superRainbow) {
+          t = (x * y + Date.now()) / 100 + Date.now() / 1000
+        }
+        style[0] = getRainbowColor(t)
         style[1] = 0
+        if (this.superRainbow) style[1] = getRainbowColor(t / 10)
         style[2] = style[2] | 1
-        if (style[2] & (1 << 1)) style[2] ^= (1 << 1)
+        if (!this.superRainbow && style[2] & (1 << 1)) style[2] ^= (1 << 1)
         index++
       }
 
@@ -353,12 +361,17 @@ class ScrollingTerminal {
     let topics = 0
     let topicData = []
     let screenOpts = this.getScreenOpts()
+    let title = this.getTitle()
     let buttons = this.getButtons()
     let cursor = this.getCursor()
     let screen = this.serializeScreen()
     if (this._screenOpts !== screenOpts) {
       this._screenOpts = screenOpts
       topicData.push(screenOpts)
+    }
+    if (this._title !== title) {
+      this._title = title
+      topicData.push(title)
     }
     if (this._buttons !== buttons) {
       this._buttons = buttons
@@ -528,7 +541,7 @@ let demoshIndex = {
       }
       return new Promise((resolve, reject) => {
         const self = this
-        let x = 14
+        let x = 13
         let cycles = 0
         let loop = function () {
           for (let y = 0; y < splash.length; y++) {
@@ -536,7 +549,7 @@ let demoshIndex = {
             if (dx > 0) drawCell(dx, y)
           }
 
-          if (++x < 69) {
+          if (++x < 70) {
             if (++cycles >= 3) {
               setTimeout(loop, 50)
               cycles = 0
@@ -690,14 +703,39 @@ let demoshIndex = {
     }
   },
   rainbow: class ToggleRainbow extends Process {
-    constructor (shell) {
+    constructor (shell, options = {}) {
       super()
       this.shell = shell
+      this.su = options.su
+      this.abort = false
+    }
+    write (data, newLine = true) {
+      if (data === 'y') {
+        this.shell.terminal.rainbow = !this.shell.terminal.rainbow
+        this.shell.terminal.superRainbow = true
+        demoData._didWarnRainbow = true
+      } else {
+        this.emit('write', data)
+      }
+      if (newLine) this.emit('write', '\x1b[0;32m\x1b[G\x1b[79PRainbow!\n')
+      this.destroy()
     }
     run () {
-      this.shell.terminal.rainbow = !this.shell.terminal.rainbow
-      this.emit('write', '')
-      this.destroy()
+      if (this.su && !this.shell.terminal.rainbow) {
+        if (!demoData._didWarnRainbow) {
+          this.emit('write', '\x1b[31;1mWarning: flashy colors. Continue? [y/N] ')
+        } else {
+          this.write('y', false)
+        }
+      } else {
+        this.shell.terminal.rainbow = !this.shell.terminal.rainbow
+        this.shell.terminal.superRainbow = false
+        this.destroy()
+      }
+    }
+    destroy () {
+      this.abort = true
+      super.destroy()
     }
   },
   mouse: class ShowMouse extends Process {
@@ -767,43 +805,19 @@ let demoshIndex = {
     constructor (shell) {
       super()
       this.shell = shell
+      this.didDestroy = false
     }
     run (...args) {
       if (args.length === 0) {
-        this.emit('write', '\x1b[31mUsage: sudo <command>\x1b[m\r\n')
-        this.destroy()
-      } else if (args.length === 4 && args.join(' ').toLowerCase() === 'make me a sandwich') {
-        const b = '\x1b[33m'
-        const r = '\x1b[0m'
-        const l = '\x1b[32m'
-        const c = '\x1b[38;5;229m'
-        const h = '\x1b[38;5;225m'
-        this.emit('write',
-          `                    ${b}_.---._\r\n` +
-          `                _.-~       ~-._\r\n` +
-          `            _.-~               ~-._\r\n` +
-          `        _.-~                       ~---._\r\n` +
-          `    _.-~                                 ~\\\r\n` +
-          ` .-~                                    _.;\r\n` +
-          ` :-._                               _.-~ ./\r\n` +
-          ` \`-._~-._                   _..__.-~ _.-~\r\n` +
-          `  ${c}/  ${b}~-._~-._              / .__..--${c}~-${l}---._\r\n` +
-          `${c} \\_____(_${b};-._\\.        _.-~_/${c}       ~)${l}.. . \\\r\n` +
-          `${l}    /(_____  ${b}\\\`--...--~_.-~${c}______..-+${l}_______)\r\n` +
-          `${l}  .(_________/${b}\`--...--~/${l}    _/ ${h}          ${b}/\\\r\n` +
-          `${b} /-._${h}     \\_     ${l}(___./_..-~${h}__.....${b}__..-~./\r\n` +
-          `${b} \`-._~-._${h}   ~\\--------~  .-~${b}_..__.-~ _.-~\r\n` +
-          `${b}     ~-._~-._ ${h}~---------\`  ${b}/ .__..--~\r\n` +
-          `${b}         ~-._\\.        _.-~_/\r\n` +
-          `${b}             \\\`--...--~_.-~\r\n` +
-          `${b}              \`--...--~${r}\r\n`)
+        this.emit('write', '\x1b[31mUsage: sudo [command]\x1b[m\r\n')
         this.destroy()
       } else {
         let name = args.shift()
         if (this.shell.index[name]) {
           let Process = this.shell.index[name]
           if (Process instanceof Function) {
-            let child = new Process(this)
+            let child = this.child = new Process(this.shell, { su: true })
+            this.on('in', data => child.write(data))
             let write = data => this.emit('write', data)
             child.on('write', write)
             child.on('exit', code => {
@@ -821,12 +835,50 @@ let demoshIndex = {
         }
       }
     }
+    destroy () {
+      if (this.didDestroy) return
+      this.didDestroy = true
+      this.child.destroy()
+      super.destroy()
+    }
   },
   make: class Make extends Process {
+    constructor (shell, options = {}) {
+      super()
+      this.su = options.su
+    }
     run (...args) {
       if (args.length === 0) this.emit('write', '\x1b[31mmake: *** No targets specified.  Stop.\x1b[0m\r\n')
       else if (args.length === 3 && args.join(' ').toLowerCase() === 'me a sandwich') {
-        this.emit('write', '\x1b[31mmake: me a sandwich : Permission denied\x1b[0m\r\n')
+        console.log(this)
+        if (this.su) {
+          const b = '\x1b[33m'
+          const r = '\x1b[0m'
+          const l = '\x1b[32m'
+          const c = '\x1b[38;5;229m'
+          const h = '\x1b[38;5;225m'
+          this.emit('write',
+            `                    ${b}_.---._\r\n` +
+            `                _.-~       ~-._\r\n` +
+            `            _.-~               ~-._\r\n` +
+            `        _.-~                       ~---._\r\n` +
+            `    _.-~                                 ~\\\r\n` +
+            ` .-~                                    _.;\r\n` +
+            ` :-._                               _.-~ ./\r\n` +
+            ` \`-._~-._                   _..__.-~ _.-~\r\n` +
+            `  ${c}/  ${b}~-._~-._              / .__..--${c}~-${l}---._\r\n` +
+            `${c} \\_____(_${b};-._\\.        _.-~_/${c}       ~)${l}.. . \\\r\n` +
+            `${l}    /(_____  ${b}\\\`--...--~_.-~${c}______..-+${l}_______)\r\n` +
+            `${l}  .(_________/${b}\`--...--~/${l}    _/ ${h}          ${b}/\\\r\n` +
+            `${b} /-._${h}     \\_     ${l}(___./_..-~${h}__.....${b}__..-~./\r\n` +
+            `${b} \`-._~-._${h}   ~\\--------~  .-~${b}_..__.-~ _.-~\r\n` +
+            `${b}     ~-._~-._ ${h}~---------\`  ${b}/ .__..--~\r\n` +
+            `${b}         ~-._\\.        _.-~_/\r\n` +
+            `${b}             \\\`--...--~_.-~\r\n` +
+            `${b}              \`--...--~${r}\r\n`)
+        } else {
+          this.emit('write', '\x1b[31mmake: me a sandwich : Permission denied\x1b[0m\r\n')
+        }
       } else {
         this.emit('write', `\x1b[31mmake: *** No rule to make target '${args.join(' ').toLowerCase()}'.  Stop.\x1b[0m\r\n`)
       }
@@ -852,6 +904,12 @@ let demoshIndex = {
     }
   }
 }
+let autocompleteIndex = {
+  'local-echo': 'local-echo [--suppress-note]',
+  theme: 'theme [n]',
+  cursor: 'cursor [block|line|bar] [--steady]',
+  sudo: 'sudo [command]'
+}
 
 class DemoShell {
   constructor (terminal, printInfo) {
@@ -861,6 +919,7 @@ class DemoShell {
     this.history = []
     this.historyIndex = 0
     this.cursorPos = 0
+    this.lastInputLength = 0
     this.child = null
     this.index = demoshIndex
 
@@ -887,8 +946,29 @@ class DemoShell {
     this.history[0] = current
     this.historyIndex = 0
   }
+  getCompleted (visual = false) {
+    if (this.history[0]) {
+      let input = this.history[0]
+      let prefix = ''
+      if (input.startsWith('sudo ')) {
+        let newInput = input.replace(/^(sudo\s+)+/, '')
+        prefix = input.substr(0, input.length - newInput.length)
+        input = newInput
+      }
+      for (let name in this.index) {
+        if (name.startsWith(input) && name !== input) {
+          if (visual && name in autocompleteIndex) return prefix + autocompleteIndex[name]
+          return prefix + name
+        }
+      }
+      return null
+    }
+    return null
+  }
   handleParsed (action, ...args) {
+    this.terminal.write(`\x1b[${this.lastInputLength - this.cursorPos}P`)
     this.terminal.write('\b\x1b[P'.repeat(this.cursorPos))
+
     if (action === 'write') {
       this.copyFromHistoryIndex()
       this.history[0] = this.history[0].substr(0, this.cursorPos) + args[0] + this.history[0].substr(this.cursorPos)
@@ -899,7 +979,11 @@ class DemoShell {
       this.cursorPos--
       if (this.cursorPos < 0) this.cursorPos = 0
     } else if (action === 'tab') {
-      console.warn('TAB not implemented') // TODO completion
+      let completed = this.getCompleted()
+      if (completed) {
+        this.history[0] = completed
+        this.cursorPos = this.history[0].length
+      }
     } else if (action === 'move-cursor-x') {
       this.cursorPos = Math.max(0, Math.min(this.history[this.historyIndex].length, this.cursorPos + args[0]))
     } else if (action === 'delete-line') {
@@ -922,17 +1006,27 @@ class DemoShell {
     this.terminal.write(this.history[this.historyIndex])
     this.terminal.write('\b'.repeat(this.history[this.historyIndex].length))
     this.terminal.moveForward(this.cursorPos)
-    this.terminal.write('') // dummy. Apply the moveFoward
+
+    this.lastInputLength = this.cursorPos
+
+    let completed = this.getCompleted(true)
+    if (this.historyIndex === 0 && completed) {
+      // show closest match faintly
+      let rest = completed.substr(this.history[0].length)
+      this.terminal.write(`\x1b[2m${rest}\x1b[m${'\b'.repeat(rest.length)}`)
+      this.lastInputLength += rest.length
+    }
 
     if (action === 'return') {
-      this.terminal.write('\r\n')
+      this.terminal.write('\n')
       this.parse(this.history[this.historyIndex])
     }
   }
   parse (input) {
     if (input === 'help') input = 'info'
     // TODO: basic chaining (i.e. semicolon)
-    this.run(input)
+    if (input) this.run(input)
+    else this.prompt()
   }
   run (command) {
     let parts = ['']
