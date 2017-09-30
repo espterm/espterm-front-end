@@ -55,13 +55,7 @@
 		<div class="screen-margin bottom"></div>
 	</div>
 
-	<div id="action-buttons">
-		<button data-n="1"></button><!--
-		--><button data-n="2"></button><!--
-		--><button data-n="3"></button><!--
-		--><button data-n="4"></button><!--
-		--><button data-n="5"></button>
-	</div>
+	<div id="action-buttons"></div>
 </div>
 
 <nav id="term-nav">

@@ -193,11 +193,9 @@ module.exports = class ScreenParser {
         qs('title').textContent = `${text} :: ESPTerm`
 
       } else if (topic === TOPIC_BUTTONS) {
-
-        // TODO optimize this
         const count = du(strArray[ci++])
 
-        let buttons = []
+        let labels = []
         for (let j = 0; j < count; j++) {
           text = ''
           while (ci < strArray.length) {
@@ -205,17 +203,10 @@ module.exports = class ScreenParser {
             if (c === '\x01') break
             text += c
           }
-          buttons.push(text)
+          labels.push(text)
         }
 
-        $('#action-buttons button').forEach((button, i) => {
-          let label = buttons[i].trim()
-          // if empty string, use the "dim" effect and put nbsp instead to
-          // stretch the button vertically
-          button.innerHTML = label.length ? $.htmlEscape(label) : '&nbsp;'
-          button.style.opacity = label.length ? 1 : 0.2
-        })
-
+        this.screen.emit('button-labels', labels)
       } else if (topic === TOPIC_BELL) {
 
         this.screen.beep()

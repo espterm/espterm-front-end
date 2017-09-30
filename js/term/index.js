@@ -6,6 +6,7 @@ const TermInput = require('./input')
 const TermUpload = require('./upload')
 const initSoftKeyboard = require('./soft_keyboard')
 const attachDebugScreen = require('./debug_screen')
+const initButtons = require('./buttons')
 
 /** Init the terminal sub-module - called from HTML */
 module.exports = function (opts) {
@@ -16,6 +17,13 @@ module.exports = function (opts) {
   screen.input = input
   screen.conn = conn
   input.termUpload = termUpload
+
+  const buttons = initButtons(input)
+  screen.on('button-labels', labels => {
+    // TODO: don't use pointers for this
+    buttons.labels.splice(0, buttons.labels.length, ...labels)
+    buttons.update()
+  })
 
   let showSplashTimeout = null
   let showSplash = (obj, delay = 250) => {
