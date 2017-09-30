@@ -224,7 +224,7 @@ module.exports = class ScreenParser {
         const freeHeap = du(strArray[ci++])
         const clientCount = du(strArray[ci++])
 
-        this.emit('internal', {
+        this.screen.emit('internal', {
           flags,
           cursorAttrs,
           regionStart,
