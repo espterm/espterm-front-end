@@ -1,146 +1,147 @@
 <?php
 
 return [
-	'menu.cfg_wifi' => 'WiFi Settings',
-	'menu.cfg_network' => 'Network Settings',
-	'menu.cfg_term' => 'Terminal Settings',
-	'menu.about' => 'About ESPTerm',
-	'menu.help' => 'Quick Reference',
-	'menu.term' => 'Back to Terminal',
-	'menu.cfg_system' => 'System Settings',
-	'menu.cfg_wifi_conn' => 'Connecting to Network',
-	'menu.settings' => 'Settings',
+	'menu.cfg_wifi' => 'Nastavení WiFi',
+	'menu.cfg_network' => 'Nastavení sítě',
+	'menu.cfg_term' => 'Nastavení terminalu',
+	'menu.about' => 'About',
+	'menu.help' => 'Nápověda',
+	'menu.term' => 'Zpět k terminálu',
+	'menu.cfg_system' => 'Nastavení systému',
+	'menu.cfg_wifi_conn' => 'Připojování',
+	'menu.settings' => 'Nastavení',
 
 	// Terminal page
 
-	'title.term' => 'Terminal', // page title of the terminal page
+	'title.term' => 'Terminál', // page title of the terminal page
 
-	'term_nav.fullscreen' => 'Fullscreen',
-	'term_nav.config' => 'Config',
+	'term_nav.fullscreen' => 'Celá obr.',
+	'term_nav.config' => 'Nastavení',
 	'term_nav.wifi' => 'WiFi',
-	'term_nav.help' => 'Help',
+	'term_nav.help' => 'Nápověda',
 	'term_nav.about' => 'About',
-	'term_nav.paste' => 'Paste',
-	'term_nav.upload' => 'Upload',
-	'term_nav.keybd' => 'Keyboard',
-	'term_nav.paste_prompt' => 'Paste text to send:',
+	'term_nav.paste' => 'Vložit',
+	'term_nav.upload' => 'Nahrát',
+	'term_nav.keybd' => 'Klávesnice',
+	'term_nav.paste_prompt' => 'Vložte text k~odeslání:',
 
-	'term_conn.connecting' => 'Connecting',
-	'term_conn.waiting_content' => 'Waiting for content',
-	'term_conn.disconnected' => 'Disconnected',
-	'term_conn.waiting_server' => 'Waiting for server',
-	'term_conn.reconnecting' => 'Reconnecting',
+	'term_conn.connecting' => 'Připojuji se',
+	'term_conn.waiting_content' => 'Čekám na data',
+	'term_conn.disconnected' => 'Odpojen',
+	'term_conn.waiting_server' => 'Čekám na server',
+	'term_conn.reconnecting' => 'Obnova spojení',
 
 	// Terminal settings page
 
-	'term.defaults' => 'Initial Settings',
-	'term.expert' => 'Expert Options',
+	'term.defaults' => 'Výchozí nastavení',
+	'term.expert' => 'Pokročilé volby',
 	'term.explain_initials' => '
-		Those are the initial settings used after ESPTerm powers on, 
-		or when the screen reset command is received (<code>\ec</code>).
-		They can be changed by the terminal application using escape sequences.
+		Tato nastavení jsou použita po spuštění a při resetu obrazovky
+		(příkaz RIS, <code>\ec</code>). Tyto volby lze měnit za běhu 
+		pomocí řídicích sekvencí.
 		',
 	'term.explain_expert' => '
-		Those are advanced config options that usually don\'t need to be changed.
-		Edit them only if you know what you\'re doing.',
+		Interní parametry terminálu. Změnou časování lze dosáhnout kratší
+		latence a~rychlejšího překreslování, hodnoty záleží na konkrétní 
+		aplikaci. Timeout parseru je čas do automatického zrušení započaté 
+		řídicí sekvence.',
 
-	'term.example' => 'Default colors preview',
+	'term.example' => 'Náhled výchozích barev',
 
 	'term.explain_scheme' => '
-		To select default text and background color, click on the
-		preview palette. Alternatively, use numbers 0-15 for theme colors,
-		16-255 for standard colors and hex (#FFFFFF) for True Color (24-bit).
+		Výchozí barvu textu a pozadí vyberete kliknutím na barvy v~paletě.
+		Dále lze použít ANSI barvy 0-255 a hex ve formátu #FFFFFF.
 		',
 
-	'term.fgbg_presets' => 'Defaults Presets',
-	'term.color_scheme' => 'Color Scheme',
-	'term.reset_screen' => 'Reset screen & parser',
-	'term.term_title' => 'Header Text',
-	'term.term_width' => 'Width',
-	'term.term_height' => 'Height',
-	'term.buttons' => 'Button Labels',
-	'term.theme' => 'Color Palette',
-	'term.cursor_shape' => 'Cursor Style',
-	'term.parser_tout_ms' => 'Parser Timeout',
-	'term.display_tout_ms' => 'Redraw Delay',
-	'term.display_cooldown_ms' => 'Redraw Cooldown',
-	'term.allow_decopt_12' => 'Allow \e?12h/l',
-	'term.fn_alt_mode' => 'SS3 Fn keys',
-	'term.show_config_links' => 'Show nav links',
-	'term.show_buttons' => 'Show buttons',
-	'term.loopback' => 'Local Echo (<span style="text-decoration:overline">SRM</span>)',
+	'term.fgbg_presets' => 'Předvolby výchozích<br>barev textu a pozadí',
+	'term.color_scheme' => 'Barevné schéma',
+	'term.reset_screen' => 'Resetovat obrazovku a parser',
+	'term.term_title' => 'Nadpis',
+	'term.term_width' => 'Šířka',
+	'term.term_height' => 'Výška',
+	'term.buttons' => 'Text tlačítke',
+	'term.theme' => 'Barevná paleta',
+	'term.cursor_shape' => 'Styl kurzoru',
+	'term.parser_tout_ms' => 'Timeout parseru',
+	'term.display_tout_ms' => 'Prodleva překreslení',
+	'term.display_cooldown_ms' => 'Min. čas překreslení',
+	'term.allow_decopt_12' => 'Povolit \e?12h/l',
+	'term.fn_alt_mode' => 'SS3 Fx klávesy',
+	'term.show_config_links' => 'Menu pod obrazovkou',
+	'term.show_buttons' => 'Zobrazit tlačítka',
+	'term.loopback' => 'Loopback (<span style="text-decoration:overline">SRM</span>)',
 	'term.crlf_mode' => 'Enter = CR+LF (LNM)',
-	'term.want_all_fn' => 'Capture F5, F11, F12',
-	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
-	'term.color_fg' => 'Default Fg.',
-	'term.color_bg' => 'Default Bg.',
-	'term.color_fg_prev' => 'Foreground',
-	'term.color_bg_prev' => 'Background',
+	'term.want_all_fn' => 'Zachytávat F5, F11, F12',
+	'term.button_msgs' => 'Reporty tlačítek<br>(dek. ASCII CSV)',
+	'term.color_fg' => 'Výchozí text',
+	'term.color_bg' => 'Výchozí pozadí',
+	'term.color_fg_prev' => 'Barva textu',
+	'term.color_bg_prev' => 'Barva pozadí',
 	'term.colors_preview' => '',
 
-	'cursor.block_blink' => 'Block, blinking',
-    'cursor.block_steady' => 'Block, steady',
-    'cursor.underline_blink' => 'Underline, blinking',
-    'cursor.underline_steady' => 'Underline, steady',
-    'cursor.bar_blink' => 'I-bar, blinking',
-    'cursor.bar_steady' => 'I-bar, steady',
+	'cursor.block_blink' => 'Blok, blikající',
+    'cursor.block_steady' => 'Blok, stálý',
+    'cursor.underline_blink' => 'Podtržítko, blikající',
+    'cursor.underline_steady' => 'Podtržítko, stálé',
+    'cursor.bar_blink' => 'Svislice, blikající',
+    'cursor.bar_steady' => 'Svislice, stálá',
 
 	// Network config page
 
 	'net.explain_sta' => '
-		Switch off Dynamic IP to configure the static IP address.',
+		Odškrtněte "Použít dynamickou IP" pro nastavení statické IP adresy.',
 
 	'net.explain_ap' => '
-		Those settings affect the built-in DHCP server in AP mode.',
+		Tato nastavení ovlivňují interní DHCP server v AP režimu (hotspot).',
 
-	'net.ap_dhcp_time' => 'Lease time',
-	'net.ap_dhcp_start' => 'Pool start IP',
-	'net.ap_dhcp_end' => 'Pool end IP',
-	'net.ap_addr_ip' => 'Own IP address',
-	'net.ap_addr_mask' => 'Subnet mask',
+	'net.ap_dhcp_time' => 'Doba zapůjčení adresy',
+	'net.ap_dhcp_start' => 'Začátek IP poolu',
+	'net.ap_dhcp_end' => 'Konec IP poolu',
+	'net.ap_addr_ip' => 'Vlastní IP adresa',
+	'net.ap_addr_mask' => 'Maska podsítě',
 
-	'net.sta_dhcp_enable' => 'Use dynamic IP',
-	'net.sta_addr_ip' => 'ESPTerm static IP',
-	'net.sta_addr_mask' => 'Subnet mask',
-	'net.sta_addr_gw' => 'Gateway IP',
+	'net.sta_dhcp_enable' => 'Použít dynamickou IP',
+	'net.sta_addr_ip' => 'Statická IP modulu',
+	'net.sta_addr_mask' => 'Maska podsítě',
+	'net.sta_addr_gw' => 'Gateway',
 
-	'net.ap' => 'DHCP Server (AP)',
-	'net.sta' => 'DHCP Client (Station)',
-	'net.sta_mac' => 'Station MAC',
-	'net.ap_mac' => 'AP MAC',
-	'net.details' => 'MAC addresses',
+	'net.ap' => 'DHCP server (AP)',
+	'net.sta' => 'DHCP klient',
+	'net.sta_mac' => 'MAC adresa klienta',
+	'net.ap_mac' => 'MAC adresa AP',
+	'net.details' => 'MAC adresy',
 
 	// Wifi config page
 
-	'wifi.ap' => 'Built-in Access Point',
-	'wifi.sta' => 'Join Existing Network',
+	'wifi.ap' => 'Vlastní hotspot (AP)',
+	'wifi.sta' => 'Připojení k~externí síti',
 
-	'wifi.enable' => 'Enabled',
-	'wifi.tpw' => 'Transmit power',
-	'wifi.ap_channel' => 'Channel',
-	'wifi.ap_ssid' => 'AP SSID',
-	'wifi.ap_password' => 'Password',
-	'wifi.ap_hidden' => 'Hide SSID',
-	'wifi.sta_info' => 'Selected',
+	'wifi.enable' => 'Zapnuto',
+	'wifi.tpw' => 'Vysílací výkon',
+	'wifi.ap_channel' => 'WiFi kanál',
+	'wifi.ap_ssid' => 'Jméno hotspotu',
+	'wifi.ap_password' => 'Přístupové heslo',
+	'wifi.ap_hidden' => 'Skrýt síť',
+	'wifi.sta_info' => 'Zvolená síť',
 
-	'wifi.not_conn' => 'Not connected.',
-	'wifi.sta_none' => 'None',
-	'wifi.sta_active_pw' => '🔒 Password saved',
-	'wifi.sta_active_nopw' => '🔓 Open access',
-	'wifi.connected_ip_is' => 'Connected, IP is ',
-	'wifi.sta_password' => 'Password:',
+	'wifi.not_conn' => 'Nepřipojen.',
+	'wifi.sta_none' => 'Žádná',
+	'wifi.sta_active_pw' => '🔒 Heslo uloženo',
+	'wifi.sta_active_nopw' => '🔓 Bez hesla',
+	'wifi.connected_ip_is' => 'Připojen, IP: ',
+	'wifi.sta_password' => 'Heslo:',
 
-	'wifi.scanning' => 'Scanning',
-	'wifi.scan_now' => 'Click here to start scanning!',
-	'wifi.cant_scan_no_sta' => 'Click here to enable client mode and start scanning!',
-	'wifi.select_ssid' => 'Available networks:',
-	'wifi.enter_passwd' => 'Enter password for ":ssid:"',
-	'wifi.sta_explain' => 'After selecting a network, press Apply to connect.',
+	'wifi.scanning' => 'Hledám sítě',
+	'wifi.scan_now' => 'Klikněte pro vyhledání sítí!',
+	'wifi.cant_scan_no_sta' => 'Klikněte pro zapnutí režimu klienta a vyhledání sítí!',
+	'wifi.select_ssid' => 'Dostupné sítě:',
+	'wifi.enter_passwd' => 'Zadejte heslo pro ":ssid:"',
+	'wifi.sta_explain' => 'Vyberte síť a připojte se tlačítkem vpravo nahoře.',
 
 	// Wifi connecting status page
 
-	'wificonn.status' => 'Status:',
-	'wificonn.back_to_config' => 'Back to WiFi config',
+	'wificonn.status' => 'Stav:',
+	'wificonn.back_to_config' => 'Zpět k~nastavení WiFi',
 	'wificonn.telemetry_lost' => 'Telemetry lost; something went wrong, or your device disconnected.',
 	'wificonn.explain_android_sucks' => '
 		If you\'re configuring ESPTerm via a smartphone, or were connected 
