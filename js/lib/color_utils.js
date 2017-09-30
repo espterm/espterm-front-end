@@ -113,6 +113,13 @@ function pad (n) {
   return n
 }
 
+exports.rgb255_to_hex = function (r, g, b) {
+  r = r.toString(16)
+  g = g.toString(16)
+  b = b.toString(16)
+  return `#${pad(r)}${pad(g)}${pad(b)}`
+}
+
 exports.rgb_to_hex = function (r, g, b) {
   r = Math.round(r * 255).toString(16)
   g = Math.round(g * 255).toString(16)
