@@ -71,15 +71,29 @@ module.exports = function (opts) {
   initSoftKeyboard(screen, input)
   if (attachDebugScreen) attachDebugScreen(screen)
 
+  let fullscreenIcon = {} // dummy
   let isFullscreen = false
+  let properFullscreen = false
   let fitScreen = false
   let screenPadding = screen.window.padding
   let fitScreenIfNeeded = function fitScreenIfNeeded () {
     if (isFullscreen) {
-      screen.window.fitIntoWidth = window.screen.width
-      screen.window.fitIntoHeight = window.screen.height
-      screen.window.padding = 0
+      fullscreenIcon.className = 'icn-resize-small'
+      if (properFullscreen) {
+        screen.window.fitIntoWidth = window.screen.width
+        screen.window.fitIntoHeight = window.screen.height
+        screen.window.padding = 0
+      } else {
+        screen.window.fitIntoWidth = window.innerWidth
+        if (qs('#term-nav').classList.contains('hidden')) {
+          screen.window.fitIntoHeight = window.innerHeight
+        } else {
+          screen.window.fitIntoHeight = window.innerHeight - 24
+        }
+        screen.window.padding = 0
+      }
     } else {
+      fullscreenIcon.className = 'icn-resize-full'
       screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
       screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
       screen.window.padding = screenPadding
@@ -108,6 +122,8 @@ module.exports = function (opts) {
 
   // add fullscreen mode & button
   if (window.Element.prototype.requestFullscreen || window.Element.prototype.webkitRequestFullscreen) {
+    properFullscreen = true
+
     let checkForFullscreen = function () {
       // document.fullscreenElement is not really supported yet, so here's a hack
       if (isFullscreen && (window.innerWidth !== window.screen.width || window.innerHeight !== window.screen.height)) {
@@ -116,28 +132,40 @@ module.exports = function (opts) {
       }
     }
     setInterval(checkForFullscreen, 500)
+  }
 
-    // (why are the buttons anchors?)
-    let button = mk('a')
-    button.href = '#'
-    button.addEventListener('click', e => {
-      e.preventDefault()
+  // (why are the buttons anchors?)
+  let button = mk('a')
+  button.id = 'fullscreen-button'
+  button.href = '#'
+  button.addEventListener('click', e => {
+    e.preventDefault()
 
-      isFullscreen = true
+    if (document.body.classList.contains('pseudo-fullscreen')) {
+      document.body.classList.remove('pseudo-fullscreen')
+      isFullscreen = false
       fitScreenIfNeeded()
-      screen.updateSize()
+      return
+    }
 
+    isFullscreen = true
+    fitScreenIfNeeded()
+    screen.updateSize()
+
+    if (properFullscreen) {
       if (screen.canvas.requestFullscreen) screen.canvas.requestFullscreen()
       else screen.canvas.webkitRequestFullscreen()
-    })
-    let icon = mk('i')
-    icon.classList.add('icn-resize-full') // TODO: less confusing icons
-    button.appendChild(icon)
-    let span = mk('span')
-    span.textContent = 'Fullscreen'
-    button.appendChild(span)
-    qs('#term-nav').insertBefore(button, qs('#term-nav').firstChild)
-  }
+    } else {
+      document.body.classList.add('pseudo-fullscreen')
+    }
+  })
+  fullscreenIcon = mk('i')
+  fullscreenIcon.className = 'icn-resize-full'
+  button.appendChild(fullscreenIcon)
+  let span = mk('span')
+  span.textContent = 'Fullscreen'
+  button.appendChild(span)
+  qs('#term-nav').insertBefore(button, qs('#term-nav').firstChild)
 
   // for debugging
   window.termScreen = screen

@@ -280,6 +280,38 @@ body.term {
 	}
 }
 
+body.pseudo-fullscreen {
+	#screen .screen-margin,
+	#keyboard-shortcut-bar {
+		display: none;
+	}
+	#outer {
+		position: static;
+	}
+	#screen {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+	#screen canvas {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	#term-nav {
+		position: fixed;
+		width: 100%;
+		bottom: 0;
+		z-index: 98;
+		height: 24px;
+		padding: 0;
+	}
+}
+
 // Attributes
 .bold {
 	font-weight: bold !important;
