@@ -12,17 +12,18 @@
 
 	<div class="Row">
 		<label for="theme"><?= tr("term.theme") ?></label>
-		<select name="theme" id="theme" class="short" onchange="showColor()">
+		<select name="theme" id="theme" onchange="showColor()">
 			<option value="0">Tango</option>
 			<option value="1">Linux (CGA)</option>
 			<option value="2">XTerm</option>
 			<option value="3">Rxvt</option>
 			<option value="4">Ambience</option>
-			<option value="5">Solarized</option>
-			<option value="6">CGA NTSC</option>
-			<option value="7">ZX Spectrum</option>
-			<option value="8">Apple II</option>
-			<option value="9">Commodore</option>
+			<option value="5">Solarized Dark</option>
+			<option value="6">Solarized Light</option>
+			<option value="7">CGA NTSC</option>
+			<option value="8">ZX Spectrum</option>
+			<option value="9">Apple II</option>
+			<option value="10">Commodore</option>
 		</select>
 	</div>
 
@@ -336,13 +337,16 @@
 
 	var $presets = $('#fgbg_presets');
 	for(var i = 0; i < themes.fgbgThemes.length; i++) {
-	  fg = themes.fgbgThemes[i][0];
-	  bg = themes.fgbgThemes[i][1];
+	  var thm = themes.fgbgThemes[i];
+	  var fg = thm[0];
+      var bg = thm[1];
+      var lbl = thm[2];
+      var tit = thm[3];
       $presets
         .htmlAppend(
           '<span class="preset" ' +
           'data-xfg="'+fg+'" data-xbg="'+bg+'" ' +
-          'style="color:'+fg+';background:'+bg+'">&nbsp;['+i+']&nbsp;</span>');
+          'style="color:'+fg+';background:'+bg+'" title="'+tit+'">&nbsp;'+lbl+'&nbsp;</span>');
 
 	  if ((i+1)%5==0) $presets.htmlAppend('<br>');
 	}

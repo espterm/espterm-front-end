@@ -1,58 +1,63 @@
 
 const themes = exports.themes = [
-  [ // Tango
+  [ // 0 - Tango - terminator
     '#111213', '#CC0000', '#4E9A06', '#C4A000', '#3465A4', '#75507B', '#06989A', '#D3D7CF',
     '#555753', '#EF2929', '#8AE234', '#FCE94F', '#729FCF', '#AD7FA8', '#34E2E2', '#EEEEEC'
   ],
-  [ // Linux (CGA)
+  [ // 1 - Linux (CGA) - terminator
     '#000000', '#aa0000', '#00aa00', '#aa5500', '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa',
     '#555555', '#ff5555', '#55ff55', '#ffff55', '#5555ff', '#ff55ff', '#55ffff', '#ffffff'
   ],
-  [ // xterm
+  [ // 2 - xterm - terminator
     '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000ee', '#cd00cd', '#00cdcd', '#e5e5e5',
     '#7f7f7f', '#ff0000', '#00ff00', '#ffff00', '#5c5cff', '#ff00ff', '#00ffff', '#ffffff'
   ],
-  [ // rxvt
+  [ // 3 - rxvt - terminator
     '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000cd', '#cd00cd', '#00cdcd', '#faebd7',
     '#404040', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
   ],
-  [ // Ambience
+  [ // 4 - Ambience - terminator
     '#2e3436', '#cc0000', '#4e9a06', '#c4a000', '#3465a4', '#75507b', '#06989a', '#d3d7cf',
     '#555753', '#ef2929', '#8ae234', '#fce94f', '#729fcf', '#ad7fa8', '#34e2e2', '#eeeeec'
   ],
-  [ // Solarized light
+  [ // 5 - Solarized Dark - terminator
     '#073642', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#eee8d5',
     '#002b36', '#cb4b16', '#586e75', '#657b83', '#839496', '#6c71c4', '#93a1a1', '#fdf6e3'
   ],
-  [ // CGA NTSC
+  [ // 6 - Solarized Light - https://github.com/sgerrand/xfce4-terminal-colors-solarized
+    '#eee8d5', '#dc322f', '#859900', '#b58900', '#268bd2', '#d33682', '#2aa198', '#073642',
+    '#fdf6e3', '#cb4b16', '#93a1a1', '#839496', '#657b83', '#6c71c4', '#586e75', '#002b36'
+  ],
+  [ // 7 - CGA NTSC - wikipedia
     '#000000', '#69001A', '#117800', '#769100', '#1A00A6', '#8019AB', '#289E76', '#A4A4A4',
     '#484848', '#C54E76', '#6DD441', '#D2ED46', '#765BFF', '#DC75FF', '#84FAD2', '#FFFFFF'
   ],
-  [ // ZX Spectrum
+  [ // 8 - ZX Spectrum - wikipedia
     '#000000', '#aa0000', '#00aa00', '#aaaa00', '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa',
     '#000000', '#ff0000', '#00FF00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'
   ],
-  [ // Apple II
+  [ // 9 - Apple II - wikipedia
     '#000000', '#722640', '#0E5940', '#808080', '#40337F', '#E434FE', '#1B9AFE', '#BFB3FF',
     '#404C00', '#E46501', '#1BCB01', '#BFCC80', '#808080', '#F1A6BF', '#8DD9BF', '#ffffff'
   ],
-  [ // Commodore
+  [ // 10 - Commodore - wikipedia
     '#000000', '#8D3E37', '#55A049', '#AAB95D', '#40318D', '#80348B', '#72C1C8', '#D59F74',
     '#8B5429', '#B86962', '#94E089', '#FFFFB2', '#8071CC', '#AA5FB6', '#87D6DD', '#ffffff'
   ]
 ]
 
 exports.fgbgThemes = [
-  ['#AAAAAA', '#000000'], // GREY_ON_BLACK
-  ['#EFF0F1', '#31363B'], // BREEZE
-  ['#FFFFFF', '#000000'], // WHITE_ON_BLACK
-  ['#00FF00', '#000000'], // GREEN_ON_BLACK
-  ['#E53C00', '#000000'], // ORANGE_ON_BLACK
-  ['#FFFFFF', '#300A24'], // AMBIENCE
-  ['#839496', '#002B36'], // SOLARIZED_DARK
-  ['#657B83', '#FDF6E3'], // SOLARIZED_LIGHT
-  ['#000000', '#FFFFDD'], // BLACK_ON_YELLOW
-  ['#000000', '#FFFFFF']  // BLACK_ON_WHITE
+  ['#AAAAAA', '#000000', 'Lnx', 'Linux'], // GREY_ON_BLACK
+  ['#EFF0F1', '#31363B', 'Brz', 'Breeze'], // BREEZE
+  ['#FFFFFF', '#000000', 'W+K', 'White on Black'], // WHITE_ON_BLACK
+  ['#00FF00', '#000000', 'Lim', 'Lime'], // GREEN_ON_BLACK
+  ['#E53C00', '#000000', 'Nix', 'Nixie'], // ORANGE_ON_BLACK
+  ['#FFFFFF', '#300A24', 'Amb', 'Ambiance'], // AMBIENCE
+  ['#839496', '#002B36', 'SoD', 'Solarized Dark'], // SOLARIZED_DARK
+  ['#657B83', '#FDF6E3', 'SoL', 'Solarized Light'], // SOLARIZED_LIGHT
+  ['#000000', '#FFFFDD', 'K+Y', 'Black on Yellow'], // BLACK_ON_YELLOW
+  ['#000000', '#FFFFFF', 'K+W', 'Black on White'], // BLACK_ON_WHITE
+  ['#000000', '#FFD75F', 'Wsp', 'Wasp']  // WASP
 ]
 
 let colorTable256 = null
