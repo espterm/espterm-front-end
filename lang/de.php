@@ -31,6 +31,7 @@ return [
 
   'title.term' => 'Terminal', // page title of the terminal page
 
+  'term_nav.fullscreen' => 'Vollbild',
   'term_nav.config' => 'Konfiguration',
   'term_nav.wifi' => 'WLAN',
   'term_nav.help' => 'Hilfe',
@@ -39,6 +40,12 @@ return [
   'term_nav.upload' => 'Hochladen',
   'term_nav.keybd' => 'Tastatur',
   'term_nav.paste_prompt' => 'Text einfügen zum Versenden:',
+
+  'term_conn.connecting' => 'Verbinden',
+  'term_conn.waiting_content' => 'Warten auf Inhalt',
+  'term_conn.disconnected' => 'Nicht verbunden',
+  'term_conn.waiting_server' => 'Warten auf Server',
+  'term_conn.reconnecting' => 'Verbinden',
 
   // Terminal settings page
 
@@ -162,9 +169,9 @@ return [
 
   'pwlock.title' => 'Zugriffsbeschränkungen',
   'pwlock.explain' => '
-    Manche, oder alle Teile Web-Interface können mit einem Passwort geschützt werden.
+    Manche, oder alle Teile des Web-Interface können mit einem Passwort geschützt werden.
     Lass die Passwortfelder leer wenn du es sie verändern möchtest.<br>
-    Das voreingestellte Passwort ist "%def_access_pw%".".
+    Das voreingestellte Passwort ist "%def_access_pw%".
   ',
   'pwlock.region' => 'Geschützte Seiten',
   'pwlock.region.none' => 'Keine, alles offen',

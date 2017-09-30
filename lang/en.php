@@ -31,6 +31,7 @@ return [
 
 	'title.term' => 'Terminal', // page title of the terminal page
 
+	'term_nav.fullscreen' => 'Fullscreen',
 	'term_nav.config' => 'Config',
 	'term_nav.wifi' => 'WiFi',
 	'term_nav.help' => 'Help',
@@ -40,14 +41,18 @@ return [
 	'term_nav.keybd' => 'Keyboard',
 	'term_nav.paste_prompt' => 'Paste text to send:',
 
+	'term_conn.connecting' => 'Connecting',
+	'term_conn.waiting_content' => 'Waiting for content',
+	'term_conn.disconnected' => 'Disconnected',
+	'term_conn.waiting_server' => 'Waiting for server',
+	'term_conn.reconnecting' => 'Reconnecting',
+
 	// Terminal settings page
 
 	'term.defaults' => 'Initial Settings',
 	'term.expert' => 'Expert Options',
 	'term.explain_initials' => '
-		Those are the initial settings used after ESPTerm powers on, or when the screen
-		reset command is received (<code>\ec</code>). They can be changed by the 
-		terminal application using escape sequences.
+		Those are the initial settings used after ESPTerm powers on, or when the screen reset command is received (<code>\ec</code>). They can be changed by the terminal application using escape sequences.
 		',
 	'term.explain_expert' => '
 		Those are advanced config options that usually don\'t need to be changed.
@@ -56,9 +61,7 @@ return [
 	'term.example' => 'Default colors preview',
 
 	'term.explain_scheme' => '
-		To select default text and background color, click on the
-		preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard 
-		colors and hex (#FFFFFF) for True Color (24-bit).
+		To select default text and background color, click on the preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard colors and hex (#FFFFFF) for True Color (24-bit).
 		',
 
 	'term.fgbg_presets' => 'Defaults Presets',
@@ -152,15 +155,10 @@ return [
 	'wificonn.back_to_config' => 'Back to WiFi config',
 	'wificonn.telemetry_lost' => 'Telemetry lost; something went wrong, or your device disconnected.',
 	'wificonn.explain_android_sucks' => '
-		If you\'re configuring ESPTerm via a smartphone, or were connected
-		from another external network, your device may lose connection and this 
-		progress indicator won\'t work. Please wait a while (~ 15 seconds), 
-		then check if the connection succeeded.',
+		If you\'re configuring ESPTerm via a smartphone, or were connected from another external network, your device may lose connection and this progress indicator won\'t work. Please wait a while (~ 15 seconds), then check if the connection succeeded.',
 
 	'wificonn.explain_reset' => '
-		To force enable the built-in AP, hold the BOOT 
-		button until the blue LED starts flashing. Hold the button longer (until the LED 
-		flashes rapidly) for a "factory reset".',
+		To force enable the built-in AP, hold the BOOT button until the blue LED starts flashing. Hold the button longer (until the LED flashes rapidly) for a "factory reset".',
 
 	'wificonn.disabled' =>"Station mode is disabled.",
 	'wificonn.idle' =>"Idle, not connected and has no IP.",
@@ -192,11 +190,7 @@ return [
 	'adminpw.title' => 'Change Admin Password',
 	'adminpw.explain' =>
 		'
-		The "admin password" is used to manipulate the stored default settings
-		and to change access restrictions. This password is not saved as part 
-		of the main config, i.e. using save / restore does not affect this 
-		password. When the admin password is forgotten, the easiest way to
-		re-gain access is to wipe and re-flash the chip.<br>
+		The "admin password" is used to manipulate the stored default settings and to change access restrictions. This password is not saved as part of the main config, i.e. using save / restore does not affect this password. When the admin password is forgotten, the easiest way to re-gain access is to wipe and re-flash the chip.<br>
 		The default admin password is "%def_admin_pw%".
 		',
 	'adminpw.new_admin_pw' => 'New admin password',
@@ -226,8 +220,7 @@ return [
 
 	'uart.title' => 'Serial Port Parameters',
 	'uart.explain' => '
-		This form controls the communication UART. The debug UART is fixed 
-		at 115.200 baud, one stop-bit and no parity.
+		This form controls the communication UART. The debug UART is fixed at 115.200 baud, one stop-bit and no parity.
 		',
 	'uart.baud' => 'Baud rate',
 	'uart.parity' => 'Parity',
@@ -243,10 +236,7 @@ return [
 
 	'hwtuning.title' => 'Hardware Tuning',
 	'hwtuning.explain' => '
-		ESP8266 can be overclocked from 80&nbsp;MHz to 160&nbsp;MHz. 
-		This will make it more responsive and allow faster screen updates
-		at the expense of slightly higher power consumption. This can also make 
-		it more susceptible to interference. Use with care.
+		ESP8266 can be overclocked from 80&nbsp;MHz to 160&nbsp;MHz. This will make it more responsive and allow faster screen updates at the expense of slightly higher power consumption. This can also make it more susceptible to interference. Use with care.
 		',
 	'hwtuning.overclock' => 'Overclock to 160MHz',
 

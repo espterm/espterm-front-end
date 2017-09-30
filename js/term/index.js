@@ -1,4 +1,5 @@
 const { qs, mk } = require('../utils')
+const localize = require('../lang')
 const Notify = require('../notif')
 const TermScreen = require('./screen')
 const TermConnection = require('./connection')
@@ -35,11 +36,11 @@ module.exports = function (opts) {
 
   conn.on('open', () => {
     // console.log('*open')
-    showSplash({ title: 'Connecting', loading: true })
+    showSplash({ title: localize('term_conn.connecting'), loading: true })
   })
   conn.on('connect', () => {
     // console.log('*connect')
-    showSplash({ title: 'Waiting for content', loading: true })
+    showSplash({ title: localize('term_conn.waiting_content'), loading: true })
   })
   conn.on('load', () => {
     // console.log('*load')
@@ -48,7 +49,7 @@ module.exports = function (opts) {
   })
   conn.on('disconnect', () => {
     // console.log('*disconnect')
-    showSplash({ title: 'Disconnected' }, 500)
+    showSplash({ title: localize('term_conn.disconnected') }, 500)
     screen.screen = []
     screen.screenFG = []
     screen.screenBG = []
@@ -56,12 +57,12 @@ module.exports = function (opts) {
   })
   conn.on('silence', () => {
     // console.log('*silence')
-    showSplash({ title: 'Waiting for server', loading: true }, 0)
+    showSplash({ title: localize('term_conn.waiting_server'), loading: true }, 0)
   })
   // conn.on('ping-fail', () => { screen.window.statusScreen = { title: 'Disconnected' } })
   conn.on('ping-success', () => {
     // console.log('*ping-success')
-    showSplash({ title: 'Re-connecting', loading: true }, 0)
+    showSplash({ title: localize('term_conn.reconnecting'), loading: true }, 0)
   })
 
   conn.init()
@@ -171,7 +172,7 @@ module.exports = function (opts) {
   fullscreenIcon.className = 'icn-resize-full'
   button.appendChild(fullscreenIcon)
   let span = mk('span')
-  span.textContent = 'Fullscreen'
+  span.textContent = localize('term_nav.fullscreen')
   button.appendChild(span)
   qs('#term-nav').insertBefore(button, qs('#term-nav').firstChild)
 
