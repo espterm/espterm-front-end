@@ -69,7 +69,7 @@ module.exports = class ScreenParser {
   }
 
   loadUpdate (str) {
-    console.log(`update ${str}`)
+    // console.log(`update ${str}`)
     // current index
     let ci = 0
     let strArray = Array.from ? Array.from(str) : str.split('')
@@ -81,7 +81,6 @@ module.exports = class ScreenParser {
 
     while (ci < strArray.length) {
       const topic = strArray[ci++]
-      console.log(`topic ${topic}`)
 
       if (topic === TOPIC_SCREEN_OPTS) {
         const newHeight = du(strArray[ci++])
@@ -353,7 +352,6 @@ module.exports = class ScreenParser {
    * @param {string} str - the message
    */
   load (str) {
-    console.log(`RX: ${str}`)
     const content = str.substr(1)
 
     switch (str[0]) {
