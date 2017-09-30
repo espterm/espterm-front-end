@@ -1,3 +1,4 @@
+const $ = require('../lib/chibi')
 
 const themes = exports.themes = [
   [ // 0 - Tango - terminator
@@ -99,12 +100,12 @@ exports.SELECTION_FG = '#333'
 exports.SELECTION_BG = '#b2d7fe'
 
 exports.themePreview = function (themeN) {
-  document.querySelectorAll('[data-fg]').forEach((elem) => {
+  $('[data-fg]').forEach((elem) => {
     let shade = elem.dataset.fg
     if (/^\d+$/.test(shade)) shade = exports.toCss(shade, themeN)
     elem.style.color = shade
   })
-  document.querySelectorAll('[data-bg]').forEach((elem) => {
+  $('[data-bg]').forEach((elem) => {
     let shade = elem.dataset.bg
     if (/^\d+$/.test(shade)) shade = exports.toCss(shade, themeN)
     elem.style.backgroundColor = shade
