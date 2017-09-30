@@ -7,6 +7,7 @@ const SEQ_SET_COLORS = 3
 const SEQ_SET_ATTRS = 4
 const SEQ_SET_FG = 5
 const SEQ_SET_BG = 6
+const SEQ_SET_ATTR_0 = 7
 
 function du (str) {
   return str.codePointAt(0) - 1
@@ -312,6 +313,10 @@ module.exports = class ScreenParser {
             case SEQ_SET_ATTRS:
               data = strArray[ci++].codePointAt(0) - 1
               attrs = data & 0xFFFF
+              break
+
+            case SEQ_SET_ATTR_0:
+              attrs = 0
               break
 
             case SEQ_SET_FG:
