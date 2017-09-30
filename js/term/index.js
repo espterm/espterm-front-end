@@ -40,7 +40,7 @@ module.exports = function (opts) {
   })
   conn.on('disconnect', () => {
     // console.log('*disconnect')
-    showSplash({ title: 'Disconnected' })
+    showSplash({ title: 'Disconnected' }, 500)
     screen.screen = []
     screen.screenFG = []
     screen.screenBG = []

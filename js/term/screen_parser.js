@@ -2,6 +2,7 @@ const $ = require('../lib/chibi')
 const { qs } = require('../utils')
 
 // constants for decoding the update blob
+const SEQ_SKIP = 1
 const SEQ_REPEAT = 2
 const SEQ_SET_COLORS = 3
 const SEQ_SET_ATTRS = 4
@@ -266,6 +267,12 @@ module.exports = class ScreenParser {
           let myAttrs = attrs
           let hasFG = attrs & ATTR_FG
           let hasBG = attrs & ATTR_BG
+
+          // use 0,0 if no fg/bg. this is to match back-end implementation
+          // and allow leaving out fg/bg setting for cells with none
+          if (!hasFG) fg = 0
+          if (!hasBG) bg = 0
+
           if ((myAttrs & MASK_BLINK) !== 0 &&
             ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
               (fg === bg && hasFG && hasBG) // invisible text
@@ -283,8 +290,15 @@ module.exports = class ScreenParser {
           let cellYInFrame = Math.floor(cell / frameWidth)
           let index = (frameY + cellYInFrame) * this.screen.window.width + frameX + cellXInFrame
 
+          let cellFg = fg
+
+          // 8 dark system colors turn bright when bold
+          if ((myAttrs & ATTR_BOLD) && !(myAttrs & ATTR_FAINT) && hasFG && fg < 8) {
+            cellFg += 8
+          }
+
           this.screen.screen[index] = lastChar
-          this.screen.screenFG[index] = fg
+          this.screen.screenFG[index] = cellFg
           this.screen.screenBG[index] = bg
           this.screen.screenAttrs[index] = myAttrs
         }
@@ -293,14 +307,18 @@ module.exports = class ScreenParser {
           let character = strArray[ci++]
           let charCode = character.codePointAt(0)
 
-          let data
+          let data, count
           switch (charCode) {
             case SEQ_REPEAT:
-              let count = du(strArray[ci++])
+              count = du(strArray[ci++])
               for (let j = 0; j < count; j++) {
                 pushCell()
                 if (++cell > screenLength) break
               }
+              break
+
+            case SEQ_SKIP:
+              cell += du(strArray[ci++])
               break
 
             case SEQ_SET_COLORS:
@@ -363,6 +381,9 @@ module.exports = class ScreenParser {
    */
   load (str) {
     const content = str.substr(1)
+
+    // This is a good place for debugging the message
+    // console.log(str)
 
     switch (str[0]) {
       case 'U':
