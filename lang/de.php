@@ -5,7 +5,7 @@ return [
 	'menu.cfg_network' => 'Netzwerkeinstellungen',
 	'menu.cfg_term' => 'Terminaleinstellungen',
 	'menu.about' => 'Über ESPTerm',
-	'menu.help' => 'Referenz',
+	'menu.help' => 'Schnellreferenz',
 	'menu.term' => 'Zurück zum Terminal',
 	'menu.cfg_system' => 'Systemeinstellungen',
 	'menu.cfg_wifi_conn' => 'Verbinden mit dem Netzwerk',
@@ -36,23 +36,23 @@ return [
 	'term.defaults' => 'Anfangseinstellungen',
 	'term.expert' => 'Expertenoptionen',
 	'term.explain_initials' => '
-		Dies sind die Anfangseinstellungen, die benutzt werden, nachdem ESPTerm startet, 
-		oder wenn der Bildschirm mit dem <code>\ec</code>-Kommando zurückgesetzt wird. 
+		Dies sind die Anfangseinstellungen, die benutzt werden, nachdem ESPTerm startet,
+		oder wenn der Bildschirm mit dem <code>\ec</code>-Kommando zurückgesetzt wird.
 		Sie können durch Escape-Sequenzen verändert werden.
 		',
 	'term.explain_expert' => '
-		Dies sind erweiterte Konfigurationsoptionen, die meistens nicht verändert 
+		Dies sind erweiterte Konfigurationsoptionen, die meistens nicht verändert
 		werden müssen. Bearbeite sie nur, wenn du weißt, was du tust.',
 
 	'term.example' => 'Standardfarbenvorschau',
 
 	'term.explain_scheme' => '
-		Um die Standardtextfarbe und Standardhintergrundfarbe auszuwählen, klicke auf 
-		die Vorschaupalette, oder benutze die Zahlen 0-15 für die Themafarben, 16-255 
+		Um die Standardtextfarbe und Standardhintergrundfarbe auszuwählen, klicke auf
+		die Vorschaupalette, oder benutze die Zahlen 0-15 für die Themafarben, 16-255
 		für Standardfarben, oder Hexadezimal (#FFFFFF) für True Color (24-bit).
 		',
 
-	'term.fgbg_presets' => 'Standardvoreinstellungen',
+	'term.fgbg_presets' => 'Voreinstellungen',
 	'term.color_scheme' => 'Farbschema',
 	'term.reset_screen' => 'Bildschirm & Parser zurücksetzen',
 	'term.term_title' => 'Titeltext',
@@ -66,7 +66,7 @@ return [
 	'term.display_cooldown_ms' => 'Zeichenabkühlzeit',
 	'term.allow_decopt_12' => '\e?12h/l erlauben',
 	'term.fn_alt_mode' => 'SS3 Fn-Tasten',
-	'term.show_config_links' => 'Navigationslinks anzeigen',
+	'term.show_config_links' => 'Links anzeigen',
 	'term.show_buttons' => 'Tasten anzeigen',
 	'term.loopback' => 'Lokales Echo (<span style="text-decoration:overline">SRM</span>)',
 	'term.crlf_mode' => 'Enter = CR+LF (LNM)',
@@ -99,7 +99,7 @@ return [
 	'net.ap_addr_ip' => 'Eigene IP-Addresse',
 	'net.ap_addr_mask' => 'Subnet-Maske',
 
-	'net.sta_dhcp_enable' => 'Dynamische IP verwenden',
+	'net.sta_dhcp_enable' => 'Dynamische IP',
 	'net.sta_addr_ip' => 'ESPTerm statische IP',
 	'net.sta_addr_mask' => 'Subnet-Mask',
 	'net.sta_addr_gw' => 'Gateway-IP',
@@ -144,14 +144,14 @@ return [
 	'wificonn.back_to_config' => 'Zurück zur WLAN-Konfiguration',
 	'wificonn.telemetry_lost' => 'Telemetrie verloren; etwas lief schief, oder dein Gerät wurde getrennt.',
 	'wificonn.explain_android_sucks' => '
-		Wenn du gerade ESPTerm mit einem Handy oder über ein anderes externes Netzwerk 
-		konfigurierst, kann dein Gerät die Verbindung verlieren und diese Fortschrittsanzeige 
-		wird nicht funktionieren. Bitte warte eine Weile (etwa 15 Sekunden) und prüfe dann, 
+		Wenn du gerade ESPTerm mit einem Handy oder über ein anderes externes Netzwerk
+		konfigurierst, kann dein Gerät die Verbindung verlieren und diese Fortschrittsanzeige
+		wird nicht funktionieren. Bitte warte eine Weile (etwa 15 Sekunden) und prüfe dann,
 		ob die Verbindung gelangen ist.',
 
 	'wificonn.explain_reset' => '
-		Um den eingebauten AP zur Aktivierung zu zwingen, halte den BOOT-Knopf gedrückt bis die 
-		blaue LED beginnt, zu blinken. Halte ihn länger gedrückt (bis die LED schnell blinkt) 
+		Um den eingebauten AP zur Aktivierung zu zwingen, halte den BOOT-Knopf gedrückt bis die
+		blaue LED beginnt, zu blinken. Halte ihn länger gedrückt (bis die LED schnell blinkt)
 		um eine "Werksrückstellung" zu vollziehen.',
 
 	'wificonn.disabled' => "Stationsmodus ist deaktiviert.",
@@ -175,30 +175,30 @@ return [
 	'pwlock.region.all' => 'Alles, sogar das Terminal',
 	'pwlock.new_access_pw' => 'Neues Passwort',
 	'pwlock.new_access_pw2' => 'Wiederholen',
-	'pwlock.admin_pw' => 'Administratorpasswort',
+	'pwlock.admin_pw' => 'Admin. Passwort',
 	'pwlock.access_name' => 'Benutzername',
 
 	// Setting admin password
 
 	'adminpw.title' => 'Administratorpasswort ändern',
 	'adminpw.explain' =>'
-		Das "Administratorpasswort" wird benutzt, um die gespeicherten Standardeinstellungen 
-		und die Zugriffsbeschränkungen zu verändern. Dieses Passwort wird nicht als Teil 
-		der Hauptkonfiguration gespeichert, d.h. Speichern / Wiederherstellen wird das 
-		Passwort nicht beeinflussen. Wenn das Administratorpasswort vergessen wird, ist 
+		Das "Administratorpasswort" wird benutzt, um die gespeicherten Standardeinstellungen
+		und die Zugriffsbeschränkungen zu verändern. Dieses Passwort wird nicht als Teil
+		der Hauptkonfiguration gespeichert, d.h. Speichern / Wiederherstellen wird das
+		Passwort nicht beeinflussen. Wenn das Administratorpasswort vergessen wird, ist
 		die einfachste Weise, wieder Zugriff zu erhalten, ein Re-flash des Chips.<br>
 		Das voreingestellte Administratorpasswort ist "%def_admin_pw%".
 		',
-	'adminpw.new_admin_pw' => 'Neues Administratorpasswort',
+	'adminpw.new_admin_pw' => 'Neues Passwort',
 	'adminpw.new_admin_pw2' => 'Wiederholen',
-	'adminpw.old_admin_pw' => 'Altes Administratorpasswort',
+	'adminpw.old_admin_pw' => 'Altes Passwort',
 
 	// Persist form
 
 	'persist.title' => 'Speichern & Wiederherstellen',
 	'persist.explain' => '
-		ESPTerm speichert alle Einstellungen im Flash-Speicher. Die aktiven Einstellungen 
-		können in den “Voreinstellungsbereich” kopiert werden und später wiederhergestellt 
+		ESPTerm speichert alle Einstellungen im Flash-Speicher. Die aktiven Einstellungen
+		können in den “Voreinstellungsbereich” kopiert werden und später wiederhergestellt
 		werden mit der Taste unten.',
 	'persist.confirm_restore' => 'Alle Einstellungen zu den Voreinstellungen zurücksetzen?',
 	'persist.confirm_restore_hard' => '
@@ -211,14 +211,14 @@ return [
 	'persist.write_defaults' => 'Aktive Einstellungen als Voreinstellungen speichern',
 	'persist.restore_hard' => 'Aktive Einstellungen zu Werkseinstellungen zurücksetzen',
 	'persist.restore_hard_explain' => '
-		(Dies löscht die WLAN-Konfiguration! Beeinflusst die gespeicherten Voreinstellungen 
+		(Dies löscht die WLAN-Konfiguration! Beeinflusst die gespeicherten Voreinstellungen
 		oder das Administratorpasswort nicht.)',
 
 	// UART settings form
 
 	'uart.title' => 'Serienportparameter',
 	'uart.explain' => '
-		Dies steuert den Kommunikations-UART. Der Debug-UART ist auf 115.200 baud fest 
+		Dies steuert den Kommunikations-UART. Der Debug-UART ist auf 115.200 baud fest
 		eingestellt mit einem Stop-Bit und keiner Parität.
 		',
 	'uart.baud' => 'Baudrate',
@@ -235,11 +235,11 @@ return [
 
 	'hwtuning.title' => 'Hardware-Tuning',
 	'hwtuning.explain' => '
-		ESP8266 kann overclocked werden von 80&nbsp;MHz auf 160&nbsp;MHz.
-		Alles wird etwas schneller sein, aber mit höherem Stromverbrauch, 
+		ESP8266 kann übertaktet werden von 80&nbsp;MHz auf 160&nbsp;MHz.
+		Alles wird etwas schneller sein, aber mit höherem Stromverbrauch,
 		und eventuell auch mit höherer Interferenz. Mit Sorgfalt benutzen.
 		',
-	'hwtuning.overclock' => 'Auf 160MHz Overclocken',
+	'hwtuning.overclock' => 'Übertakten',
 
 	// Generic button / dialog labels
 
