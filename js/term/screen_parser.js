@@ -90,6 +90,8 @@ module.exports = class ScreenParser {
         const defBg = du(strArray[ci++]) | (du(strArray[ci++]) << 12)
         const attributes = du(strArray[ci++])
 
+        console.log(`set colors ${defFg}, ${defBg}, theme ${theme}`)
+
         // theming
         this.screen.renderer.loadTheme(theme)
         this.screen.renderer.setDefaultColors(defFg, defBg)

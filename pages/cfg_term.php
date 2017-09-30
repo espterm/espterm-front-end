@@ -19,11 +19,12 @@
 			<option value="3">Rxvt</option>
 			<option value="4">Ambience</option>
 			<option value="5">Solarized Dark</option>
-			<option value="6">Solarized Light</option>
-			<option value="7">CGA NTSC</option>
-			<option value="8">ZX Spectrum</option>
-			<option value="9">Apple II</option>
-			<option value="10">Commodore</option>
+			<option value="11">Solarized Dark, high contrast</option>
+			<option value="10">Solarized Light</option>
+			<option value="6">CGA NTSC</option>
+			<option value="7">ZX Spectrum</option>
+			<option value="8">Apple II</option>
+			<option value="9">Commodore</option>
 		</select>
 	</div>
 
