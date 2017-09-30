@@ -44,7 +44,7 @@ module.exports = function (conn, input, screen) {
     lines = v.split('\n')
     line_i = 0
     inline_pos = 0 // offset in line
-    send_delay_ms = qs('#fu_delay').value
+    send_delay_ms = +qs('#fu_delay').value
 
     // sanitize - 0 causes overflows
     if (send_delay_ms < 0) {
@@ -92,13 +92,18 @@ module.exports = function (conn, input, screen) {
       }
     }
 
+    let maxChunk = +qs('#fu_chunk').value
+    if (maxChunk === 0 || maxChunk > MAX_LINE_LEN) {
+      maxChunk = MAX_LINE_LEN
+    }
+
     let chunk
-    if ((curLine.length - inline_pos) <= MAX_LINE_LEN) {
-      chunk = curLine.substr(inline_pos, MAX_LINE_LEN)
+    if ((curLine.length - inline_pos) <= maxChunk) {
+      chunk = curLine.substr(inline_pos, maxChunk)
       inline_pos = 0
     } else {
-      chunk = curLine.substr(inline_pos, MAX_LINE_LEN)
-      inline_pos += MAX_LINE_LEN
+      chunk = curLine.substr(inline_pos, maxChunk)
+      inline_pos += maxChunk
     }
 
     if (!input.sendString(chunk)) {

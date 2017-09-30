@@ -20,7 +20,7 @@
 				<textarea id="fu_text"></textarea>
 			</p>
 			<p>
-				<label for="fu_crlf">Line Endings:</label>
+				<label for="fu_crlf">Line endings:</label>
 				<select id="fu_crlf">
 					<option value="CR">CR (Enter key)</option>
 					<option value="CRLF">CR LF (Windows)</option>
@@ -28,8 +28,12 @@
 				</select>
 			</p>
 			<p>
-				<label for="fu_delay">Line Delay (ms):</label>
+				<label for="fu_delay">Chunk delay (ms):</label>
 				<input id="fu_delay" type="number" value=1 min=0>
+			</p>
+			<p>
+				<label for="fu_chunk">Chunk size (0=line):</label>
+				<input id="fu_chunk" type="number" value=0 min=0 max=100>
 			</p>
 		</div>
 		<div class="fu-buttons">
