@@ -93,4 +93,6 @@ return [
 	'theme' => 0,
 	'pwlock' => 0,
 	'access_name' => 'espterm',
+
+	'allow_decopt_12' => 0,
 ];

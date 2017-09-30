@@ -288,6 +288,12 @@
 		<input type="hidden" id="show_config_links" name="show_config_links" value="%show_config_links%">
 	</div>
 
+	<div class="Row checkbox" >
+		<label><?= tr('term.allow_decopt_12') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="allow_decopt_12" name="allow_decopt_12" value="%allow_decopt_12%">
+	</div>
+
 	<div class="Row buttons">
 		<a class="button icn-ok" href="#" onclick="qs('#form-expert').submit()"><?= tr('apply') ?></a>
 	</div>
