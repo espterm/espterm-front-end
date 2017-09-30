@@ -175,23 +175,23 @@ return [
 	'pwlock.region.all' => 'Alles, sogar das Terminal',
 	'pwlock.new_access_pw' => 'Neues Passwort',
 	'pwlock.new_access_pw2' => 'Wiederholen',
-	'pwlock.admin_pw' => 'Admin. Passwort',
+	'pwlock.admin_pw' => 'Systempasswort',
 	'pwlock.access_name' => 'Benutzername',
 
 	// Setting admin password
 
-	'adminpw.title' => 'Administratorpasswort ändern',
+	'adminpw.title' => 'Systempasswort ändern',
 	'adminpw.explain' =>'
-		Das "Administratorpasswort" wird benutzt, um die gespeicherten Standardeinstellungen
+		Das "Systempasswort" wird benutzt, um die gespeicherten Standardeinstellungen
 		und die Zugriffsbeschränkungen zu verändern. Dieses Passwort wird nicht als Teil
 		der Hauptkonfiguration gespeichert, d.h. Speichern / Wiederherstellen wird das
-		Passwort nicht beeinflussen. Wenn das Administratorpasswort vergessen wird, ist
+		Passwort nicht beeinflussen. Wenn das Systempasswort vergessen wird, ist
 		die einfachste Weise, wieder Zugriff zu erhalten, ein Re-flash des Chips.<br>
-		Das voreingestellte Administratorpasswort ist "%def_admin_pw%".
+		Das voreingestellte Systempasswort ist "%def_admin_pw%".
 		',
-	'adminpw.new_admin_pw' => 'Neues Passwort',
+	'adminpw.new_admin_pw' => 'Neues Systempasswort',
 	'adminpw.new_admin_pw2' => 'Wiederholen',
-	'adminpw.old_admin_pw' => 'Altes Passwort',
+	'adminpw.old_admin_pw' => 'Altes Systempasswort',
 
 	// Persist form
 
@@ -205,14 +205,14 @@ return [
 		Zurücksetzen zu den Firmware-Voreinstellungen? Dies wird alle aktiven
 		Einstellungen zürucksetzen und den AP-Modus aktivieren mit der Standard-SSID.',
 	'persist.confirm_store_defaults' =>
-		'Administratorpasswort eingeben um Voreinstellungen zu überschreiben',
-	'persist.password' => 'Administratorpasswort:',
+		'Systempasswort eingeben um Voreinstellungen zu überschreiben',
+	'persist.password' => 'Systempasswort:',
 	'persist.restore_defaults' => 'Zu gespeicherten Voreinstellungen zurücksetzen',
 	'persist.write_defaults' => 'Aktive Einstellungen als Voreinstellungen speichern',
 	'persist.restore_hard' => 'Aktive Einstellungen zu Werkseinstellungen zurücksetzen',
 	'persist.restore_hard_explain' => '
 		(Dies löscht die WLAN-Konfiguration! Beeinflusst die gespeicherten Voreinstellungen
-		oder das Administratorpasswort nicht.)',
+		oder das Systempasswort nicht.)',
 
 	// UART settings form
 
