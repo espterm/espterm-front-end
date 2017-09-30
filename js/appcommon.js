@@ -61,7 +61,7 @@ $.ready(function () {
   }, 1000)
 
   // flipping number boxes with the mouse wheel
-  $('input[type=number]').on('mousewheel', function (e) {
+  $('input[type=number]').on('wheel', function (e) {
     let $this = $(this)
     let val = +$this.val()
     if (isNaN(val)) val = 1
@@ -69,14 +69,14 @@ $.ready(function () {
     const step = +($this.attr('step') || 1)
     const min = +$this.attr('min')
     const max = +$this.attr('max')
-    if (e.wheelDelta > 0) {
+    if (e.deltaY > 0) {
       val += step
     } else {
       val -= step
     }
 
-    if (!Number.isFinite(min)) val = Math.max(val, +min)
-    if (!Number.isFinite(max)) val = Math.min(val, +max)
+    if (Number.isFinite(min)) val = Math.max(val, +min)
+    if (Number.isFinite(max)) val = Math.min(val, +max)
     $this.val(val)
 
     if ('createEvent' in document) {
