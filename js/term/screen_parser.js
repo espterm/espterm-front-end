@@ -306,13 +306,13 @@ module.exports = class ScreenParser {
               break
 
             case SEQ_SET_COLORS:
-              data = strArray[ci++].codePointAt(0) - 1
+              data = du(strArray[ci++])
               fg = data & 0xFF
               bg = (data >> 8) & 0xFF
               break
 
             case SEQ_SET_ATTRS:
-              data = strArray[ci++].codePointAt(0) - 1
+              data = du(strArray[ci++])
               attrs = data & 0xFFFF
               break
 
@@ -321,13 +321,23 @@ module.exports = class ScreenParser {
               break
 
             case SEQ_SET_FG:
-              data = strArray[ci++].codePointAt(0) - 1
-              fg = data & 0xFF
+              data = du(strArray[ci++])
+              if (data & 0x10000) {
+                data ^= 0x10000
+                data |= du(strArray[ci++]) << 12
+                data += 256
+              }
+              fg = data
               break
 
             case SEQ_SET_BG:
-              data = strArray[ci++].codePointAt(0) - 1
-              bg = data & 0xFF
+              data = du(strArray[ci++])
+              if (data & 0x10000) {
+                data ^= 0x10000
+                data |= du(strArray[ci++]) << 12
+                data += 256
+              }
+              bg = data
               break
 
             default:
