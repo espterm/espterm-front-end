@@ -78,6 +78,8 @@ return [
 	'term.color_fg_prev' => 'Barva textu',
 	'term.color_bg_prev' => 'Barva pozadí',
 	'term.colors_preview' => '',
+	'term.debugbar' => 'Zobraz ladicí panel',
+	'term.ascii_debug' => 'ASCII debug režim',
 
 	'cursor.block_blink' => 'Blok, blikající',
     'cursor.block_steady' => 'Blok, stálý',

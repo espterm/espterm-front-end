@@ -271,6 +271,19 @@
 	</div>
 
 	<div class="Row checkbox" >
+		<label><?= tr('term.debugbar') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="debugbar" name="debugbar" value="%debugbar%">
+	</div>
+
+	<div class="Row checkbox" >
+		<label><?= tr('term.ascii_debug') ?></label><!--
+		--><span class="box" tabindex=0 role=checkbox></span>
+		<input type="hidden" id="ascii_debug" name="ascii_debug" value="%ascii_debug%">
+	</div>
+
+
+	<div class="Row checkbox" >
 		<label><?= tr('term.fn_alt_mode') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="fn_alt_mode" name="fn_alt_mode" value="%fn_alt_mode%">
