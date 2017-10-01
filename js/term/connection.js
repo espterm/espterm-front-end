@@ -3,6 +3,9 @@ const $ = require('../lib/chibi')
 let demo
 try { demo = require('./demo') } catch (err) {}
 
+const RECONN_DELAY = 2000
+const HEARTBEAT_TIME = 3000
+
 /** Handle connections */
 module.exports = class TermConnection extends EventEmitter {
   constructor (screen) {
@@ -17,12 +20,16 @@ module.exports = class TermConnection extends EventEmitter {
     this.reconnTimeout = null
     this.forceClosing = false
 
-    this.blobReader = new FileReader()
-    this.blobReader.onload = (evt) => {
-      this.onDecodedWSMessage(this.blobReader.result)
-    }
-    this.blobReader.onerror = (evt) => {
-      console.error(evt)
+    try {
+      this.blobReader = new FileReader()
+      this.blobReader.onload = (evt) => {
+        this.onDecodedWSMessage(this.blobReader.result)
+      }
+      this.blobReader.onerror = (evt) => {
+        console.error(evt)
+      }
+    } catch (e) {
+      this.blobReader = null
     }
 
     this.pageShown = false
@@ -67,7 +74,7 @@ module.exports = class TermConnection extends EventEmitter {
     }
 
     clearTimeout(this.reconnTimeout)
-    this.reconnTimeout = setTimeout(() => this.init(), 2000)
+    this.reconnTimeout = setTimeout(() => this.init(), RECONN_DELAY)
 
     this.emit('disconnect', evt.code)
   }
@@ -75,6 +82,7 @@ module.exports = class TermConnection extends EventEmitter {
   onDecodedWSMessage (str) {
     switch (str.charAt(0)) {
       case '.':
+        console.log(str)
         // heartbeat, no-op message
         break
 
@@ -106,6 +114,11 @@ module.exports = class TermConnection extends EventEmitter {
   onWSMessage (evt) {
     if (typeof evt.data === 'string') this.onDecodedWSMessage(evt.data)
     else {
+      if (!this.blobReader) {
+        console.error('No FileReader!')
+        return
+      }
+
       if (this.blobReader.readyState !== 1) {
         this.blobReader.readAsText(evt.data)
       } else {
@@ -183,7 +196,24 @@ module.exports = class TermConnection extends EventEmitter {
 
   heartbeat () {
     clearTimeout(this.heartbeatTimeout)
-    this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), 2500)
+    this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), HEARTBEAT_TIME)
+  }
+
+  sendPing () {
+    console.log('> ping')
+    this.emit('ping')
+    $.get('http://' + window._root + '/system/ping', (resp, status) => {
+      if (status === 200) {
+        clearInterval(this.pingInterval)
+        console.info('Server ready, opening socket…')
+        this.emit('ping-success')
+        this.init()
+        // location.reload()
+      } else this.emit('ping-fail', status)
+    }, {
+      timeout: 100,
+      loader: false // we have loader on-screen
+    })
   }
 
   onHeartbeatFail () {
@@ -191,22 +221,9 @@ module.exports = class TermConnection extends EventEmitter {
     this.emit('silence')
     console.error('Heartbeat lost, probing server...')
     clearInterval(this.pingInterval)
+    this.pingInterval = setInterval(() => { this.sendPing() }, 1000)
 
-    this.pingInterval = setInterval(() => {
-      console.log('> ping')
-      this.emit('ping')
-      $.get('http://' + window._root + '/system/ping', (resp, status) => {
-        if (status === 200) {
-          clearInterval(this.pingInterval)
-          console.info('Server ready, opening socket…')
-          this.emit('ping-success')
-          this.init()
-          // location.reload()
-        } else this.emit('ping-fail', status)
-      }, {
-        timeout: 100,
-        loader: false // we have loader on-screen
-      })
-    }, 1000)
+    // first ping, if this gets through, it'll will reduce delay
+    setTimeout(() => { this.sendPing() }, 200)
   }
 }
