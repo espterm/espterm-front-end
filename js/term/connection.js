@@ -17,6 +17,14 @@ module.exports = class TermConnection extends EventEmitter {
     this.reconnTimeout = null
     this.forceClosing = false
 
+    this.blobReader = new FileReader()
+    this.blobReader.onload = (evt) => {
+      this.onDecodedWSMessage(this.blobReader.result)
+    }
+    this.blobReader.onerror = (evt) => {
+      console.error(evt)
+    }
+
     this.pageShown = false
 
     this.disconnectTimeout = null
@@ -64,38 +72,47 @@ module.exports = class TermConnection extends EventEmitter {
     this.emit('disconnect', evt.code)
   }
 
-  onWSMessage (evt) {
-    try {
-      switch (evt.data.charAt(0)) {
-        case '.':
-          // heartbeat, no-op message
-          break
+  onDecodedWSMessage (str) {
+    switch (str.charAt(0)) {
+      case '.':
+        // heartbeat, no-op message
+        break
 
-        case '-':
-          // console.log('xoff');
-          this.xoff = true
-          this.autoXoffTimeout = setTimeout(() => {
-            this.xoff = false
-          }, 250)
-          break
-
-        case '+':
-          // console.log('xon');
+      case '-':
+        // console.log('xoff');
+        this.xoff = true
+        this.autoXoffTimeout = setTimeout(() => {
           this.xoff = false
-          clearTimeout(this.autoXoffTimeout)
-          break
+        }, 250)
+        break
 
-        default:
-          this.screen.load(evt.data)
-          if (!this.pageShown) {
-            window.showPage()
-            this.pageShown = true
-          }
-          break
+      case '+':
+        // console.log('xon');
+        this.xoff = false
+        clearTimeout(this.autoXoffTimeout)
+        break
+
+      default:
+        this.screen.load(str)
+        if (!this.pageShown) {
+          window.showPage()
+          this.pageShown = true
+        }
+        break
+    }
+    this.heartbeat()
+  }
+
+  onWSMessage (evt) {
+    if (typeof evt.data === 'string') this.onDecodedWSMessage(evt.data)
+    else {
+      if (this.blobReader.readyState !== 1) {
+        this.blobReader.readAsText(evt.data)
+      } else {
+        setTimeout(() => {
+          this.onWSMessage(evt)
+        }, 1)
       }
-      this.heartbeat()
-    } catch (e) {
-      console.error(e)
     }
   }
 
