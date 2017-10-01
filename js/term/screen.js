@@ -268,10 +268,20 @@ module.exports = class TermScreen extends EventEmitter {
       }
     })
 
+    let aggregateWheelDelta = 0
     this.canvas.addEventListener('wheel', e => {
       if (this.mouseMode.clicks) {
-        this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY),
-          e.deltaY > 0 ? 1 : -1)
+        if (Math.abs(e.wheelDeltaY) === 120) {
+          // mouse wheel scrolling
+          this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
+        } else {
+          // smooth scrolling
+          aggregateWheelDelta -= e.wheelDeltaY
+          if (Math.abs(aggregateWheelDelta) >= 40) {
+            this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
+            aggregateWheelDelta = 0
+          }
+        }
 
         // prevent page scrolling
         e.preventDefault()
