@@ -321,11 +321,12 @@ module.exports = class TermScreen extends EventEmitter {
 
     x = x / this._windowScale - this._padding
     y = y / this._windowScale - this._padding
+    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
+    y = Math.floor(y / cellSize.height)
+    x = Math.max(0, Math.min(this.window.width - 1, x))
+    y = Math.max(0, Math.min(this.window.height - 1, y))
 
-    return [
-      Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
-      Math.floor(y / cellSize.height)
-    ]
+    return [x, y]
   }
 
   /**

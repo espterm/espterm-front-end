@@ -19,15 +19,15 @@ module.exports = function attachDebugScreen (screen) {
   let addCanvas = function () {
     if (!debugCanvas.parentNode) {
       screen.canvas.parentNode.appendChild(debugCanvas)
-      screen.canvas.parentNode.addEventListener('mousemove', onMouseMove)
-      screen.canvas.parentNode.addEventListener('mouseout', onMouseOut)
+      screen.canvas.addEventListener('mousemove', onMouseMove)
+      screen.canvas.addEventListener('mouseout', onMouseOut)
     }
   }
   let removeCanvas = function () {
     if (debugCanvas.parentNode) {
       debugCanvas.parentNode.removeChild(debugCanvas)
-      screen.canvas.parentNode.removeEventListener('mousemove', onMouseMove)
-      screen.canvas.parentNode.removeEventListener('mouseout', onMouseOut)
+      screen.canvas.removeEventListener('mousemove', onMouseMove)
+      screen.canvas.removeEventListener('mouseout', onMouseOut)
       onMouseOut()
     }
   }
@@ -261,10 +261,10 @@ module.exports = function attachDebugScreen (screen) {
   const formatColor = color => color < 256 ? color : `#${`000000${(color - 256).toString(16)}`.substr(-6)}`
   const getCellData = cell => {
     if (cell < 0 || cell > screen.screen.length) return '(-)'
-    let cellAttrs = screen.renderer.drawnScreenAttrs[cell]
-    let cellFG = formatColor(screen.renderer.drawnScreenFG[cell])
-    let cellBG = formatColor(screen.renderer.drawnScreenBG[cell])
-    let cellCode = (screen.renderer.drawnScreen[cell] || '').codePointAt(0)
+    let cellAttrs = screen.renderer.drawnScreenAttrs[cell] | 0
+    let cellFG = formatColor(screen.renderer.drawnScreenFG[cell]) | 0
+    let cellBG = formatColor(screen.renderer.drawnScreenBG[cell]) | 0
+    let cellCode = (screen.renderer.drawnScreen[cell] || '').codePointAt(0) | 0
     let hexcode = cellCode.toString(16).toUpperCase()
     if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
     hexcode = `U+${hexcode}`
@@ -284,8 +284,8 @@ module.exports = function attachDebugScreen (screen) {
     if ('flags' in internalInfo) {
       // we got ourselves some internal data
       text += ' '
-      text += ` flags:${internalInfo.flags}`
-      text += ` curAttrs:${internalInfo.cursorAttrs}`
+      text += ` flags:${internalInfo.flags.toString(2)}`
+      text += ` curAttrs:${internalInfo.cursorAttrs.toString(2)}`
       text += ` Region:${internalInfo.regionStart}->${internalInfo.regionEnd}`
       text += ` Charset:${internalInfo.charsetGx} (0:${internalInfo.charsetG0},1:${internalInfo.charsetG1})`
       text += ` Heap:${internalInfo.freeHeap}`
