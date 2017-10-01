@@ -202,7 +202,7 @@ module.exports = class TermConnection extends EventEmitter {
   sendPing () {
     console.log('> ping')
     this.emit('ping')
-    $.get('http://' + window._root + '/system/ping', (resp, status) => {
+    $.get('http://' + window._root + '/api/v1/ping', (resp, status) => {
       if (status === 200) {
         clearInterval(this.pingInterval)
         console.info('Server ready, opening socket…')
