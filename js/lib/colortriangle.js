@@ -21,18 +21,20 @@
  */
 
 // NOTE: Converted to ES6 by MightyPork (2017)
+// Modified for ESPTerm
 
+const EventEmitter = require('events')
 const {
-  rgb_to_hex,
-  hex_to_rgb,
-  hsl_to_rgb,
-  rgb_to_hsl
+  rgb2hex,
+  hex2rgb,
+  hsl2rgb,
+  rgb2hsl
 } = require('./color_utils')
 
 const win = window
 const doc = document
 const M = Math
-const PI = M.PI
+const TAU = 2 * M.PI
 
 function times (i, fn) {
   for (let j = 0; j < i; j++) {
@@ -54,13 +56,15 @@ function each (obj, fn) {
   }
 }
 
-module.exports = class ColorTriangle {
+module.exports = class ColorTriangle extends EventEmitter {
   /****************
    * ColorTriangle *
    ****************/
 
   // Constructor function:
   constructor (color, options) {
+    super()
+
     this.options = {
       size: 150,
       padding: 8,
@@ -74,15 +78,17 @@ module.exports = class ColorTriangle {
       background: 'transparent'
     }
 
-    this._setOptions(options)
-    this._calculateProperties()
+    this.pixelRatio = window.devicePixelRatio
 
-    this._createContainer()
-    this._createTriangle()
-    this._createWheel()
-    this._createWheelPointer()
-    this._createTrianglePointer()
-    this._attachEvents()
+    this.setOptions(options)
+    this.calculateProperties()
+
+    this.createContainer()
+    this.createTriangle()
+    this.createWheel()
+    this.createWheelPointer()
+    this.createTrianglePointer()
+    this.attachEvents()
 
     color = color || '#f00'
     if (typeof color == 'string') {
@@ -90,7 +96,7 @@ module.exports = class ColorTriangle {
     }
   }
 
-  _calculateProperties () {
+  calculateProperties () {
     let opts = this.options
 
     this.padding = opts.padding
@@ -104,10 +110,10 @@ module.exports = class ColorTriangle {
     this.triangleSideLength = M.sqrt(3) * this.triangleRadius
   }
 
-  _calculatePositions () {
+  calculatePositions () {
     const r = this.triangleRadius
     const hue = this.hue
-    const third = (2 / 3) * PI
+    const third = TAU / 3
     const s = this.saturation
     const l = this.lightness
 
@@ -128,7 +134,7 @@ module.exports = class ColorTriangle {
     this.y = sy + (vy - sy) * l + (hy - my) * a
   }
 
-  _createContainer () {
+  createContainer () {
     let c = this.container = doc.createElement('div')
     c.className = 'color-triangle'
 
@@ -141,38 +147,41 @@ module.exports = class ColorTriangle {
     c.style.background = this.options.background
   }
 
-  _createWheel () {
+  createWheel () {
     let c = this.wheel = doc.createElement('canvas')
-    c.width = c.height = this.innerSize
+    c.width = c.height = this.innerSize * this.pixelRatio
+    c.style.width = c.style.height = `${this.innerSize}px`
     c.style.position = 'absolute'
     c.style.margin = c.style.padding = '0'
     c.style.left = c.style.top = `${this.padding}px`
 
-    this._drawWheel(c.getContext('2d'))
+    this.drawWheel(c.getContext('2d'))
     this.container.appendChild(c)
   }
 
-  _drawWheel (ctx) {
+  drawWheel (ctx) {
     let s, i
 
     ctx.save()
+    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
     ctx.translate(this.wheelRadius, this.wheelRadius)
     s = this.wheelRadius - this.triangleRadius
     // Draw a circle for every color
     for (i = 0; i < 360; i++) {
-      ctx.rotate(PI / -180) // rotate one degree
+      ctx.rotate(TAU / -360) // rotate one degree
       ctx.beginPath()
       ctx.fillStyle = 'hsl(' + i + ', 100%, 50%)'
-      ctx.arc(this.wheelRadius - (s / 2), 0, s / 2, 0, PI * 2, true)
+      ctx.arc(this.wheelRadius - (s / 2), 0, s / 2, 0, TAU, true)
       ctx.fill()
     }
     ctx.restore()
   }
 
-  _createTriangle () {
+  createTriangle () {
     let c = this.triangle = doc.createElement('canvas')
 
-    c.width = c.height = this.innerSize
+    c.width = c.height = this.innerSize * this.pixelRatio
+    c.style.width = c.style.height = `${this.innerSize}px`
     c.style.position = 'absolute'
     c.style.margin = c.style.padding = '0'
     c.style.left = c.style.top = this.padding + 'px'
@@ -182,7 +191,7 @@ module.exports = class ColorTriangle {
     this.container.appendChild(c)
   }
 
-  _drawTriangle () {
+  drawTriangle () {
     const hx = this.hx
     const hy = this.hy
     const sx = this.sx
@@ -194,9 +203,10 @@ module.exports = class ColorTriangle {
     let ctx = this.triangleCtx
 
     // clear
-    ctx.clearRect(0, 0, size, size)
+    ctx.clearRect(0, 0, size * this.pixelRatio, size * this.pixelRatio)
 
     ctx.save()
+    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
     ctx.translate(this.wheelRadius, this.wheelRadius)
 
     // make a triangle
@@ -213,7 +223,7 @@ module.exports = class ColorTriangle {
 
     // create gradient from hsl(hue, 1, 1) to transparent
     let grad0 = ctx.createLinearGradient(hx, hy, (sx + vx) / 2, (sy + vy) / 2)
-    const hsla = 'hsla(' + M.round(this.hue * (180 / PI)) + ', 100%, 50%, '
+    const hsla = 'hsla(' + M.round(this.hue * (360 / TAU)) + ', 100%, 50%, '
     grad0.addColorStop(0, hsla + '1)')
     grad0.addColorStop(1, hsla + '0)')
     ctx.fillStyle = grad0
@@ -233,57 +243,60 @@ module.exports = class ColorTriangle {
   }
 
   // The two pointers
-  _createWheelPointer () {
+  createWheelPointer () {
     let c = this.wheelPointer = doc.createElement('canvas')
     const size = this.wheelPointerSize
-    c.width = c.height = size
+    c.width = c.height = size * this.pixelRatio
+    c.style.width = c.style.height = `${size}px`
     c.style.position = 'absolute'
     c.style.margin = c.style.padding = '0'
-    this._drawPointer(c.getContext('2d'), size / 2, this.options.wheelPointerColor1, this.options.wheelPointerColor2)
+    this.drawPointer(c.getContext('2d'), size / 2, this.options.wheelPointerColor1, this.options.wheelPointerColor2)
     this.container.appendChild(c)
   }
 
-  _moveWheelPointer () {
+  moveWheelPointer () {
     const r = this.wheelPointerSize / 2
     const s = this.wheelPointer.style
     s.top = this.padding + this.wheelRadius - M.sin(this.hue) * (this.triangleRadius + this.wheelThickness / 2) - r + 'px'
     s.left = this.padding + this.wheelRadius + M.cos(this.hue) * (this.triangleRadius + this.wheelThickness / 2) - r + 'px'
   }
 
-  _createTrianglePointer () { // create pointer in the triangle
+  createTrianglePointer () { // create pointer in the triangle
     let c = this.trianglePointer = doc.createElement('canvas')
     const size = this.options.trianglePointerSize
 
-    c.width = c.height = size
+    c.width = c.height = size * this.pixelRatio
+    c.style.width = c.style.height = `${size}px`
     c.style.position = 'absolute'
     c.style.margin = c.style.padding = '0'
-    this._drawPointer(c.getContext('2d'), size / 2, this.options.trianglePointerColor1, this.options.trianglePointerColor2)
+    this.drawPointer(c.getContext('2d'), size / 2, this.options.trianglePointerColor1, this.options.trianglePointerColor2)
     this.container.appendChild(c)
   }
 
-  _moveTrianglePointer (x, y) {
+  moveTrianglePointer (x, y) {
     const s = this.trianglePointer.style
     const r = this.options.trianglePointerSize / 2
     s.top = (this.y + this.wheelRadius + this.padding - r) + 'px'
     s.left = (this.x + this.wheelRadius + this.padding - r) + 'px'
   }
 
-  _drawPointer (ctx, r, color1, color2) {
+  drawPointer (ctx, r, color1, color2) {
+    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
     ctx.fillStyle = color2
     ctx.beginPath()
-    ctx.arc(r, r, r, 0, PI * 2, true)
+    ctx.arc(r, r, r, 0, TAU, true)
     ctx.fill() // => black circle
     ctx.fillStyle = color1
     ctx.beginPath()
-    ctx.arc(r, r, r - 2, 0, PI * 2, true)
+    ctx.arc(r, r, r - 2, 0, TAU, true)
     ctx.fill() // => white circle with 1px black border
     ctx.fillStyle = color2
     ctx.beginPath()
-    ctx.arc(r, r, r / 4 + 2, 0, PI * 2, true)
+    ctx.arc(r, r, r / 4 + 2, 0, TAU, true)
     ctx.fill() // => black circle with big white border and a small black border
     ctx.globalCompositeOperation = 'destination-out'
     ctx.beginPath()
-    ctx.arc(r, r, r / 4, 0, PI * 2, true)
+    ctx.arc(r, r, r / 4, 0, TAU, true)
     ctx.fill() // => transparent center
   }
 
@@ -292,7 +305,7 @@ module.exports = class ColorTriangle {
     parent.appendChild(this.container)
   }
 
-  _getRelativeCoordinates (evt) {
+  getRelativeCoordinates (evt) {
     let elem = this.triangle
     let rect = elem.getBoundingClientRect()
 
@@ -315,7 +328,7 @@ module.exports = class ColorTriangle {
 
   // Color accessors
   getCSS () {
-    const h = Math.round(this.hue * (180 / PI))
+    const h = Math.round(this.hue * (360 / TAU))
     const s = Math.round(this.saturation * 100)
     const l = Math.round(this.lightness * 100)
 
@@ -323,19 +336,19 @@ module.exports = class ColorTriangle {
   }
 
   getHEX () {
-    return rgb_to_hex(...this.getRGB())
+    return rgb2hex(...this.getRGB())
   }
 
   setHEX (hex) {
-    this.setRGB(...hex_to_rgb(hex))
+    this.setRGB(...hex2rgb(hex))
   }
 
   getRGB () {
-    return hsl_to_rgb(...this.getHSL())
+    return hsl2rgb(...this.getHSL())
   }
 
   setRGB (r, g, b) {
-    this.setHSL(...rgb_to_hsl(r, g, b))
+    this.setHSL(...rgb2hsl(r, g, b))
   }
 
   getHSL () {
@@ -347,18 +360,18 @@ module.exports = class ColorTriangle {
     this.saturation = s
     this.lightness = l
 
-    this._initColor()
+    this.initColor()
   }
 
-  _initColor () {
-    this._calculatePositions()
-    this._moveWheelPointer()
-    this._drawTriangle()
-    this._moveTrianglePointer()
+  initColor () {
+    this.calculatePositions()
+    this.moveWheelPointer()
+    this.drawTriangle()
+    this.moveTrianglePointer()
   }
 
   // Mouse event handling
-  _attachEvents () {
+  attachEvents () {
     this.down = null
 
     let mousedown = (evt) => {
@@ -368,19 +381,19 @@ module.exports = class ColorTriangle {
       doc.body.addEventListener('mousemove', mousemove, false)
       doc.body.addEventListener('mouseup', mouseup, false)
 
-      let xy = this._getRelativeCoordinates(evt)
-      this._map(xy.x, xy.y)
+      let xy = this.getRelativeCoordinates(evt)
+      this.map(xy.x, xy.y)
     }
 
     let mousemove = (evt) => {
-      let xy = this._getRelativeCoordinates(evt)
-      this._move(xy.x, xy.y)
+      let xy = this.getRelativeCoordinates(evt)
+      this.move(xy.x, xy.y)
     }
 
     let mouseup = (evt) => {
       if (this.down) {
         this.down = null
-        this._fireEvent('dragend')
+        this.emit('dragend')
       }
       doc.body.removeEventListener('mousemove', mousemove, false)
       doc.body.removeEventListener('mouseup', mouseup, false)
@@ -390,7 +403,7 @@ module.exports = class ColorTriangle {
     this.container.addEventListener('mousemove', mousemove, false)
   }
 
-  _map (x, y) {
+  map (x, y) {
     let x0 = x
     let y0 = y
     x -= this.wheelRadius
@@ -400,17 +413,17 @@ module.exports = class ColorTriangle {
     if (r > this.triangleRadius && r < this.wheelRadius) {
       // Wheel
       this.down = 'wheel'
-      this._fireEvent('dragstart')
-      this._move(x0, y0)
+      this.emit('dragstart')
+      this.move(x0, y0)
     } else if (r < this.triangleRadius) {
       // Inner circle
       this.down = 'triangle'
-      this._fireEvent('dragstart')
-      this._move(x0, y0)
+      this.emit('dragstart')
+      this.move(x0, y0)
     }
   }
 
-  _move (x, y) {
+  move (x, y) {
     if (!this.down) {
       return
     }
@@ -420,17 +433,17 @@ module.exports = class ColorTriangle {
 
     let rad = M.atan2(-y, x)
     if (rad < 0) {
-      rad += 2 * PI
+      rad += TAU
     }
 
     if (this.down === 'wheel') {
       this.hue = rad
-      this._initColor()
-      this._fireEvent('drag')
+      this.initColor()
+      this.emit('drag')
     } else if (this.down === 'triangle') {
       // get radius and max radius
-      let rad0 = (rad + 2 * PI - this.hue) % (2 * PI)
-      let rad1 = rad0 % ((2 / 3) * PI) - (PI / 3)
+      let rad0 = (rad + TAU - this.hue) % TAU
+      let rad1 = rad0 % (TAU / 3) - (TAU / 6)
       let a = 0.5 * this.triangleRadius
       let b = M.tan(rad1) * a
       let r = M.sqrt(x * x + y * y) // Pythagoras
@@ -439,15 +452,15 @@ module.exports = class ColorTriangle {
       if (r > maxR) {
         const dx = M.tan(rad1) * r
         let rad2 = M.atan(dx / maxR)
-        if (rad2 > PI / 3) {
-          rad2 = PI / 3
-        } else if (rad2 < -PI / 3) {
-          rad2 = -PI / 3
+        if (rad2 > TAU / 6) {
+          rad2 = TAU / 6
+        } else if (rad2 < -TAU / 6) {
+          rad2 = -TAU / 6
         }
         rad += rad2 - rad1
 
-        rad0 = (rad + 2 * PI - this.hue) % (2 * PI)
-        rad1 = rad0 % ((2 / 3) * PI) - (PI / 3)
+        rad0 = (rad + TAU - this.hue) % TAU
+        rad1 = rad0 % (TAU / 3) - (TAU / 6)
         b = M.tan(rad1) * a
         r = maxR = M.sqrt(a * a + b * b) // Pythagoras
       }
@@ -467,9 +480,9 @@ module.exports = class ColorTriangle {
 
       this.x = x
       this.y = y
-      this._moveTrianglePointer()
+      this.moveTrianglePointer()
 
-      this._fireEvent('drag')
+      this.emit('drag')
     }
   }
 
@@ -491,7 +504,7 @@ module.exports = class ColorTriangle {
         options.event = options.event || 'dragend'
 
         ct = new ColorTriangle(hex, options)
-        ct.addEventListener(options.event, () => {
+        ct.on(options.event, () => {
           const hex = ct.getHEX()
           input.value = options.uppercase ? hex.toUpperCase() : hex
           fireChangeEvent()
@@ -545,7 +558,7 @@ module.exports = class ColorTriangle {
    * Helper functions *
    *******************/
 
-  _setOptions (opts) {
+  setOptions (opts) {
     opts = opts || {}
     let dflt = this.options
     let options = this.options = {}
@@ -555,40 +568,5 @@ module.exports = class ColorTriangle {
         ? opts[key]
         : val
     })
-  }
-
-  addEventListener (type, fn) {
-    if (!this.events) {
-      this.events = {}
-    }
-    if (!this.events[type]) {
-      this.events[type] = []
-    }
-    this.events[type].push(fn)
-  }
-
-  removeEventListener (type, fn) {
-    if (this.events) {
-      let fns = this.events[type]
-      const l = fns.length
-      for (let i = 0; i < l; i += 1) {
-        if (fns[i] === fn) {
-          fns.splice(i, 1)
-          break
-        }
-      }
-    }
-  }
-
-  _fireEvent (type) {
-    if (this.events) {
-      let evts = this.events[type]
-      if (evts) {
-        const args = Array.prototype.slice.call(arguments, 1)
-        each(evts, function (evt) {
-          evt(...args)
-        })
-      }
-    }
   }
 }

@@ -29,9 +29,9 @@
  *******************/
 
 const M = Math
-const PI = M.PI
+const TAU = 2 * M.PI
 
-exports.hue_to_rgb = function (v1, v2, h) {
+exports.hue2rgb = function (v1, v2, h) {
   if (h < 0) h += 1
   if (h > 1) h -= 1
 
@@ -41,8 +41,8 @@ exports.hue_to_rgb = function (v1, v2, h) {
   return v1
 }
 
-exports.hsl_to_rgb = function (h, s, l) {
-  h /= 2 * PI
+exports.hsl2rgb = function (h, s, l) {
+  h /= TAU
   let r, g, b
 
   if (s === 0) {
@@ -55,14 +55,14 @@ exports.hsl_to_rgb = function (h, s, l) {
 
     var_1 = 2 * l - var_2
 
-    r = exports.hue_to_rgb(var_1, var_2, h + (1 / 3))
-    g = exports.hue_to_rgb(var_1, var_2, h)
-    b = exports.hue_to_rgb(var_1, var_2, h - (1 / 3))
+    r = exports.hue2rgb(var_1, var_2, h + (1 / 3))
+    g = exports.hue2rgb(var_1, var_2, h)
+    b = exports.hue2rgb(var_1, var_2, h - (1 / 3))
   }
   return [r, g, b]
 }
 
-exports.rgb_to_hsl = function (r, g, b) {
+exports.rgb2hsl = function (r, g, b) {
   const min = M.min(r, g, b)
   const max = M.max(r, g, b)
   const d = max - min // delta
@@ -90,39 +90,29 @@ exports.rgb_to_hsl = function (r, g, b) {
     if (h < 0) h += 1
     else if (h > 1) h -= 1
   }
-  h *= 2 * PI
+  h *= TAU
   return [h, s, l]
 }
 
-exports.hex_to_rgb = function (hex) {
-  const groups = hex.match(/^#([A-Fa-f0-9]+)$/)
-  if (groups && groups[1].length % 3 === 0) {
+exports.hex2rgb = function (hex) {
+  const groups = hex.match(/^#([\da-f]{3,6})$/i)
+  if (groups) {
     hex = groups[1]
     const bytes = hex.length / 3
-    const max = Math.pow(16, bytes) - 1
-    const r = parseInt(hex.slice(0 * bytes, 1 * bytes), 16) / max
-    const g = parseInt(hex.slice(1 * bytes, 2 * bytes), 16) / max
-    const b = parseInt(hex.slice(2 * bytes, 3 * bytes), 16) / max
-    return [r, g, b]
+    const max = (16 ** bytes) - 1
+    return [0, 1, 2].map(x => parseInt(hex.slice(x * bytes, (x + 1) * bytes), 16) / max)
   }
   return [0, 0, 0]
 }
 
 function pad (n) {
-  if (n.length === 1) n = '0' + n
-  return n
+  return `00${n}`.substr(-2)
 }
 
-exports.rgb255_to_hex = function (r, g, b) {
-  r = r.toString(16)
-  g = g.toString(16)
-  b = b.toString(16)
-  return `#${pad(r)}${pad(g)}${pad(b)}`
+exports.rgb255ToHex = function (r, g, b) {
+  return '#' + [r, g, b].map(x => pad(x.toString(16))).join('')
 }
 
-exports.rgb_to_hex = function (r, g, b) {
-  r = Math.round(r * 255).toString(16)
-  g = Math.round(g * 255).toString(16)
-  b = Math.round(b * 255).toString(16)
-  return `#${pad(r)}${pad(g)}${pad(b)}`
+exports.rgb2hex = function (r, g, b) {
+  return '#' + [r, g, b].map(x => pad(Math.round(x * 255).toString(16))).join('')
 }

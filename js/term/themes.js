@@ -1,5 +1,5 @@
 const $ = require('../lib/chibi')
-const { rgb255_to_hex } = require('../lib/color_utils')
+const { rgb255ToHex } = require('../lib/color_utils')
 
 const themes = exports.themes = [
   [ // 0 - Tango - terminator
@@ -84,14 +84,14 @@ exports.buildColorTable = function () {
         let redValue = red * 40 + (red ? 55 : 0)
         let greenValue = green * 40 + (green ? 55 : 0)
         let blueValue = blue * 40 + (blue ? 55 : 0)
-        colorTable256.push(rgb255_to_hex(redValue, greenValue, blueValue))
+        colorTable256.push(rgb255ToHex(redValue, greenValue, blueValue))
       }
     }
   }
   // colors 232-255 are a grayscale ramp, sans black and white
   for (let gray = 0; gray < 24; gray++) {
     let value = gray * 10 + 8
-    colorTable256.push(rgb255_to_hex(value, value, value))
+    colorTable256.push(rgb255ToHex(value, value, value))
   }
 
   return colorTable256
