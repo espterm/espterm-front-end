@@ -218,6 +218,9 @@ module.exports = function attachDebugScreen (screen) {
   const dataDisplay = mk('div')
   dataDisplay.classList.add('data-display')
   toolbar.appendChild(dataDisplay)
+  const internalDisplay = mk('div')
+  internalDisplay.classList.add('internal-display')
+  toolbar.appendChild(internalDisplay)
   toolbar.appendChild(drawInfo)
   const buttons = mk('div')
   buttons.classList.add('toolbar-buttons')
@@ -258,6 +261,28 @@ module.exports = function attachDebugScreen (screen) {
     }
   })
 
+  const displayCellAttrs = attrs => {
+    let result = attrs.toString(16)
+    if (attrs & 1 || attrs & 2) {
+      result += ':has('
+      if (attrs & 1) result += 'fg'
+      if (attrs & 2) result += (attrs & 1 ? ',' : '') + 'bg'
+      result += ')'
+    }
+    let attributes = []
+    if (attrs & (1 << 2)) attributes.push('\\(bold)bold\\()')
+    if (attrs & (1 << 3)) attributes.push('\\(underline)underln\\()')
+    if (attrs & (1 << 4)) attributes.push('\\(invert)invert\\()')
+    if (attrs & (1 << 5)) attributes.push('blink')
+    if (attrs & (1 << 6)) attributes.push('\\(italic)italic\\()')
+    if (attrs & (1 << 7)) attributes.push('\\(strike)strike\\()')
+    if (attrs & (1 << 8)) attributes.push('\\(overline)overln\\()')
+    if (attrs & (1 << 9)) attributes.push('\\(faint)faint\\()')
+    if (attrs & (1 << 10)) attributes.push('fraktur')
+    if (attributes.length) result += ':' + attributes.join()
+    return result.trim()
+  }
+
   const formatColor = color => color < 256 ? color : `#${`000000${(color - 256).toString(16)}`.substr(-6)}`
   const getCellData = cell => {
     if (cell < 0 || cell > screen.screen.length) return '(-)'
@@ -270,7 +295,53 @@ module.exports = function attachDebugScreen (screen) {
     hexcode = `U+${hexcode}`
     let x = cell % screen.window.width
     let y = Math.floor(cell / screen.window.width)
-    return `((${y},${x})=${cell}:${hexcode}:F${cellFG}:B${cellBG}:A${cellAttrs.toString(2)})`
+    return `((${y},${x})=${cell}:\\(bold)${hexcode}\\():F${cellFG}:B${cellBG}:A(${displayCellAttrs(cellAttrs)}))`
+  }
+
+  const setFormattedText = (node, text) => {
+    node.innerHTML = ''
+
+    let match
+    let attrs = {}
+
+    let pushSpan = content => {
+      let span = mk('span')
+      node.appendChild(span)
+      span.textContent = content
+      for (let key in attrs) span[key] = attrs[key]
+    }
+
+    while ((match = text.match(/\\\((.*?)\)/))) {
+      if (match.index > 0) pushSpan(text.substr(0, match.index))
+
+      attrs = { style: '' }
+      let data = match[1].split(' ')
+      for (let attr of data) {
+        if (!attr) continue
+        let key, value
+        if (attr.indexOf('=') > -1) {
+          key = attr.substr(0, attr.indexOf('='))
+          value = attr.substr(attr.indexOf('=') + 1)
+        } else {
+          key = attr
+          value = true
+        }
+
+        if (key === 'bold') attrs.style += 'font-weight:bold;'
+        if (key === 'italic') attrs.style += 'font-style:italic;'
+        if (key === 'underline') attrs.style += 'text-decoration:underline;'
+        if (key === 'invert') attrs.style += 'background:#000;filter:invert(1);'
+        if (key === 'strike') attrs.style += 'text-decoration:line-through;'
+        if (key === 'overline') attrs.style += 'text-decoration:overline;'
+        if (key === 'faint') attrs.style += 'opacity:0.5;'
+        else if (key === 'color') attrs.style += `color:${value};`
+        else attrs[key] = value
+      }
+
+      text = text.substr(match.index + match[0].length)
+    }
+
+    if (text) pushSpan(text)
   }
 
   let internalInfo = {}
@@ -281,17 +352,19 @@ module.exports = function attachDebugScreen (screen) {
     if (mouseHoverCell) {
       text += ' m' + getCellData(mouseHoverCell[1] * screen.window.width + mouseHoverCell[0])
     }
+    setFormattedText(dataDisplay, text)
+
     if ('flags' in internalInfo) {
       // we got ourselves some internal data
-      text += ' '
+      let text = ' '
       text += ` flags:${internalInfo.flags.toString(2)}`
       text += ` curAttrs:${internalInfo.cursorAttrs.toString(2)}`
       text += ` Region:${internalInfo.regionStart}->${internalInfo.regionEnd}`
       text += ` Charset:${internalInfo.charsetGx} (0:${internalInfo.charsetG0},1:${internalInfo.charsetG1})`
       text += ` Heap:${internalInfo.freeHeap}`
       text += ` Clients:${internalInfo.clientCount}`
+      setFormattedText(internalDisplay, text)
     }
-    dataDisplay.textContent = text
   }
 
   screen.on('draw', updateToolbar)
