@@ -77,8 +77,8 @@ return [
 	'term.color_fg_prev' => 'Foreground',
 	'term.color_bg_prev' => 'Background',
 	'term.colors_preview' => '',
-	'term.debugbar' => 'Show debug panel',
-	'term.ascii_debug' => 'Debug parser',
+	'term.debugbar' => 'Debug internal state',
+	'term.ascii_debug' => 'Display control codes',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
