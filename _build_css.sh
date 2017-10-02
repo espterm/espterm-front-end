@@ -10,4 +10,4 @@ else
 fi
 
 mkdir -p out/css
-npm run sass -- --output-style ${stylearg} sass/app.scss "out/css/app.$FRONT_END_HASH.css"
+npm run sass -- --output-style ${stylearg} sass/app.scss "out/css/app.$FRONT_END_HASH-$ESP_LANG.css"

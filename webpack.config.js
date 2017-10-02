@@ -3,6 +3,7 @@ const { execSync } = require('child_process')
 const path = require('path')
 
 let hash = execSync('git rev-parse --short HEAD').toString().trim()
+let lang = process.env.ESP_LANG || 'en'
 
 let plugins = []
 let devtool = 'source-map'
@@ -23,7 +24,7 @@ module.exports = {
   entry: './js',
   output: {
     path: path.resolve(__dirname, 'out', 'js'),
-    filename: `app.${hash}.js`
+    filename: `app.${hash}-${lang}.js`
   },
   module: {
     rules: [

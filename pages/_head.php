@@ -5,8 +5,8 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1">
 	<title><?= $_GET['PAGE_TITLE'] ?></title>
-	<link href="/css/app.<?= GIT_HASH ?>.css" rel="stylesheet">
-	<script src="/js/app.<?= GIT_HASH ?>.js"></script>
+	<link href="/css/app.<?= GIT_HASH . '-' . LOCALE ?>.css" rel="stylesheet">
+	<script src="/js/app.<?= GIT_HASH . '-' . LOCALE ?>.js"></script>
 	<script>
 		var _root = <?= JS_WEB_ROOT ?>;
 		var _demo = <?= (int)ESP_DEMO ?>;
