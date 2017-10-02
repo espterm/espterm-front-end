@@ -20,6 +20,13 @@ plugins.push(new webpack.optimize.UglifyJsPlugin({
   sourceMap: devtool === 'source-map'
 }))
 
+// replace "locale-data" with path to locale data
+let locale = process.env.LOCALE || 'en'
+plugins.push(new webpack.NormalModuleReplacementPlugin(
+  /^locale-data$/,
+  path.resolve(`lang/${locale}.php`)
+))
+
 module.exports = {
   entry: './js',
   output: {
@@ -34,6 +41,10 @@ module.exports = {
           path.resolve(__dirname, 'node_modules')
         ],
         loader: 'babel-loader'
+      },
+      {
+        test: /lang\/.+?\.php$/,
+        loader: './lang/lang-loader.js'
       }
     ]
   },
