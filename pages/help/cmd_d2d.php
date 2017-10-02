@@ -21,7 +21,10 @@
 
 		<p>
 			This command sends a POST request to `http://<i>&lt;DestIP&gt;</i>/api/v1/msg`.
-			The IP address may be appended by a port, if needed (eg. :8080).
+			The IP address may be appended by a port, if needed (eg. :8080). In addition to POST,
+			a GET request can also be used. In that case, any GET arguments (`/api/v1/msg?<i>arguments</i>`)
+			will be used instead of the request body. This is intended for external access
+			when sending POST requests is not convenient.
 		</p>
 
 		<p>
