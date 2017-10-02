@@ -16,6 +16,7 @@
 <?php require __DIR__ . "/help/sgr_colors.php"; ?>
 <?php require __DIR__ . "/help/cmd_cursor.php"; ?>
 <?php require __DIR__ . "/help/cmd_screen.php"; ?>
+<?php require __DIR__ . "/help/cmd_d2d.php"; ?>
 <?php require __DIR__ . "/help/cmd_system.php"; ?>
 
 <script>

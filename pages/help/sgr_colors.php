@@ -1,6 +1,6 @@
 
 <div class="Box fold">
-	<h2>Commands: Color attributes</h2>
+	<h2>Commands: Color Attributes</h2>
 
 	<div class="Row v">
 		<p>
