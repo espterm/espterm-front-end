@@ -88,6 +88,18 @@ return [
     'cursor.bar_blink' => 'Svislice, blikající',
     'cursor.bar_steady' => 'Svislice, stálá',
 
+	// Text upload dialog
+
+	'upload.title' => 'Upload textu',
+	'upload.prompt' => 'Načíst ze souboru:',
+	'upload.endings' => 'Konce řádku:',
+	'upload.endings.cr' => 'CR (klávesa Enter)',
+	'upload.endings.crlf' => 'CR LF (Windows)',
+	'upload.endings.lf' => 'LF (Linux)',
+	'upload.chunk_delay' => 'Prodleva (ms):',
+	'upload.chunk_size' => 'Délka úseku (0=řádek):',
+	'upload.progress' => 'Proběh:',
+
 	// Network config page
 
 	'net.explain_sta' => '
@@ -247,10 +259,13 @@ return [
 	// Generic button / dialog labels
 
 	'apply' => 'Uložit!',
+	'start' => 'Start',
+	'cancel' => 'Zrušit',
 	'enabled' => 'Zapnuto',
 	'disabled' => 'Vypnuto',
 	'yes' => 'Ano',
 	'no' => 'Ne',
 	'confirm' => 'OK',
+	'copy' => 'Kopírovat',
 	'form_errors' => 'Neplatné hodnoty:',
 ];

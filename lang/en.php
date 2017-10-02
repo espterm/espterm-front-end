@@ -87,6 +87,18 @@ return [
     'cursor.bar_blink' => 'I-bar, blinking',
     'cursor.bar_steady' => 'I-bar, steady',
 
+	// Text upload dialog
+
+	'upload.title' => 'Text Upload',
+	'upload.prompt' => 'Load a text file:',
+	'upload.endings' => 'Line endings:',
+	'upload.endings.cr' => 'CR (Enter key)',
+	'upload.endings.crlf' => 'CR LF (Windows)',
+	'upload.endings.lf' => 'LF (Linux)',
+	'upload.chunk_delay' => 'Chunk delay (ms):',
+	'upload.chunk_size' => 'Chunk size (0=line):',
+	'upload.progress' => 'Upload:',
+
 	// Network config page
 
 	'net.explain_sta' => '
@@ -247,10 +259,13 @@ return [
 	// Generic button / dialog labels
 
 	'apply' => 'Apply!',
+	'start' => 'Start',
+	'cancel' => 'Cancel',
 	'enabled' => 'Enabled',
 	'disabled' => 'Disabled',
 	'yes' => 'Yes',
 	'no' => 'No',
 	'confirm' => 'OK',
+	'copy' => 'Copy',
 	'form_errors' => 'Validation errors for:',
 ];

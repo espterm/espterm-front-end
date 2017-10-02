@@ -13,45 +13,45 @@
 <div class="Modal light hidden" id="fu_modal">
 	<div id="fu_form" class="Dialog">
 		<div class="fu-content">
-			<h2>Text Upload</h2>
+			<h2><?= tr('upload.title') ?></h2>
 			<p>
-				<label for="fu_file">Load a text file:</label>
+				<label for="fu_file"><?= tr('upload.prompt') ?></label>
 				<input type="file" id="fu_file" accept="text/*" /><br>
 				<textarea id="fu_text"></textarea>
 			</p>
 			<p>
-				<label for="fu_crlf">Line endings:</label>
+				<label for="fu_crlf"><?= tr('upload.endings') ?></label>
 				<select id="fu_crlf">
-					<option value="CR">CR (Enter key)</option>
-					<option value="CRLF">CR LF (Windows)</option>
-					<option value="LF">LF (Linux)</option>
+					<option value="CR"><?= tr('upload.endings.cr') ?></option>
+					<option value="CRLF"><?= tr('upload.endings.crlf') ?></option>
+					<option value="LF"><?= tr('upload.endings.lf') ?></option>
 				</select>
 			</p>
 			<p>
-				<label for="fu_delay">Chunk delay (ms):</label>
+				<label for="fu_delay"><?= tr('upload.chunk_delay') ?></label>
 				<input id="fu_delay" type="number" value=1 min=0>
 			</p>
 			<p>
-				<label for="fu_chunk">Chunk size (0=line):</label>
+				<label for="fu_chunk"><?= tr('upload.chunk_size') ?></label>
 				<input id="fu_chunk" type="number" value=0 min=0 max=100>
 			</p>
 		</div>
 		<div class="fu-buttons">
-			<button id="term-fu-start" class="icn-ok x-fu-go">Start</button>&nbsp;
-			<button id="term-fu-close" class="icn-cancel x-fu-cancel">Cancel</button>&nbsp;
-			<i class="fu-prog-box">Upload: <span id="fu_prog"></span></i>
+			<button id="term-fu-start" class="icn-ok x-fu-go"><?= tr('start') ?></button>&nbsp;
+			<button id="term-fu-close" class="icn-cancel x-fu-cancel"><?= tr('cancel') ?></button>&nbsp;
+			<i class="fu-prog-box"><?= tr('upload.progress') ?> <span id="fu_prog"></span></i>
 		</div>
 	</div>
 </div>
 
-<h1 id="screen-title"><!-- Screen title is loaded here by JS --></h1>
+<h1 id="screen-title"><!-- JS, title --></h1>
 <a href="#" id="term-fit-screen" class="mq-tablet-max"><i id="resize-button-icon" class="icn-resize-small"></i></a>
 
 <div id="term-wrap">
 	<div id="screen">
 		<input id="softkb-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
 		<div id="touch-select-menu">
-			<button id="touch-select-copy-btn">Copy</button>
+			<button id="touch-select-copy-btn"><?= tr('copy') ?></button>
 		</div>
 		<div class="screen-margin top"></div>
 		<div class="screen-margin left"></div>
@@ -59,7 +59,7 @@
 		<div class="screen-margin bottom"></div>
 	</div>
 
-	<div id="action-buttons"></div>
+	<div id="action-buttons"><!-- JS, buttons --></div>
 </div>
 
 <nav id="term-nav">
