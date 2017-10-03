@@ -77,6 +77,8 @@ return [
 	'term.color_fg_prev' => 'Vordergrund',
 	'term.color_bg_prev' => 'Hintergrund',
 	'term.colors_preview' => '',
+	'term.debugbar' => 'Debug-Leiste anzeigen',
+	'term.ascii_debug' => 'Kontrollcodes anzeigen',
 
 	'cursor.block_blink' => 'Block, blinkend',
 		'cursor.block_steady' => 'Block, ruhig',
@@ -84,6 +86,18 @@ return [
 		'cursor.underline_steady' => 'Unterstrich, ruhig',
 		'cursor.bar_blink' => 'Balken, blinkend',
 		'cursor.bar_steady' => 'Balken, ruhig',
+
+	// Text upload dialog
+
+	'upload.title' => 'Text Hochladen',
+	'upload.prompt' => 'Eine Textdatei laden:',
+	'upload.endings' => 'Zeilenumbruch:',
+	'upload.endings.cr' => 'CR (Enter-Taste)',
+	'upload.endings.crlf' => 'CR LF (Windows)',
+	'upload.endings.lf' => 'LF (Linux)',
+	'upload.chunk_delay' => 'Datenblockverzögerung (ms):',
+	'upload.chunk_size' => 'Datenblockgröße (0=Linie):',
+	'upload.progress' => 'Hochladen:',
 
 	// Network config page
 
@@ -244,10 +258,13 @@ return [
 	// Generic button / dialog labels
 
 	'apply' => 'Bestätigen!',
+	'start' => 'Starten',
+	'cancel' => 'Abbrechen',
 	'enabled' => 'Aktiviert',
 	'disabled' => 'Deaktiviert',
 	'yes' => 'Ja',
 	'no' => 'Nein',
 	'confirm' => 'OK',
+	'copy' => 'Kopieren',
 	'form_errors' => 'Gültigkeitsfehler für:',
 ];
