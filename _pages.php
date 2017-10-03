@@ -41,7 +41,7 @@ pg('help',  'cfg page-help',  'help', '/help');
 pg('about', 'cfg page-about', 'about', '/about');
 pg('term',  'term',           '', '/', 'title.term');
 
-pg('reset_screen',  'api',     '', '/system/cls', 'title.term');
+pg('reset_screen',  'api',     '', '/api/v1/clear', 'title.term');
 
 pg('index',  'api',           '', '/', '');
 

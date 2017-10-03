@@ -1,5 +1,5 @@
 <div class="Box fold">
-	<h2>Commands: Style attributes</h2>
+	<h2>Commands: Style Attributes</h2>
 
 	<div class="Row v">
 		<p>

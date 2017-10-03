@@ -48,6 +48,7 @@ module.exports = function (screen, input) {
 
   // sends the difference between the last and the new composition string
   let sendInputDelta = function (newValue) {
+    if (newValue === null) newValue = '' // this sometimes happens, why?
     let resend = false
     if (newValue.length > lastCompositionString.length) {
       if (newValue.startsWith(lastCompositionString)) {

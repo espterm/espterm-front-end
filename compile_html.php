@@ -55,9 +55,24 @@ foreach($_pages as $_k => $p) {
 		// making it not a very big improvement at the expense of ugly html.
 		//	$s = process_html($s);
 		ob_clean();
-	}                                 // clean up
-	$of = $dest . $_k . ((in_array($_k, $no_tpl_files)||ESP_DEMO) ? '.html' : '.tpl');
-	file_put_contents($of, $s);                   // write to a file
+	}
+
+	$outputPath = $dest . $_k . ((in_array($_k, $no_tpl_files)||ESP_DEMO) ? '.html' : '.tpl');
+
+	if (file_exists($outputPath)) unlink($outputPath);
+	if (ESP_PROD) {
+		$tmpfile = tempnam('/tmp', 'espterm').'.html';
+		file_put_contents($tmpfile, $s);
+		// using https://github.com/tdewolff/minify
+		system('minify --html-keep-default-attrvals '.
+			'-o '.escapeshellarg($outputPath).' '.
+			''.escapeshellarg($tmpfile), $rv);
+
+		// fallback if minify is not installed
+		if (!file_exists($outputPath)) file_put_contents($outputPath, $s);
+	} else {
+		file_put_contents($outputPath, $s);
+	}
 }
 
 ob_flush();

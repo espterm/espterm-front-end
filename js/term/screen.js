@@ -55,6 +55,7 @@ module.exports = class TermScreen extends EventEmitter {
       devicePixelRatio: 1,
       fontFamily: '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace',
       fontSize: 20,
+      padding: 6,
       gridScaleX: 1.0,
       gridScaleY: 1.2,
       fitIntoWidth: 0,
@@ -67,11 +68,15 @@ module.exports = class TermScreen extends EventEmitter {
     // scaling caused by fitIntoWidth/fitIntoHeight
     this._windowScale = 1
 
+    // actual padding, as it may be disabled by fullscreen mode etc.
+    this._padding = 0
+
     // properties of this.window that require updating size and redrawing
     this.windowState = {
       width: 0,
       height: 0,
       devicePixelRatio: 0,
+      padding: 0,
       gridScaleX: 0,
       gridScaleY: 0,
       fontFamily: '',
@@ -98,10 +103,12 @@ module.exports = class TermScreen extends EventEmitter {
     const self = this
     this.window = new Proxy(this._window, {
       set (target, key, value, receiver) {
-        target[key] = value
-        self.scheduleSizeUpdate()
-        self.renderer.scheduleDraw(`window:${key}=${value}`)
-        self.emit(`update-window:${key}`, value)
+        if (target[key] !== value) {
+          target[key] = value
+          self.scheduleSizeUpdate()
+          self.renderer.scheduleDraw(`window:${key}=${value}`)
+          self.emit(`update-window:${key}`, value)
+        }
         return true
       }
     })
@@ -215,7 +222,7 @@ module.exports = class TermScreen extends EventEmitter {
           selectionPos[1]}px)`
       }
 
-      if (!touchDidMove) {
+      if (!touchDidMove && !this.mouseMode.clicks) {
         this.emit('tap', Object.assign(e, {
           x: touchPosition[0],
           y: touchPosition[1]
@@ -261,10 +268,20 @@ module.exports = class TermScreen extends EventEmitter {
       }
     })
 
+    let aggregateWheelDelta = 0
     this.canvas.addEventListener('wheel', e => {
       if (this.mouseMode.clicks) {
-        this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY),
-          e.deltaY > 0 ? 1 : -1)
+        if (Math.abs(e.wheelDeltaY) === 120) {
+          // mouse wheel scrolling
+          this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
+        } else {
+          // smooth scrolling
+          aggregateWheelDelta -= e.wheelDeltaY
+          if (Math.abs(aggregateWheelDelta) >= 40) {
+            this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
+            aggregateWheelDelta = 0
+          }
+        }
 
         // prevent page scrolling
         e.preventDefault()
@@ -312,10 +329,14 @@ module.exports = class TermScreen extends EventEmitter {
   screenToGrid (x, y, rounded = false) {
     let cellSize = this.getCellSize()
 
-    return [
-      Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width),
-      Math.floor(y / cellSize.height)
-    ]
+    x = x / this._windowScale - this._padding
+    y = y / this._windowScale - this._padding
+    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
+    y = Math.floor(y / cellSize.height)
+    x = Math.max(0, Math.min(this.window.width - 1, x))
+    y = Math.max(0, Math.min(this.window.height - 1, y))
+
+    return [x, y]
   }
 
   /**
@@ -328,7 +349,7 @@ module.exports = class TermScreen extends EventEmitter {
   gridToScreen (x, y, withScale = false) {
     let cellSize = this.getCellSize()
 
-    return [x * cellSize.width, y * cellSize.height].map(v => withScale ? v * this._windowScale : v)
+    return [x * cellSize.width, y * cellSize.height].map(v => this._padding + (withScale ? v * this._windowScale : v))
   }
 
   /**
@@ -363,7 +384,7 @@ module.exports = class TermScreen extends EventEmitter {
    */
   updateSize () {
     // see below (this is just updating it)
-    this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
+    this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
 
     let didChange = false
     for (let key in this.windowState) {
@@ -378,13 +399,15 @@ module.exports = class TermScreen extends EventEmitter {
         width,
         height,
         fitIntoWidth,
-        fitIntoHeight
+        fitIntoHeight,
+        padding
       } = this.window
       const cellSize = this.getCellSize()
 
       // real height of the canvas element in pixels
       let realWidth = width * cellSize.width
       let realHeight = height * cellSize.height
+      let originalWidth = realWidth
 
       if (fitIntoWidth && fitIntoHeight) {
         let terminalAspect = realWidth / realHeight
@@ -392,30 +415,30 @@ module.exports = class TermScreen extends EventEmitter {
 
         if (terminalAspect < fitAspect) {
           // align heights
-          realHeight = fitIntoHeight
+          realHeight = fitIntoHeight - 2 * padding
           realWidth = realHeight * terminalAspect
         } else {
           // align widths
-          realWidth = fitIntoWidth
+          realWidth = fitIntoWidth - 2 * padding
           realHeight = realWidth / terminalAspect
         }
-      } else if (fitIntoWidth) {
-        realHeight = fitIntoWidth / (realWidth / realHeight)
-        realWidth = fitIntoWidth
-      } else if (fitIntoHeight) {
-        realWidth = fitIntoHeight * (realWidth / realHeight)
-        realHeight = fitIntoHeight
       }
 
       // store new window scale
-      this._windowScale = realWidth / (width * cellSize.width)
+      this._windowScale = realWidth / originalWidth
+
+      realWidth += 2 * padding
+      realHeight += 2 * padding
+
+      // store padding
+      this._padding = padding * (originalWidth / realWidth)
 
       // the DPR must be rounded to a very nice value to prevent gaps between cells
-      let devicePixelRatio = this._window.devicePixelRatio = Math.round(this._windowScale * (window.devicePixelRatio || 1) * 2) / 2
+      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
 
-      this.canvas.width = width * devicePixelRatio * cellSize.width
+      this.canvas.width = (width * cellSize.width + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.width = `${realWidth}px`
-      this.canvas.height = height * devicePixelRatio * cellSize.height
+      this.canvas.height = (height * cellSize.height + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.height = `${realHeight}px`
 
       // the screen has been cleared (by changing canvas width)

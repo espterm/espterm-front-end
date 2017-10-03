@@ -35,6 +35,7 @@ if (!file_exists(__DIR__ . '/_env.php')) {
 define('JS_WEB_ROOT', $root);
 
 
+define('ESP_PROD', (bool)getenv('ESP_PROD'));
 define('ESP_DEMO', (bool)getenv('ESP_DEMO'));
 if (ESP_DEMO) {
 	define('DEMO_APS', <<<APS
@@ -58,9 +59,11 @@ APS
 );
 }
 
-define('LOCALE', isset($_GET['locale']) ? $_GET['locale'] : 'en');
+define('LOCALE', isset($_GET['locale']) ? $_GET['locale'] : (getenv('ESP_LANG') ?: 'en'));
 
 $_messages = require(__DIR__ . '/lang/' . LOCALE . '.php');
+$_messages_fallback = require(__DIR__ . '/lang/en.php');
+$_messages_common = require(__DIR__ . '/lang/common.php');
 $_pages = require(__DIR__ . '/_pages.php');
 
 define('APP_NAME', 'ESPTerm');
@@ -96,12 +99,26 @@ function je($s)
 
 function tr($key)
 {
-	global $_messages;
-	if (isset($_messages[$key])) return $_messages[$key];
-	else {
+	global $_messages, $_messages_fallback, $_messages_common;
+
+	if (isset($_messages[$key])) {
+		$str = $_messages[$key];
+	}
+	else if (isset($_messages_fallback[$key])) {
+		$str = $_messages_fallback[$key];
+	}
+	else if (isset($_messages_common[$key])) {
+		$str = $_messages_common[$key];
+	}
+	else{
 		ob_end_clean();
 		die('??' . $key . '??');
 	}
+
+	// allow tildes in translation
+	$str = preg_replace('/(?<=[^ \\\\])~(?=[^ ])/', '&nbsp;', $str);
+	$str = str_replace('\~', '~', $str);
+	return $str;
 }
 
 /** Like eval, but allows <?php and ?> */

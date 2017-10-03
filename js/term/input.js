@@ -242,8 +242,8 @@ module.exports = function (conn, screen) {
   }
 
   /** Send a button event */
-  function sendButton (n) {
-    conn.send('b' + String.fromCharCode(n))
+  function sendButton (index) {
+    conn.send('b' + String.fromCharCode(index + 1))
   }
 
   const shouldAcceptEvent = function () {
@@ -354,13 +354,6 @@ module.exports = function (conn, screen) {
   function init (opts) {
     initKeys(opts)
 
-    // Button presses
-    $('#action-buttons button').forEach(s => {
-      s.addEventListener('click', function (evt) {
-        sendButton(+this.dataset['n'])
-      })
-    })
-
     // global mouse state tracking - for motion reporting
     window.addEventListener('mousedown', evt => {
       if (evt.button === 0) mb1 = 1
@@ -404,6 +397,7 @@ module.exports = function (conn, screen) {
 
     /** Send a literal string message */
     sendString,
+    sendButton,
 
     /** Enable alternate key modes (cursors, numpad, fn) */
     setAlts: function (cu, np, fn, crlf) {

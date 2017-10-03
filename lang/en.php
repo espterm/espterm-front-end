@@ -1,9 +1,6 @@
 <?php
 
 return [
-	'appname' => 'ESPTerm',
-	'appname_demo' => 'ESPTerm<sup> DEMO</sup>',
-
 	'menu.cfg_wifi' => 'WiFi Settings',
 	'menu.cfg_network' => 'Network Settings',
 	'menu.cfg_term' => 'Terminal Settings',
@@ -14,23 +11,11 @@ return [
 	'menu.cfg_wifi_conn' => 'Connecting to Network',
 	'menu.settings' => 'Settings',
 
-	// not used - api etc. Added to suppress warnings
-	'menu.term_set' => '',
-	'menu.wifi_connstatus' => '',
-	'menu.wifi_set' => '',
-	'menu.wifi_scan' => '',
-	'menu.network_set' => '',
-	'menu.system_set' => '',
-	'menu.write_defaults' => '',
-	'menu.restore_defaults' => '',
-	'menu.restore_hard' => '',
-	'menu.reset_screen' => '',
-	'menu.index' => '',
-
 	// Terminal page
 
 	'title.term' => 'Terminal', // page title of the terminal page
 
+	'term_nav.fullscreen' => 'Fullscreen',
 	'term_nav.config' => 'Config',
 	'term_nav.wifi' => 'WiFi',
 	'term_nav.help' => 'Help',
@@ -40,14 +25,20 @@ return [
 	'term_nav.keybd' => 'Keyboard',
 	'term_nav.paste_prompt' => 'Paste text to send:',
 
+	'term_conn.connecting' => 'Connecting',
+	'term_conn.waiting_content' => 'Waiting for content',
+	'term_conn.disconnected' => 'Disconnected',
+	'term_conn.waiting_server' => 'Waiting for server',
+	'term_conn.reconnecting' => 'Reconnecting',
+
 	// Terminal settings page
 
 	'term.defaults' => 'Initial Settings',
 	'term.expert' => 'Expert Options',
 	'term.explain_initials' => '
-		Those are the initial settings used after ESPTerm powers on, or when the screen
-		reset command is received (<code>\ec</code>). They can be changed by the 
-		terminal application using escape sequences.
+		Those are the initial settings used after ESPTerm powers on, 
+		or when the screen reset command is received (<code>\ec</code>).
+		They can be changed by the terminal application using escape sequences.
 		',
 	'term.explain_expert' => '
 		Those are advanced config options that usually don\'t need to be changed.
@@ -57,34 +48,37 @@ return [
 
 	'term.explain_scheme' => '
 		To select default text and background color, click on the
-		preview palette. Alternatively, use numbers 0-15 for theme colors, 16-255 for standard 
-		colors and hex (#FFFFFF) for True Color (24-bit).
+		preview palette. Alternatively, use numbers 0-15 for theme colors,
+		16-255 for standard colors and hex (#FFFFFF) for True Color (24-bit).
 		',
 
-	'term.fgbg_presets' => 'Presets',
+	'term.fgbg_presets' => 'Defaults Presets',
 	'term.color_scheme' => 'Color Scheme',
 	'term.reset_screen' => 'Reset screen & parser',
-	'term.term_title' => 'Header text',
+	'term.term_title' => 'Header Text',
 	'term.term_width' => 'Width',
 	'term.term_height' => 'Height',
-	'term.buttons' => 'Button labels',
-	'term.theme' => 'Color palette',
-	'term.cursor_shape' => 'Cursor style',
-	'term.parser_tout_ms' => 'Parser timeout',
-	'term.display_tout_ms' => 'Redraw delay',
-	'term.display_cooldown_ms' => 'Redraw cooldown',
+	'term.buttons' => 'Button Labels',
+	'term.theme' => 'Color Palette',
+	'term.cursor_shape' => 'Cursor Style',
+	'term.parser_tout_ms' => 'Parser Timeout',
+	'term.display_tout_ms' => 'Redraw Delay',
+	'term.display_cooldown_ms' => 'Redraw Cooldown',
+	'term.allow_decopt_12' => 'Allow \e?12h/l',
 	'term.fn_alt_mode' => 'SS3 Fn keys',
 	'term.show_config_links' => 'Show nav links',
 	'term.show_buttons' => 'Show buttons',
 	'term.loopback' => 'Local Echo (<span style="text-decoration:overline">SRM</span>)',
 	'term.crlf_mode' => 'Enter = CR+LF (LNM)',
-	'term.want_all_fn' => 'Capture all keys<br>(F5, F11, F12…)',
+	'term.want_all_fn' => 'Capture F5, F11, F12',
 	'term.button_msgs' => 'Button codes<br>(ASCII, dec, CSV)',
-	'term.color_fg' => 'Default fg.',
-	'term.color_bg' => 'Default bg.',
+	'term.color_fg' => 'Default Fg.',
+	'term.color_bg' => 'Default Bg.',
 	'term.color_fg_prev' => 'Foreground',
 	'term.color_bg_prev' => 'Background',
-	'term.colors_preview' => 'Defaults',
+	'term.colors_preview' => '',
+	'term.debugbar' => 'Debug internal state',
+	'term.ascii_debug' => 'Display control codes',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
@@ -92,6 +86,18 @@ return [
     'cursor.underline_steady' => 'Underline, steady',
     'cursor.bar_blink' => 'I-bar, blinking',
     'cursor.bar_steady' => 'I-bar, steady',
+
+	// Text upload dialog
+
+	'upload.title' => 'Text Upload',
+	'upload.prompt' => 'Load a text file:',
+	'upload.endings' => 'Line endings:',
+	'upload.endings.cr' => 'CR (Enter key)',
+	'upload.endings.crlf' => 'CR LF (Windows)',
+	'upload.endings.lf' => 'LF (Linux)',
+	'upload.chunk_delay' => 'Chunk delay (ms):',
+	'upload.chunk_size' => 'Chunk size (0=line):',
+	'upload.progress' => 'Upload:',
 
 	// Network config page
 
@@ -151,15 +157,15 @@ return [
 	'wificonn.back_to_config' => 'Back to WiFi config',
 	'wificonn.telemetry_lost' => 'Telemetry lost; something went wrong, or your device disconnected.',
 	'wificonn.explain_android_sucks' => '
-		If you\'re configuring ESPTerm via a smartphone, or were connected
-		from another external network, your device may lose connection and this 
-		progress indicator won\'t work. Please wait a while (~ 15 seconds), 
+		If you\'re configuring ESPTerm via a smartphone, or were connected 
+		from another external network, your device may lose connection and 
+		this progress indicator won\'t work. Please wait a while (~ 15 seconds), 
 		then check if the connection succeeded.',
 
 	'wificonn.explain_reset' => '
-		To force enable the built-in AP, hold the BOOT 
-		button until the blue LED starts flashing. Hold the button longer (until the LED 
-		flashes rapidly) for a "factory reset".',
+		To force enable the built-in AP, hold the BOOT button until the blue LED 
+		starts flashing. Hold the button longer (until the LED flashes rapidly) 
+		for a "factory reset".',
 
 	'wificonn.disabled' =>"Station mode is disabled.",
 	'wificonn.idle' =>"Idle, not connected and has no IP.",
@@ -191,10 +197,10 @@ return [
 	'adminpw.title' => 'Change Admin Password',
 	'adminpw.explain' =>
 		'
-		The "admin password" is used to manipulate the stored default settings
+		The "admin password" is used to manipulate the stored default settings 
 		and to change access restrictions. This password is not saved as part 
 		of the main config, i.e. using save / restore does not affect this 
-		password. When the admin password is forgotten, the easiest way to
+		password. When the admin password is forgotten, the easiest way to 
 		re-gain access is to wipe and re-flash the chip.<br>
 		The default admin password is "%def_admin_pw%".
 		',
@@ -219,13 +225,14 @@ return [
 	'persist.restore_defaults' => 'Reset to saved defaults',
 	'persist.write_defaults' => 'Save active settings as defaults',
 	'persist.restore_hard' => 'Reset active settings to factory defaults',
-	'persist.restore_hard_explain' => '(This clears the WiFi config! Does not affect saved defaults or admin password.)',
+	'persist.restore_hard_explain' =>
+		'(This clears the WiFi config! Does not affect saved defaults or admin password.)',
 
 	// UART settings form
 
 	'uart.title' => 'Serial Port Parameters',
 	'uart.explain' => '
-		This form controls the communication UART. The debug UART is fixed 
+		This form controls the communication UART. The debug UART is fixed
 		at 115.200 baud, one stop-bit and no parity.
 		',
 	'uart.baud' => 'Baud rate',
@@ -242,20 +249,23 @@ return [
 
 	'hwtuning.title' => 'Hardware Tuning',
 	'hwtuning.explain' => '
-		ESP8266 can be overclocked from 80&nbsp;MHz to 160&nbsp;MHz. 
-		This will make it more responsive and allow faster screen updates
-		at the expense of slightly higher power consumption. This can also make 
-		it more susceptible to interference. Use with care.
+		ESP8266 can be overclocked from 80&nbsp;MHz to 160&nbsp;MHz. This will make 
+		it more responsive and allow faster screen updates at the expense of slightly 
+		higher power consumption. This can also make it more susceptible to interference.
+		Use with care.
 		',
 	'hwtuning.overclock' => 'Overclock to 160MHz',
 
 	// Generic button / dialog labels
 
 	'apply' => 'Apply!',
+	'start' => 'Start',
+	'cancel' => 'Cancel',
 	'enabled' => 'Enabled',
 	'disabled' => 'Disabled',
 	'yes' => 'Yes',
 	'no' => 'No',
 	'confirm' => 'OK',
+	'copy' => 'Copy',
 	'form_errors' => 'Validation errors for:',
 ];

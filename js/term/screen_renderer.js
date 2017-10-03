@@ -9,6 +9,21 @@ const frakturExceptions = {
   'Z': '\u2128'
 }
 
+// TODO do not repeat - this is also defined in screen_parser ...
+/* eslint-disable no-multi-spaces */
+const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
+const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
+const ATTR_BOLD      = (1 << 2)  // Bold font
+const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
+const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
+const ATTR_BLINK     = (1 << 5)  // Blinking
+const ATTR_ITALIC    = (1 << 6)  // Italic font
+const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
+const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
+const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
+const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
+/* eslint-enable no-multi-spaces */
+
 module.exports = class ScreenRenderer {
   constructor (screen) {
     this.screen = screen
@@ -37,6 +52,9 @@ module.exports = class ScreenRenderer {
   resetDrawn () {
     // used to determine if a cell should be redrawn; storing the current state
     // as it is on screen
+    if (this.screen.window && this.screen.window.debug) {
+      console.log('Resetting drawn screen')
+    }
     this.drawnScreen = []
     this.drawnScreenFG = []
     this.drawnScreenBG = []
@@ -61,11 +79,17 @@ module.exports = class ScreenRenderer {
     }
   }
 
+  loadTheme (i) {
+    if (i in themes) this.palette = themes[i]
+  }
+
   setDefaultColors (fg, bg) {
-    this.defaultFgNum = fg
-    this.defaultBgNum = bg
-    this.resetDrawn()
-    this.scheduleDraw('defaultColors')
+    if (fg !== this.defaultFgNum || bg !== this.defaultBgNum) {
+      this.resetDrawn()
+      this.defaultFgNum = fg
+      this.defaultBgNum = bg
+      this.scheduleDraw('default-colors')
+    }
   }
 
   /**
@@ -159,9 +183,27 @@ module.exports = class ScreenRenderer {
    */
   drawBackground ({ x, y, cellWidth, cellHeight, bg }) {
     const ctx = this.ctx
+    const { width, height } = this.screen.window
+    const padding = Math.round(this.screen._padding)
     ctx.fillStyle = this.getColor(bg)
-    ctx.clearRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
-    ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+    let screenX = x * cellWidth + padding
+    let screenY = y * cellHeight + padding
+    let isBorderCell = x === 0 || y === 0 || x === width - 1 || y === height - 1
+    if (isBorderCell) {
+      let left = screenX
+      let top = screenY
+      let right = screenX + cellWidth
+      let bottom = screenY + cellHeight
+      if (x === 0) left -= padding
+      else if (x === width - 1) right += padding
+      if (y === 0) top -= padding
+      else if (y === height - 1) bottom += padding
+      ctx.clearRect(left, top, right - left, bottom - top)
+      ctx.fillRect(left, top, right - left, bottom - top)
+    } else {
+      ctx.clearRect(screenX, screenY, cellWidth, cellHeight)
+      ctx.fillRect(screenX, screenY, cellWidth, cellHeight)
+    }
   }
 
   /**
@@ -182,24 +224,28 @@ module.exports = class ScreenRenderer {
     if (!text) return
 
     const ctx = this.ctx
+    const padding = Math.round(this.screen._padding)
 
     let underline = false
     let strike = false
     let overline = false
-    if (attrs & (1 << 1)) ctx.globalAlpha = 0.5
-    if (attrs & (1 << 3)) underline = true
-    if (attrs & (1 << 5)) text = ScreenRenderer.alphaToFraktur(text)
-    if (attrs & (1 << 6)) strike = true
-    if (attrs & (1 << 7)) overline = true
+    if (attrs & ATTR_FAINT) ctx.globalAlpha = 0.5
+    if (attrs & ATTR_UNDERLINE) underline = true
+    if (attrs & ATTR_FRAKTUR) text = ScreenRenderer.alphaToFraktur(text)
+    if (attrs & ATTR_STRIKE) strike = true
+    if (attrs & ATTR_OVERLINE) overline = true
 
     ctx.fillStyle = this.getColor(fg)
+
+    let screenX = x * cellWidth + padding
+    let screenY = y * cellHeight + padding
 
     let codePoint = text.codePointAt(0)
     if (codePoint >= 0x2580 && codePoint <= 0x259F) {
       // block elements
       ctx.beginPath()
-      const left = x * cellWidth
-      const top = y * cellHeight
+      const left = screenX
+      const top = screenY
       const cw = cellWidth
       const ch = cellHeight
       const c2w = cellWidth / 2
@@ -251,16 +297,16 @@ module.exports = class ScreenRenderer {
           for (let dx = 0; dx < cw; dx += dotSpacingX) {
             // prevent overflow
             let dotSizeY = Math.min(dotSize, ch - dy)
-            ctx.rect(x * cw + (alignRight ? cw - dx - dotSize : dx), y * ch + dy, dotSize, dotSizeY)
+            ctx.rect(left + (alignRight ? cw - dx - dotSize : dx), top + dy, dotSize, dotSizeY)
           }
           alignRight = !alignRight
         }
       } else if (codePoint === 0x2594) {
         // upper one eighth block >▔<
-        ctx.rect(x * cw, y * ch, cw, ch / 8)
+        ctx.rect(left, top, cw, ch / 8)
       } else if (codePoint === 0x2595) {
         // right one eighth block >▕<
-        ctx.rect((x + 7 / 8) * cw, y * ch, cw / 8, ch)
+        ctx.rect(left + (7 / 8) * cw, top, cw / 8, ch)
       } else if (codePoint === 0x2596) {
         // left bottom quadrant >▖<
         ctx.rect(left, top + c2h, c2w, c2h)
@@ -300,9 +346,33 @@ module.exports = class ScreenRenderer {
       }
 
       ctx.fill()
+    } else if (codePoint >= 0xE0B0 && codePoint <= 0xE0B3) {
+      // powerline symbols, except branch, line, and lock. Basically, just the triangles
+      ctx.beginPath()
+
+      if (codePoint === 0xE0B0 || codePoint === 0xE0B1) {
+        // right-pointing triangle
+        ctx.moveTo(screenX, screenY)
+        ctx.lineTo(screenX + cellWidth, screenY + cellHeight / 2)
+        ctx.lineTo(screenX, screenY + cellHeight)
+      } else if (codePoint === 0xE0B2 || codePoint === 0xE0B3) {
+        // left-pointing triangle
+        ctx.moveTo(screenX + cellWidth, screenY)
+        ctx.lineTo(screenX, screenY + cellHeight / 2)
+        ctx.lineTo(screenX + cellWidth, screenY + cellHeight)
+      }
+
+      if (codePoint % 2 === 0) {
+        // triangle
+        ctx.fill()
+      } else {
+        // chevron
+        ctx.strokeStyle = ctx.fillStyle
+        ctx.stroke()
+      }
     } else {
       // Draw other characters using the text renderer
-      ctx.fillText(text, (x + 0.5) * cellWidth, (y + 0.5) * cellHeight)
+      ctx.fillText(text, screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
     }
 
     // -- line drawing - a reference for a possible future rect/line implementation ---
@@ -324,21 +394,21 @@ module.exports = class ScreenRenderer {
       ctx.beginPath()
 
       if (underline) {
-        let lineY = Math.round(y * cellHeight + charSize.height) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY + charSize.height) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       if (strike) {
-        let lineY = Math.round((y + 0.5) * cellHeight) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY + 0.5 * cellHeight) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       if (overline) {
-        let lineY = Math.round(y * cellHeight) + 0.5
-        ctx.moveTo(x * cellWidth, lineY)
-        ctx.lineTo((x + 1) * cellWidth, lineY)
+        let lineY = Math.round(screenY) + 0.5
+        ctx.moveTo(screenX, lineY)
+        ctx.lineTo(screenX + cellWidth, lineY)
       }
 
       ctx.stroke()
@@ -402,7 +472,7 @@ module.exports = class ScreenRenderer {
     ctx.textBaseline = 'middle'
 
     // bits in the attr value that affect the font
-    const FONT_MASK = 0b101
+    const FONT_MASK = ATTR_BOLD | ATTR_ITALIC
 
     // Map of (attrs & FONT_MASK) -> Array of cell indices
     let fontGroups = new Map()
@@ -413,11 +483,10 @@ module.exports = class ScreenRenderer {
     for (let cell = 0; cell < screenLength; cell++) {
       let x = cell % width
       let y = Math.floor(cell / width)
-      let isCursor = !this.screen.cursor.hanging &&
+      let isCursor = this.cursorBlinkOn &&
         this.screen.cursor.x === x &&
         this.screen.cursor.y === y &&
-        this.screen.cursor.visible &&
-        this.cursorBlinkOn
+        this.screen.cursor.visible
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
@@ -428,13 +497,13 @@ module.exports = class ScreenRenderer {
       let bg = this.screen.screenBG[cell] | 0
       let attrs = this.screen.screenAttrs[cell] | 0
 
-      if (!(attrs & (1 << 8))) fg = this.defaultFgNum
-      if (!(attrs & (1 << 9))) bg = this.defaultBgNum
+      if (!(attrs & ATTR_FG)) fg = this.defaultFgNum
+      if (!(attrs & ATTR_BG)) bg = this.defaultBgNum
 
-      if (attrs & (1 << 10)) [fg, bg] = [bg, fg] // swap - reversed character colors
+      if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
       if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
 
-      if (attrs & (1 << 4) && !this.blinkStyleOn) {
+      if (attrs & ATTR_BLINK && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
         // set text to nothing so drawCharacter doesn't draw anything
         text = ''
@@ -450,7 +519,8 @@ module.exports = class ScreenRenderer {
         bg !== this.drawnScreenBG[cell] || // background updated
         attrs !== this.drawnScreenAttrs[cell] || // attributes updated
         isCursor !== wasCursor || // cursor blink/position updated
-        (isCursor && this.screen.cursor.style !== this.drawnCursor[2]) // cursor style updated
+        (isCursor && this.screen.cursor.style !== this.drawnCursor[2]) || // cursor style updated
+        (isCursor && this.screen.cursor.hanging !== this.drawnCursor[3]) // cursor hanging updated
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -499,6 +569,7 @@ module.exports = class ScreenRenderer {
     // mask to redrawing regions only
     if (this.screen.window.graphics >= 1) {
       let debug = this.screen.window.debug && this.screen._debug
+      let padding = Math.round(this.screen._padding)
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -508,13 +579,13 @@ module.exports = class ScreenRenderer {
           let redrawing = redrawMap.get(cell)
           if (redrawing && regionStart === null) regionStart = x
           if (!redrawing && regionStart !== null) {
-            ctx.rect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
           }
         }
         if (regionStart !== null) {
-          ctx.rect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
           if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
         }
       }
@@ -548,8 +619,8 @@ module.exports = class ScreenRenderer {
       // set font once because in Firefox, this is a really slow action for some
       // reason
       let modifiers = {}
-      if (font & 1) modifiers.weight = 'bold'
-      if (font & 1 << 2) modifiers.style = 'italic'
+      if (font & ATTR_BOLD) modifiers.weight = 'bold'
+      if (font & ATTR_ITALIC) modifiers.style = 'italic'
       ctx.font = this.screen.getFont(modifiers)
 
       for (let data of fontGroups.get(font)) {
@@ -565,22 +636,34 @@ module.exports = class ScreenRenderer {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
-          if (isCursor) this.drawnCursor = [x, y, this.screen.cursor.style]
+          if (isCursor) this.drawnCursor = [x, y, this.screen.cursor.style, this.screen.cursor.hanging]
 
+          // draw cursor
           if (isCursor && !inSelection) {
             ctx.save()
             ctx.beginPath()
+
+            let cursorX = x
+            let cursorY = y
+
+            if (this.screen.cursor.hanging) {
+              // draw hanging cursor in the margin
+              cursorX += 1
+            }
+
+            let screenX = cursorX * cellWidth + this.screen._padding
+            let screenY = cursorY * cellHeight + this.screen._padding
             if (this.screen.cursor.style === 'block') {
               // block
-              ctx.rect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
+              ctx.rect(screenX, screenY, cellWidth, cellHeight)
             } else if (this.screen.cursor.style === 'bar') {
               // vertical bar
               let barWidth = 2
-              ctx.rect(x * cellWidth, y * cellHeight, barWidth, cellHeight)
+              ctx.rect(screenX, screenY, barWidth, cellHeight)
             } else if (this.screen.cursor.style === 'line') {
               // underline
               let lineHeight = 2
-              ctx.rect(x * cellWidth, y * cellHeight + charSize.height, cellWidth, lineHeight)
+              ctx.rect(screenX, screenY + charSize.height, cellWidth, lineHeight)
             }
             ctx.clip()
 
@@ -590,9 +673,9 @@ module.exports = class ScreenRenderer {
             // HACK: ensure cursor is visible
             if (fg === bg) bg = fg === 0 ? 7 : 0
 
-            this.drawBackground({ x, y, cellWidth, cellHeight, bg })
+            this.drawBackground({ x: cursorX, y: cursorY, cellWidth, cellHeight, bg })
             this.drawCharacter({
-              x, y, charSize, cellWidth, cellHeight, text, fg, attrs
+              x: cursorX, y: cursorY, charSize, cellWidth, cellHeight, text, fg, attrs
             })
             ctx.restore()
           }
@@ -604,7 +687,7 @@ module.exports = class ScreenRenderer {
 
     if (this.screen.window.debug && this.screen._debug) this.screen._debug.drawEnd()
 
-    this.screen.emit('draw')
+    this.screen.emit('draw', why)
   }
 
   drawStatus (statusScreen) {
@@ -620,14 +703,15 @@ module.exports = class ScreenRenderer {
     this.drawnScreen = []
 
     const cellSize = this.screen.getCellSize()
-    const screenWidth = width * cellSize.width
-    const screenHeight = height * cellSize.height
+    const screenWidth = width * cellSize.width + 2 * this.screen._padding
+    const screenHeight = height * cellSize.height + 2 * this.screen._padding
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-    ctx.clearRect(0, 0, screenWidth, screenHeight)
+    ctx.fillStyle = this.getColor(this.defaultBgNum)
+    ctx.fillRect(0, 0, screenWidth, screenHeight)
 
     ctx.font = `24px ${fontFamily}`
-    ctx.fillStyle = '#fff'
+    ctx.fillStyle = this.getColor(this.defaultFgNum)
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 50)
@@ -637,7 +721,7 @@ module.exports = class ScreenRenderer {
       ctx.save()
       ctx.translate(screenWidth / 2, screenHeight / 2 + 20)
 
-      ctx.strokeStyle = '#fff'
+      ctx.strokeStyle = this.getColor(this.defaultFgNum)
       ctx.lineWidth = 5
       ctx.lineCap = 'round'
 

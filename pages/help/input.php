@@ -21,6 +21,7 @@
 			Here are some examples of control key codes:
 		</p>
 
+		<div class="tscroll">
 		<table>
 			<thead><tr><th>Key</th><th>Code</th><th>Key</th><th>Code</th></tr></thead>
 			<tr>
@@ -108,6 +109,7 @@
 				<td>ASCII 1-26</td>
 			</tr>
 		</table>
+		</div>
 
 		<h3>Action buttons</h3>
 

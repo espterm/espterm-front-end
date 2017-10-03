@@ -18,7 +18,6 @@ body.term {
 #screen {
 	white-space: nowrap;
 	background: #111213;
-	padding: 6px;
 	display: inline-block;
 	border: 2px solid #3983CD;
 	position: relative;
@@ -28,6 +27,38 @@ body.term {
 
 	canvas.selectable {
 		cursor: text;
+	}
+
+	.screen-margin {
+		position: absolute;
+		// #111213 as rgb
+		background: rgba(17, 18, 19, 0.2);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+		pointer-events: none;
+
+		&.top {
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 6px;
+		}
+		&.left, &.right {
+			top: 6px;
+			left: 0;
+			bottom: 0;
+			width: 6px;
+		}
+		&.right {
+			left: auto;
+			right: 0;
+		}
+		&.bottom {
+			left: 6px;
+			right: 6px;
+			bottom: 0;
+			height: 6px;
+		}
 	}
 
 	@include noselect();
@@ -67,8 +98,20 @@ body.term {
 		}
 	}
 
+	.debug-canvas {
+		position: absolute;
+		top: 6px;
+		left: 6px;
+		pointer-events: none;
+	}
+
 	.debug-toolbar {
 		line-height: 1.5;
+		text-align: left;
+		padding: 6px;
+		font-family: $screen-stack;
+		font-size: 12px;
+		white-space: normal;
 	}
 }
 
@@ -85,6 +128,10 @@ body.term {
 
 		&:focus {
 			outline: 0 none !important;
+		}
+
+		&.inactive {
+			opacity: 0.2;
 		}
 	}
 }
@@ -159,7 +206,7 @@ body.term {
 	z-index: 1000;
 
 	label {
-		width: 8em;
+		width: 12em;
 		display: inline-block;
 	}
 
@@ -214,6 +261,7 @@ body.term {
 	background: #d1d5db;
 	padding: 5px 10px;
 	overflow-x: auto;
+	margin: 6px;
 
 	&:not(.open) {
 		display: none;
@@ -234,6 +282,38 @@ body.term {
 			background: #9ea6b1;
 			color: #000;
 		}
+	}
+}
+
+body.pseudo-fullscreen {
+	#screen .screen-margin,
+	#keyboard-shortcut-bar {
+		display: none;
+	}
+	#outer {
+		position: static;
+	}
+	#screen {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+	#screen canvas {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 99;
+	}
+	#term-nav {
+		position: fixed;
+		width: 100%;
+		bottom: 0;
+		z-index: 98;
+		height: 24px;
+		padding: 0;
 	}
 }
 
@@ -305,4 +385,24 @@ body.term {
 #color-example {
 	display: inline-block;
 	padding: 5px;
+}
+
+.theme-nav-btn {
+	width: 2em;
+	height: 2em;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	background: #4c4c4c;
+	color: #eaeaea;
+	margin: 5px;
+	border-radius: 5px;
+
+	@include noselect();
+
+	cursor: pointer;
+	position: relative;
+	&:active {
+		top: 1px;
+	}
 }

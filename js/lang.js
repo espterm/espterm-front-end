@@ -1,8 +1,5 @@
-// Generated from PHP locale file
-let _tr = {
-    "wifi.connected_ip_is": "Connected, IP is ",
-    "wifi.not_conn": "Not connected.",
-    "wifi.enter_passwd": "Enter password for \":ssid:\""
-};
+let data = require('locale-data')
 
-module.exports = function tr (key) { return _tr[key] || '?' + key + '?' }
+module.exports = function localize (key) {
+  return data[key] || `?${key}?`
+}
