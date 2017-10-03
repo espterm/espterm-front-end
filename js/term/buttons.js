@@ -39,7 +39,7 @@ module.exports = function initButtons (input) {
         pushButton()
       }
     } else if (buttons.length > labels.length) {
-      for (let i = labels.length; i < buttons.length; i++) {
+      for (let i = labels.length; i <= buttons.length; i++) {
         popButton()
       }
     }
@@ -48,9 +48,8 @@ module.exports = function initButtons (input) {
       let label = labels[i].trim()
       let button = buttons[i]
       button.textContent = label || '\u00a0' // label or nbsp
-      if (!label) {
-        button.classList.add('inactive')
-      }
+      if (!label) button.classList.add('inactive')
+      else button.classList.remove('inactive')
     }
   }
 

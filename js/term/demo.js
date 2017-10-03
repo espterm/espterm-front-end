@@ -129,7 +129,7 @@ class ScrollingTerminal {
     this.height = 25
     this.termScreen = screen
     this.parser = new ANSIParser((...args) => this.handleParsed(...args))
-    this.buttonLabels = ['', '', '^C', '', 'Help']
+    this.buttonLabels = []
 
     this.reset()
 
@@ -287,7 +287,7 @@ class ScrollingTerminal {
   }
   getButtons () {
     let data = 'B'
-    data += encodeAsCodePoint(5)
+    data += encodeAsCodePoint(this.buttonLabels.length)
     data += this.buttonLabels.map(x => x + '\x01').join('')
     return data
   }
@@ -411,22 +411,7 @@ class Process extends EventEmitter {
 }
 
 let demoData = {
-  buttons: {
-    1: '',
-    2: '',
-    3: (terminal, shell) => shell.write('\x03'),
-    4: '',
-    5: function (terminal, shell) {
-      if (shell.child) shell.child.destroy()
-      let chars = 'info\r'
-      let loop = function () {
-        shell.write(chars[0])
-        chars = chars.substr(1)
-        if (chars) setTimeout(loop, 100)
-      }
-      setTimeout(loop, 200)
-    }
-  },
+  buttons: [],
   mouseReceiver: null
 }
 
@@ -744,6 +729,15 @@ let demoshIndex = {
       this.shell = shell
     }
     run () {
+      this.emit('buttons', [
+        {
+          label: 'Exit',
+          action (shell) {
+            shell.write('\x03')
+          }
+        }
+      ])
+
       this.shell.terminal.trackMouse = true
       demoData.mouseReceiver = this
       this.randomData = []
@@ -819,9 +813,12 @@ let demoshIndex = {
             let child = this.child = new Process(this.shell, { su: true })
             this.on('in', data => child.write(data))
             let write = data => this.emit('write', data)
+            let setButtons = buttons => this.emit('buttons', buttons)
             child.on('write', write)
+            child.on('buttons', setButtons)
             child.on('exit', code => {
               child.removeListener('write', write)
+              child.removeListener('buttons', setButtons)
               this.destroy()
             })
             child.run(...args)
@@ -938,6 +935,8 @@ class DemoShell {
     this.terminal.write('$ \x1b[m')
     this.history.unshift('')
     this.cursorPos = 0
+
+    this.setButtons()
   }
   copyFromHistoryIndex () {
     if (!this.historyIndex) return
@@ -1009,7 +1008,7 @@ class DemoShell {
     this.lastInputLength = this.cursorPos
 
     let completed = this.getCompleted(true)
-    if (this.historyIndex === 0 && completed) {
+    if (this.historyIndex === 0 && completed && action !== 'return') {
       // show closest match faintly
       let rest = completed.substr(this.history[0].length)
       this.terminal.write(`\x1b[2m${rest}\x1b[m${'\b'.repeat(rest.length)}`)
@@ -1055,11 +1054,17 @@ class DemoShell {
   spawn (name, args = []) {
     let Process = this.index[name]
     if (Process instanceof Function) {
+      this.setButtons([])
       this.child = new Process(this)
       let write = data => this.terminal.write(data)
+      let setButtons = buttons => this.setButtons(buttons)
       this.child.on('write', write)
+      this.child.on('buttons', setButtons)
       this.child.on('exit', code => {
-        if (this.child) this.child.removeListener('write', write)
+        if (this.child) {
+          this.child.removeListener('write', write)
+          this.child.removeListener('buttons', setButtons)
+        }
         this.child = null
         this.prompt(!code)
       })
@@ -1068,6 +1073,46 @@ class DemoShell {
       this.terminal.write(Process)
       this.prompt()
     }
+  }
+
+  setButtons (buttons) {
+    if (!buttons) {
+      const shell = this
+      let writeChars = chars => {
+        let loop = () => {
+          shell.write(chars[0])
+          chars = chars.substr(1)
+          if (chars) setTimeout(loop, 100)
+        }
+        setTimeout(loop, 200)
+      }
+
+      buttons = [
+        {
+          label: 'Open GitHub',
+          action (shell) {
+            if (shell.child) shell.child.destroy()
+            writeChars('github\r')
+          }
+        },
+        {
+          label: 'Help',
+          action (shell) {
+            if (shell.child) shell.child.destroy()
+            writeChars('info\r')
+          }
+        }
+      ]
+    }
+    if (!buttons.length) buttons.push({ label: '', action () {} })
+    this.buttons = buttons
+    this.terminal.buttonLabels = buttons.map(x => x.label)
+  }
+
+  onButtonPress (index) {
+    let button = this.buttons[index]
+    if (!button) return
+    button.action(this, this.terminal)
   }
 }
 
@@ -1080,11 +1125,7 @@ window.demoInterface = module.exports = {
       this.shell.write(content)
     } else if (type === 'b') {
       let button = content.charCodeAt(0)
-      let action = demoData.buttons[button]
-      if (action) {
-        if (typeof action === 'string') this.shell.write(action)
-        else if (action instanceof Function) action(this.terminal, this.shell)
-      }
+      this.shell.onButtonPress(button - 1)
     } else if (type === 'm' || type === 'p' || type === 'r') {
       let row = parse2B(content, 0)
       let column = parse2B(content, 2)
