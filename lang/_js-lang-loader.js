@@ -5,11 +5,11 @@
 
 const { spawnSync } = require('child_process')
 const path = require('path')
-const selectedKeys = require('./keys')
+const selectedKeys = require('./js-keys')
 
 module.exports = function (source) {
-  let child = spawnSync(path.resolve(__dirname, 'dump_selected.php'), selectedKeys, {
-    timeout: 10000
+  let child = spawnSync(path.resolve(__dirname, '_js-dump.php'), selectedKeys, {
+    timeout: 1000
   })
 
   let data
@@ -48,6 +48,7 @@ module.exports = function (source) {
     mappings: 'AAAA;AAAA'
   }
 
-  this.callback(null, `/* Generated language file */
-module.exports=${JSON.stringify(data)}`, map)
+  this.callback(null,
+    `/* Generated language file */\n` +
+    `module.exports=${JSON.stringify(data)}\n`, map)
 }

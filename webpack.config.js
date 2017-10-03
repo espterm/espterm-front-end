@@ -44,7 +44,7 @@ module.exports = {
       },
       {
         test: /lang\/.+?\.php$/,
-        loader: './lang/lang-loader.js'
+        loader: './lang/_js-lang-loader.js'
       }
     ]
   },
