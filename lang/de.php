@@ -230,7 +230,7 @@ return [
 
 	// UART settings form
 
-	'uart.title' => 'Serienportparameter',
+	'uart.title' => 'Serieller Port Parameter',
 	'uart.explain' => '
 		Dies steuert den Kommunikations-UART. Der Debug-UART ist auf 115.200 baud fest
 		eingestellt mit einem Stop-Bit und keiner Parität.
