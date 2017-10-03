@@ -270,14 +270,14 @@ module.exports = function attachDebugScreen (screen) {
       result += ')'
     }
     let attributes = []
-    if (attrs & (1 << 2)) attributes.push('\\(bold)bold\\()')
-    if (attrs & (1 << 3)) attributes.push('\\(underline)underln\\()')
-    if (attrs & (1 << 4)) attributes.push('\\(invert)invert\\()')
+    if (attrs & (1 << 2)) attributes.push('\\[bold]bold\\()')
+    if (attrs & (1 << 3)) attributes.push('\\[underline]underln\\()')
+    if (attrs & (1 << 4)) attributes.push('\\[invert]invert\\()')
     if (attrs & (1 << 5)) attributes.push('blink')
-    if (attrs & (1 << 6)) attributes.push('\\(italic)italic\\()')
-    if (attrs & (1 << 7)) attributes.push('\\(strike)strike\\()')
-    if (attrs & (1 << 8)) attributes.push('\\(overline)overln\\()')
-    if (attrs & (1 << 9)) attributes.push('\\(faint)faint\\()')
+    if (attrs & (1 << 6)) attributes.push('\\[italic]italic\\()')
+    if (attrs & (1 << 7)) attributes.push('\\[strike]strike\\()')
+    if (attrs & (1 << 8)) attributes.push('\\[overline]overln\\()')
+    if (attrs & (1 << 9)) attributes.push('\\[faint]faint\\()')
     if (attrs & (1 << 10)) attributes.push('fraktur')
     if (attributes.length) result += ':' + attributes.join()
     return result.trim()
@@ -287,15 +287,19 @@ module.exports = function attachDebugScreen (screen) {
   const getCellData = cell => {
     if (cell < 0 || cell > screen.screen.length) return '(-)'
     let cellAttrs = screen.renderer.drawnScreenAttrs[cell] | 0
-    let cellFG = formatColor(screen.renderer.drawnScreenFG[cell]) | 0
-    let cellBG = formatColor(screen.renderer.drawnScreenBG[cell]) | 0
+    let cellFG = screen.renderer.drawnScreenFG[cell] | 0
+    let cellBG = screen.renderer.drawnScreenBG[cell] | 0
+    let fgText = formatColor(cellFG)
+    let bgText = formatColor(cellBG)
+    fgText += `\\[color=${screen.renderer.getColor(cellFG).replace(/ /g, '')}]●\\[]`
+    bgText += `\\[color=${screen.renderer.getColor(cellBG).replace(/ /g, '')}]●\\[]`
     let cellCode = (screen.renderer.drawnScreen[cell] || '').codePointAt(0) | 0
     let hexcode = cellCode.toString(16).toUpperCase()
     if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
     hexcode = `U+${hexcode}`
     let x = cell % screen.window.width
     let y = Math.floor(cell / screen.window.width)
-    return `((${y},${x})=${cell}:\\(bold)${hexcode}\\():F${cellFG}:B${cellBG}:A(${displayCellAttrs(cellAttrs)}))`
+    return `((${y},${x})=${cell}:\\[bold]${hexcode}\\[]:F${fgText}:B${bgText}:A(${displayCellAttrs(cellAttrs)}))`
   }
 
   const setFormattedText = (node, text) => {
@@ -311,7 +315,7 @@ module.exports = function attachDebugScreen (screen) {
       for (let key in attrs) span[key] = attrs[key]
     }
 
-    while ((match = text.match(/\\\((.*?)\)/))) {
+    while ((match = text.match(/\\\[(.*?)\]/))) {
       if (match.index > 0) pushSpan(text.substr(0, match.index))
 
       attrs = { style: '' }
@@ -326,6 +330,8 @@ module.exports = function attachDebugScreen (screen) {
           key = attr
           value = true
         }
+
+        if (key === 'color') console.log(value)
 
         if (key === 'bold') attrs.style += 'font-weight:bold;'
         if (key === 'italic') attrs.style += 'font-style:italic;'
