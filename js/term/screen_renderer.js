@@ -223,14 +223,27 @@ module.exports = class ScreenRenderer {
 
     if (type === 1 || type === 2) {
       // thin or thick line
-      ctx.lineWidth = type === 2 ? 3 : 1
-      ctx.lineCap = 'butt'
-      ctx.beginPath()
-      ctx.moveTo(x - Math.sign(dx) * normalOffset, y - Math.sign(dy) * normalOffset)
-      ctx.lineTo(x + dx, y + dy)
-      ctx.stroke()
+      let lineWidth = type === 2 ? 3 : 1
+      let startX = x - Math.sign(dx) * normalOffset
+      let startY = y - Math.sign(dy) * normalOffset
+      let width = dx
+      let height = dy
+
+      if (Math.abs(dx) > 0) {
+        // horizontal line
+        startY -= lineWidth / 2
+        startY = Math.round(startY)
+        height = lineWidth
+      } else {
+        // vertical line
+        startX -= lineWidth / 2
+        startX = Math.round(startX)
+        width = lineWidth
+      }
+
+      ctx.fillRect(startX, startY, width, height)
     } else if (type === 3) {
-      // double-stroked line
+      // double-struck line
       ctx.lineWidth = 1
       ctx.lineCap = 'butt'
       ctx.beginPath()
@@ -245,8 +258,10 @@ module.exports = class ScreenRenderer {
   }
 
   drawBoxLines ({ x, y, cellWidth, cellHeight, up, left, right, down }) {
-    let centerX = (x + 0.5) * cellWidth
-    let centerY = (y + 0.5) * cellHeight
+    const padding = Math.round(this.screen._padding)
+
+    let centerX = (x + 0.5) * cellWidth + padding
+    let centerY = (y + 0.5) * cellHeight + padding
 
     let verticalType = Math.max(up, down)
     let horizontalType = Math.max(left, right)
@@ -329,11 +344,11 @@ module.exports = class ScreenRenderer {
 
         ctx.beginPath()
         if (direction === 0) {
-          ctx.moveTo(x * cellWidth, (y + 0.5) * cellHeight)
-          ctx.lineTo((x + 1) * cellWidth, (y + 0.5) * cellHeight)
+          ctx.moveTo(screenX, screenY + 0.5 * cellHeight)
+          ctx.lineTo(screenX + cellWidth, screenY + 0.5 * cellHeight)
         } else {
-          ctx.moveTo((x + 0.5) * cellWidth, y * cellHeight)
-          ctx.lineTo((x + 0.5) * cellWidth, (y + 1) * cellHeight)
+          ctx.moveTo(screenX + 0.5 * cellWidth, screenY)
+          ctx.lineTo(screenX + 0.5 * cellWidth, screenY + cellHeight)
         }
         ctx.stroke()
         if (dashes) ctx.setLineDash([])
@@ -429,8 +444,8 @@ module.exports = class ScreenRenderer {
         })
       } else if (codePoint <= 0x2570) {
         // arcs
-        let centerX = (x + 0.5) * cellWidth
-        let centerY = (y + 0.5) * cellHeight
+        let centerX = screenX + 0.5 * cellWidth
+        let centerY = screenY + 0.5 * cellHeight
         let radius = Math.min(cellWidth, cellHeight) / 2
 
         let endX = (codePoint - 0x256D) % 3 === 0 ? 1 : -1
@@ -448,13 +463,13 @@ module.exports = class ScreenRenderer {
         ctx.beginPath()
         if (codePoint === 0x2571 || codePoint === 0x2573) {
           // diagonal /
-          ctx.moveTo(x * cellWidth, (y + 1) * cellHeight)
-          ctx.lineTo((x + 1) * cellWidth, y * cellHeight)
+          ctx.moveTo(screenX, screenY + cellHeight)
+          ctx.lineTo(screenX + cellWidth, screenY)
         }
         if (codePoint === 0x2572 || codePoint === 0x2573) {
           // diagonal \
-          ctx.moveTo(x * cellWidth, y * cellHeight)
-          ctx.lineTo((x + 1) * cellWidth, (y + 1) * cellHeight)
+          ctx.moveTo(screenX, screenY)
+          ctx.lineTo(screenX + cellWidth, screenY + cellHeight)
         }
         ctx.stroke()
       } else if (codePoint <= 0x257B) {
@@ -620,18 +635,6 @@ module.exports = class ScreenRenderer {
       // Draw other characters using the text renderer
       ctx.fillText(text, screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
     }
-
-    // -- line drawing - a reference for a possible future rect/line implementation ---
-    // http://www.fileformat.info/info/unicode/block/box_drawing/utf8test.htm
-    //         0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0A  0x0B  0x0C  0x0D  0x0E  0x0F
-    // 0x2500     ─     ━     │     ┃     ┄     ┅     ┆     ┇     ┈     ┉     ┊     ┋     ┌     ┍     ┎     ┏
-    // 0x2510     ┐     ┑     ┒     ┓     └     ┕     ┖     ┗     ┘     ┙     ┚     ┛     ├     ┝     ┞     ┟
-    // 0x2520     ┠     ┡     ┢     ┣     ┤     ┥     ┦     ┧     ┨     ┩     ┪     ┫     ┬     ┭     ┮     ┯
-    // 0x2530     ┰     ┱     ┲     ┳     ┴     ┵     ┶     ┷     ┸     ┹     ┺     ┻     ┼     ┽     ┾     ┿
-    // 0x2540     ╀     ╁     ╂     ╃     ╄     ╅     ╆     ╇     ╈     ╉     ╊     ╋     ╌     ╍     ╎     ╏
-    // 0x2550     ═     ║     ╒     ╓     ╔     ╕     ╖     ╗     ╘     ╙     ╚     ╛     ╜     ╝     ╞     ╟
-    // 0x2560     ╠     ╡     ╢     ╣     ╤     ╥     ╦     ╧     ╨     ╩     ╪     ╫     ╬     ╭     ╮     ╯
-    // 0x2570     ╰     ╱     ╲     ╳     ╴     ╵     ╶     ╷     ╸     ╹     ╺     ╻     ╼     ╽     ╾     ╿
 
     if (underline || strike || overline) {
       ctx.strokeStyle = this.getColor(fg)
