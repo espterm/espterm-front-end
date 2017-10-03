@@ -57,6 +57,8 @@
 					<li>`H` - get response headers
 					<li>`B` - get response body
 					<li>`X` - ignore the response, return nothing
+					<li>`N=<i>nonce</i>` - a custom string that will be added in the options field of the response message.
+						Use this to keep track of which request a response belongs to.
 					<li>`T=<i>ms</i>` - request timeout (default 5000~ms), in milliseconds
 					<li>`L=<i>bytes</i>` - limit response length (default 0 = don't limit). Applies to the head, body, or both combined, depending on the `H` and `B` flags
 					<li>`l=<i>bytes</i>` - limit the response buffer size (default 5000~B).
@@ -75,7 +77,7 @@
 		<ul>
 			<li>`_status_` - a HTTP status code, eg. 200 is OK, 404 Not found.
 			<li>`_options_` - similar to those in the request, here describing the response data.
-				This field can contain comma-separated `B`, `H` and `L=<i>bytes</i>`.
+				This field can contain comma-separated `B`, `H` and `L=<i>bytes</i>` and `N=<i>nonce</i>`.
 			<li>`_response_` - the response, as requested. If both headers and body are received,
 				they will be separated by an empty line (i.e. `\r\n\r\n`). Response can be up to several
 				kilobytes long, depending on the `L=` and `l=` options.
