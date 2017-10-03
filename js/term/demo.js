@@ -838,7 +838,7 @@ let demoshIndex = {
     destroy () {
       if (this.didDestroy) return
       this.didDestroy = true
-      this.child.destroy()
+      if (this.child) this.child.destroy()
       super.destroy()
     }
   },
