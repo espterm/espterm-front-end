@@ -115,7 +115,7 @@ return [
 
 	'net.sta_dhcp_enable' => 'Dynamische IP',
 	'net.sta_addr_ip' => 'ESPTerm statische IP',
-	'net.sta_addr_mask' => 'Subnet-Mask',
+	'net.sta_addr_mask' => 'Subnet-Maske',
 	'net.sta_addr_gw' => 'Gateway-IP',
 
 	'net.ap' => 'DHCP Server (AP)',
@@ -150,7 +150,7 @@ return [
 	'wifi.select_ssid' => 'Verfügbare Netzwerke:',
 	'wifi.enter_passwd' => 'Passwort für ":ssid:"',
 	'wifi.sta_explain' =>
-		'Nach dem Auswählen eines Netzwerks, drücke Bestätigen drücken, um dich zu verbinden.',
+		'Nach dem Auswählen eines Netzwerks, drücke Bestätigen, um dich zu verbinden.',
 
 	// Wifi connecting status page
 
