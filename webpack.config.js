@@ -21,7 +21,7 @@ plugins.push(new webpack.optimize.UglifyJsPlugin({
 }))
 
 // replace "locale-data" with path to locale data
-let locale = process.env.LOCALE || 'en'
+let locale = process.env.ESP_LANG || 'en'
 plugins.push(new webpack.NormalModuleReplacementPlugin(
   /^locale-data$/,
   path.resolve(`lang/${locale}.php`)
