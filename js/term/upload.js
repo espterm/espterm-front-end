@@ -159,19 +159,19 @@ module.exports = function (conn, input, screen) {
         reader.readAsText(file)
       }, false)
 
-      qs('#term-fu-open').addEventListener('click', function () {
+      qs('#term-fu-open').addEventListener('click', e => {
+        e.preventDefault()
         openUploadDialog()
-        return false
       })
 
-      qs('#term-fu-start').addEventListener('click', function () {
+      qs('#term-fu-start').addEventListener('click', e => {
+        e.preventDefault()
         startUpload()
-        return false
       })
 
-      qs('#term-fu-close').addEventListener('click', function () {
+      qs('#term-fu-close').addEventListener('click', e => {
+        e.preventDefault()
         fuClose()
-        return false
       })
     },
     open: openUploadDialog,
