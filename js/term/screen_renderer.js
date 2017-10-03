@@ -206,6 +206,57 @@ module.exports = class ScreenRenderer {
     }
   }
 
+  drawBoxLine (x, y, dx, dy, type, normalType) {
+    const ctx = this.ctx
+
+    let normalOffset = 0
+    if (normalType === 1) {
+      // thin
+      normalOffset = 1 / 2
+    } else if (normalType === 2) {
+      // thick
+      normalOffset = 3 / 2
+    } else if (normalType === 3) {
+      // double
+      normalOffset = -1
+    }
+
+    if (type === 1 || type === 2) {
+      // thin or thick line
+      ctx.lineWidth = type === 2 ? 3 : 1
+      ctx.lineCap = 'butt'
+      ctx.beginPath()
+      ctx.moveTo(x - Math.sign(dx) * normalOffset, y - Math.sign(dy) * normalOffset)
+      ctx.lineTo(x + dx, y + dy)
+      ctx.stroke()
+    } else if (type === 3) {
+      // double-stroked line
+      ctx.lineWidth = 1
+      ctx.lineCap = 'butt'
+      ctx.beginPath()
+      let nx = ctx.lineWidth * Math.sign(dy) // normal x
+      let ny = ctx.lineWidth * Math.sign(dx) // normal y
+      ctx.moveTo(x + nx - Math.sign(dx) * normalOffset, y + ny - Math.sign(dy) * normalOffset)
+      ctx.lineTo(x + dx + nx, y + dy + ny)
+      ctx.moveTo(x - nx - Math.sign(dx) * normalOffset, y - ny - Math.sign(dy) * normalOffset)
+      ctx.lineTo(x + dx - nx, y + dy - ny)
+      ctx.stroke()
+    }
+  }
+
+  drawBoxLines ({ x, y, cellWidth, cellHeight, up, left, right, down }) {
+    let centerX = (x + 0.5) * cellWidth
+    let centerY = (y + 0.5) * cellHeight
+
+    let verticalType = Math.max(up, down)
+    let horizontalType = Math.max(left, right)
+
+    if (up) this.drawBoxLine(centerX, centerY, 0, -cellHeight / 2, up, horizontalType)
+    if (left) this.drawBoxLine(centerX, centerY, -cellWidth / 2, 0, left, verticalType)
+    if (right) this.drawBoxLine(centerX, centerY, cellWidth / 2, 0, right, verticalType)
+    if (down) this.drawBoxLine(centerX, centerY, 0, cellHeight / 2, down, horizontalType)
+  }
+
   /**
    * Draws a cell's character with the given parameters. Won't do anything if
    * text is an empty string.
@@ -241,7 +292,202 @@ module.exports = class ScreenRenderer {
     let screenY = y * cellHeight + padding
 
     let codePoint = text.codePointAt(0)
-    if (codePoint >= 0x2580 && codePoint <= 0x259F) {
+    if (codePoint >= 0x2500 && codePoint <= 0x257F) {
+      // box drawing
+      //      0 1 2 3 4 5 6 7 8 9 a b c d e f
+      // 250  ─ ━ │ ┃ ┄ ┅ ┆ ┇ ┈ ┉ ┊ ┋ ┌ ┍ ┎ ┏
+      // 251  ┐ ┑ ┒ ┓ └ ┕ ┖ ┗ ┘ ┙ ┚ ┛ ├ ┝ ┞ ┟
+      // 252  ┠ ┡ ┢ ┣ ┤ ┥ ┦ ┧ ┨ ┩ ┪ ┫ ┬ ┭ ┮ ┯
+      // 253  ┰ ┱ ┲ ┳ ┴ ┵ ┶ ┷ ┸ ┹ ┺ ┻ ┼ ┽ ┾ ┿
+      // 254  ╀ ╁ ╂ ╃ ╄ ╅ ╆ ╇ ╈ ╉ ╊ ╋ ╌ ╍ ╎ ╏
+      // 255  ═ ║ ╒ ╓ ╔ ╕ ╖ ╗ ╘ ╙ ╚ ╛ ╜ ╝ ╞ ╟
+      // 256  ╠ ╡ ╢ ╣ ╤ ╥ ╦ ╧ ╨ ╩ ╪ ╫ ╬ ╭ ╮ ╯
+      // 257  ╰ ╱ ╲ ╳ ╴ ╵ ╶ ╷ ╸ ╹ ╺ ╻ ╼ ╽ ╾ ╿
+
+      ctx.strokeStyle = ctx.fillStyle
+
+      if (codePoint <= 0x250B || (codePoint >= 0x254C && codePoint <= 0x254F)) {
+        // single long line
+
+        // direction. 0 for horizontal, 1 for vertical
+        let direction, thick, dashes
+        if (codePoint <= 0x250B) {
+          direction = Math.floor((codePoint - 0x2500) / 2) % 2
+          thick = codePoint % 2 === 1
+          dashes = codePoint < 0x2504 ? 0 : codePoint < 0x2508 ? 3 : 4
+        } else {
+          direction = (codePoint - 0x254C) < 3 ? 0 : 1
+          thick = codePoint % 2 === 1
+          dashes = 2
+        }
+
+        ctx.lineWidth = thick ? 3 : 1
+        if (dashes) {
+          let length = direction === 0 ? cellWidth : cellHeight
+          ctx.setLineDash([(length / dashes) - 1, 1])
+        }
+
+        ctx.beginPath()
+        if (direction === 0) {
+          ctx.moveTo(x * cellWidth, (y + 0.5) * cellHeight)
+          ctx.lineTo((x + 1) * cellWidth, (y + 0.5) * cellHeight)
+        } else {
+          ctx.moveTo((x + 0.5) * cellWidth, y * cellHeight)
+          ctx.lineTo((x + 0.5) * cellWidth, (y + 1) * cellHeight)
+        }
+        ctx.stroke()
+        if (dashes) ctx.setLineDash([])
+      } else if (codePoint <= 0x251B) {
+        // two lines
+
+        // horizontal line direction
+        let directionX = (codePoint - 0x250B - 1) % 8 < 4 ? 1 : -1
+        // vertical line direction
+        let directionY = codePoint < 0x2514 ? 1 : -1
+        let typeX = (1 - (codePoint - 0x250B) % 2) + 1
+        let typeY = Math.floor((codePoint - 0x250B - 1) / 2) % 2 + 1
+
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          up: directionY === -1 ? typeY : 0,
+          down: directionY === 1 ? typeY : 0,
+          left: directionX === -1 ? typeX : 0,
+          right: directionX === 1 ? typeX : 0
+        })
+      } else if (codePoint <= 0x253B) {
+        // three lines
+
+        // TODO: figure out the pattern
+        let up = [1, 1, 2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+        let left = [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 1, 1, 2, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+        let right = [1, 2, 1, 1, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2]
+        let down = [1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 2, 2, 1, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0]
+        let index = codePoint - 0x251C
+
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          up: up[index],
+          left: left[index],
+          right: right[index],
+          down: down[index]
+        })
+      } else if (codePoint <= 0x254B) {
+        // four lines
+        let up = [1, 1, 1, 1, 2, 1, 2, 2, 2, 1, 1, 2, 1, 2, 2, 2]
+        let left = [1, 2, 1, 2, 1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2]
+        let right = [1, 1, 2, 2, 1, 1, 1, 1, 2, 1, 2, 2, 2, 1, 2, 2]
+        let down = [1, 1, 1, 1, 1, 2, 2, 1, 1, 2, 2, 1, 2, 2, 2, 2]
+        let index = codePoint - 0x253C
+
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          up: up[index],
+          left: left[index],
+          right: right[index],
+          down: down[index]
+        })
+      } else if (codePoint <= 0x2551) {
+        // double struck line
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          up: codePoint === 0x2551 ? 3 : 0,
+          down: codePoint === 0x2551 ? 3 : 0,
+          left: codePoint === 0x2550 ? 3 : 0,
+          right: codePoint === 0x2550 ? 3 : 0
+        })
+      } else if (codePoint <= 0x256C) {
+        // double struck
+
+        // TODO: figure out the pattern
+        let up = [0, 0, 0, 0, 0, 0, 1, 3, 3, 1, 3, 3, 1, 3, 3, 1, 3, 3, 0, 0, 0, 1, 3, 3, 1, 3, 3]
+        let left = [0, 0, 0, 3, 1, 3, 0, 0, 0, 3, 1, 3, 0, 0, 0, 3, 1, 3, 3, 1, 3, 3, 1, 3, 3, 1, 3]
+        let right = [3, 1, 3, 0, 0, 0, 3, 1, 3, 0, 0, 0, 3, 1, 3, 0, 0, 0, 3, 1, 3, 3, 1, 3, 3, 1, 3]
+        let down = [1, 3, 3, 1, 3, 3, 0, 0, 0, 0, 0, 0, 1, 3, 3, 1, 3, 3, 1, 3, 3, 0, 0, 0, 1, 3, 3]
+        let index = codePoint - 0x2552
+
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          up: up[index],
+          left: left[index],
+          right: right[index],
+          down: down[index]
+        })
+      } else if (codePoint <= 0x2570) {
+        // arcs
+        let centerX = (x + 0.5) * cellWidth
+        let centerY = (y + 0.5) * cellHeight
+        let radius = Math.min(cellWidth, cellHeight) / 2
+
+        let endX = (codePoint - 0x256D) % 3 === 0 ? 1 : -1
+        let startY = (codePoint - 0x256D) < 2 ? 1 : -1
+
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(centerX, centerY + startY * cellHeight / 2)
+        ctx.arcTo(centerX, centerY, centerX + endX * radius, centerY, radius)
+        ctx.lineTo(centerX + endX * cellWidth / 2, centerY)
+        ctx.stroke()
+      } else if (codePoint <= 0x2573) {
+        // diagonals
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        if (codePoint === 0x2571 || codePoint === 0x2573) {
+          // diagonal /
+          ctx.moveTo(x * cellWidth, (y + 1) * cellHeight)
+          ctx.lineTo((x + 1) * cellWidth, y * cellHeight)
+        }
+        if (codePoint === 0x2572 || codePoint === 0x2573) {
+          // diagonal \
+          ctx.moveTo(x * cellWidth, y * cellHeight)
+          ctx.lineTo((x + 1) * cellWidth, (y + 1) * cellHeight)
+        }
+        ctx.stroke()
+      } else if (codePoint <= 0x257B) {
+        // single lines
+
+        // 0: left, 1: up, 2: right, 3: down
+        let direction = (codePoint - 0x2574) % 4
+        let type = codePoint < 0x2578 ? 1 : 2
+
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          left: direction === 0 ? type : 0,
+          up: direction === 1 ? type : 0,
+          right: direction === 2 ? type : 0,
+          down: direction === 3 ? type : 0
+        })
+      } else {
+        let index = codePoint - 0x257C
+        this.drawBoxLines({
+          x,
+          y,
+          cellWidth,
+          cellHeight,
+          left: index === 0 ? 1 : index === 2 ? 2 : 0,
+          up: index === 1 ? 1 : index === 3 ? 2 : 0,
+          right: index === 0 ? 2 : index === 2 ? 1 : 0,
+          down: index === 1 ? 2 : index === 3 ? 1 : 0
+        })
+      }
+    } else if (codePoint >= 0x2580 && codePoint <= 0x259F) {
       // block elements
       ctx.beginPath()
       const left = screenX
