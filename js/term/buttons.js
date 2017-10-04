@@ -18,9 +18,17 @@ module.exports = function initButtons (input) {
     container.appendChild(button)
 
     button.addEventListener('click', e => {
+      console.log('button click', e)
       // might as well use the attribute ¯\_(ツ)_/¯
       let index = +button.getAttribute('data-n')
       input.sendButton(index)
+
+      e.target.blur() // if it keeps focus, spacebar will push it
+    })
+
+    // this prevents button retaining focus after half-click/drag-away
+    button.addEventListener('mouseleave', e => {
+      e.target.blur()
     })
 
     return button
