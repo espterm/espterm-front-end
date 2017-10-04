@@ -731,53 +731,56 @@ let demoshIndex = {
       super.destroy()
     }
   },
-  mouse: class ShowMouse extends Process {
+  mouse: class MouseDemo extends Process {
     constructor (shell) {
       super()
       this.shell = shell
     }
     run () {
+      const self = this
       this.emit('buttons', [
         {
           label: 'Exit',
           action (shell) {
             shell.write('\x03')
           }
+        },
+        {
+          label: 'Add Box',
+          action () {
+            self.boxes.push(self.generateRandomBox())
+            self.render()
+          }
         }
       ])
 
       this.shell.terminal.trackMouse = true
       demoData.mouseReceiver = this
-      this.randomData = []
-      this.highlighted = {}
-      let characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      for (let i = 0; i < 23; i++) {
-        let line = ''
-        for (let j = 0; j < 79; j++) {
-          line += characters[Math.floor(characters.length * Math.random())]
-        }
-        this.randomData.push(line)
-      }
-      this.scrollOffset = 0
+
+      this.boxes = Array(3).fill(0).map(x => this.generateRandomBox())
+      this.grabbedBox = null
+      this.grabOffset = [0, 0]
+
       this.render()
     }
     render () {
       this.emit('write', '\x1b[m\x1b[2J\x1b[1;1H')
-      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMouse movement, clicking, and scrolling!')
+      this.emit('write', '\x1b[97m\x1b[1mMouse Demo\r\n\x1b[mMove boxes around or scroll their contents!')
 
-      // render random data for scrolling
-      for (let y = 0; y < 23; y++) {
-        let index = y + this.scrollOffset
-        // proper modulo:
-        index = ((index % this.randomData.length) + this.randomData.length) % this.randomData.length
-        let line = this.randomData[index]
-        let lineData = `\x1b[${3 + y};1H\x1b[38;5;239m`
-        for (let x in line) {
-          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[97m'
-          lineData += line[x]
-          if (this.highlighted[(y + 2) * 80 + (+x)]) lineData += '\x1b[38;5;239m'
+      // draw boxes
+      for (let box of this.boxes) {
+        this.emit('write', `\x1b[${box.y + 1};${box.x + 1}H`)
+        this.emit('write', `\x1b[m\x1b[48;2;${box.color.join(';')}m`)
+        for (let y = box.y; y < box.y + box.height; y++) {
+          let drawnX = 0
+          for (let x = box.x; x < box.x + box.width; x++) {
+            if (x < 0 || x >= this.shell.terminal.width - 1) continue
+            if (y < 0 || y >= this.shell.terminal.height) continue
+            drawnX++
+            this.emit('write', box.content[y - box.y][x - box.x])
+          }
+          this.emit('write', '\x1b[D'.repeat(drawnX) + '\x1b[B')
         }
-        this.emit('write', lineData)
       }
 
       // move cursor to mouse
@@ -785,19 +788,72 @@ let demoshIndex = {
         this.emit('write', `\x1b[${this.mouse.y + 1};${this.mouse.x + 1}H`)
       }
     }
+    generateRandomBox () {
+      let chars = 'abcdefghijklmnopqrstuvwxyz-*()!@#$%'
+      let content = []
+      let width = [5, 10, 15][Math.floor(Math.random() * 3)]
+      let height = [4, 5, 6][Math.floor(Math.random() * 3)]
+
+      for (let y = 0; y < height; y++) {
+        content.push('')
+        for (let x = 0; x < width; x++) {
+          if (Math.random() > 0.6) {
+            content[y] += chars[Math.floor(Math.random() * chars.length)]
+          } else content[y] += ' '
+        }
+      }
+
+      return {
+        x: Math.floor(Math.random() * (this.shell.terminal.width - 1)) + 1,
+        y: Math.floor(Math.random() * (this.shell.terminal.height - 1)) + 1,
+        width,
+        height,
+        color: [Math.random(), Math.random(), Math.random()].map(x => Math.floor(x * 255)),
+        content
+      }
+    }
+    getBoxAt (x, y) {
+      let boxes = this.boxes.reverse() // top to bottom, like drawing order
+      for (let box of boxes) {
+        if (box.x <= x && box.x + box.width > x && box.y <= y && box.y + box.height > y) {
+          return box
+        }
+      }
+    }
     mouseMove (x, y) {
       this.mouse = { x, y }
+      if (this.grabbedBox) {
+        this.grabbedBox.x = x + this.grabOffset[0]
+        this.grabbedBox.y = y + this.grabOffset[1]
+      }
       this.render()
     }
     mouseDown (x, y, button) {
-      if (button === 4) this.scrollOffset--
-      else if (button === 5) this.scrollOffset++
-      else this.highlighted[y * 80 + x] = !this.highlighted[y * 80 + x]
+      if (button === 4) this.scrollInsideBox(this.getBoxAt(x, y), -1)
+      else if (button === 5) this.scrollInsideBox(this.getBoxAt(x, y), 1)
+      else {
+        let box = this.getBoxAt(x, y)
+        if (box) {
+          this.grabbedBox = box
+          this.grabOffset = [box.x - x, box.y - y]
+          this.render()
+        }
+      }
       this.render()
     }
-    mouseUp (x, y, button) {}
+    mouseUp (x, y, button) {
+      this.grabbedBox = null
+    }
+    scrollInsideBox (box, amount) {
+      if (!box) return
+      let content = box.content.slice()
+      box.content = []
+      for (let i = 0; i < content.length; i++) {
+        box.content.push(content[((i + amount % content.length) + content.length) % content.length])
+      }
+    }
     destroy () {
-      this.shell.terminal.write('\x1b[2J\x1b[1;1H')
+      this.shell.terminal.write('\x1b[m\x1b[2J\x1b[1;1H')
       this.shell.terminal.trackMouse = false
       if (demoData.mouseReceiver === this) demoData.mouseReceiver = null
       super.destroy()
