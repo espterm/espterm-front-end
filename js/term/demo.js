@@ -461,14 +461,22 @@ let demoshIndex = {
   'local-echo': class LocalEcho extends Process {
     run (...args) {
       if (!args.includes('--suppress-note')) {
-        this.emit('write', '\x1b[38;5;239mNote: not all terminal features are supported or and may not work as expected in this demo\x1b[0m\r\n')
+        this.emit('write', '\x1b[38;5;239mNote: not all terminal features are supported and may not work as expected in this demo\x1b[m\n')
       }
+      this.emit('buttons', [
+        {
+          label: 'Exit',
+          action (shell) {
+            shell.write('\x03')
+          }
+        }
+      ])
     }
     write (data) {
       this.emit('write', data)
     }
   },
-  'info': class Info extends Process {
+  info: class Info extends Process {
     run (...args) {
       let fast = args.includes('--fast')
       this.showSplash().then(() => {
@@ -953,6 +961,7 @@ class DemoShell {
         prefix = input.substr(0, input.length - newInput.length)
         input = newInput
       }
+      if (!input) return null
       for (let name in this.index) {
         if (name.startsWith(input) && name !== input) {
           if (visual && name in autocompleteIndex) return prefix + autocompleteIndex[name]
