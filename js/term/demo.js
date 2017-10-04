@@ -813,7 +813,7 @@ let demoshIndex = {
       }
     }
     getBoxAt (x, y) {
-      let boxes = this.boxes.reverse() // top to bottom, like drawing order
+      let boxes = this.boxes.slice().reverse() // top to bottom, like drawing order
       for (let box of boxes) {
         if (box.x <= x && box.x + box.width > x && box.y <= y && box.y + box.height > y) {
           return box
@@ -836,7 +836,8 @@ let demoshIndex = {
         if (box) {
           this.grabbedBox = box
           this.grabOffset = [box.x - x, box.y - y]
-          this.render()
+          // move grabbed box to top of stack
+          this.boxes.push(...this.boxes.splice(this.boxes.indexOf(box), 1))
         }
       }
       this.render()
