@@ -173,9 +173,18 @@ if (!function_exists('load_esp_charsets')) {
 			$rows = array_map('trim', $rows);
 
 			foreach($rows as $j => $v) {
+				$literal = false;
 				if (strpos($v, '0x') === 0) {
+					// hexa codes
 					$v = substr($v, 2);
 					$v = hexdec($v);
+				}  else if (strpos($v, 'u\'\\0\'') === 0) {
+					// zero
+					$v = 0;
+				} else if (strpos($v, 'u\'') === 0) {
+					// utf8 literals
+					$v = mb_substr($v, 2, 1, 'utf-8');
+					$literal = true;
 				} else {
 					$v = intval($v);
 				}
@@ -183,7 +192,7 @@ if (!function_exists('load_esp_charsets')) {
 				$table[] = [
 					$ascii,
 					chr($ascii),
-					utf8($v==0? $ascii :$v),
+					$literal ? $v : utf8($v==0? $ascii :$v),
 				];
 			}
 			$cps[$name] = $table;
