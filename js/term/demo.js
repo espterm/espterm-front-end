@@ -143,6 +143,8 @@ class ScrollingTerminal {
     this.cursor = { x: 0, y: 0, style: 1, visible: true }
     this.trackMouse = false
     this.theme = 0
+    this.defaultFG = 7
+    this.defaultBG = 0
     this.rainbow = this.superRainbow = false
     this.parser.reset()
     this.clear()
@@ -274,10 +276,10 @@ class ScrollingTerminal {
     data += encodeAsCodePoint(25)
     data += encodeAsCodePoint(80)
     data += encodeAsCodePoint(this.theme)
-    data += encodeAsCodePoint(7)
-    data += encodeAsCodePoint(0)
-    data += encodeAsCodePoint(0)
-    data += encodeAsCodePoint(0)
+    data += encodeAsCodePoint(this.defaultFG & 0xFFFF)
+    data += encodeAsCodePoint(this.defaultFG >> 16)
+    data += encodeAsCodePoint(this.defaultBG & 0xFFFF)
+    data += encodeAsCodePoint(this.defaultBG >> 16)
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
@@ -647,37 +649,160 @@ let demoshIndex = {
     }
   },
   themes: class ShowThemes extends Process {
-    color (hex) {
-      hex = parseInt(hex.substr(1), 16)
-      let r = hex >> 16
-      let g = (hex >> 8) & 0xFF
-      let b = hex & 0xFF
-      this.emit('write', `\x1b[48;2;${r};${g};${b}m`)
-      if (((r + g + b) / 3) > 127) {
-        this.emit('write', '\x1b[38;5;16m')
-      } else {
-        this.emit('write', '\x1b[38;5;255m')
-      }
+    constructor (shell) {
+      super()
+      this.shell = shell
+      this.parser = new ANSIParser((...args) => this.handler(...args))
     }
+
+    destroy () {
+      this.shell.terminal.cursor.style = this.savedCursorStyle
+      this.emit('write', '\n\n')
+      super.destroy()
+    }
+
     run (...args) {
-      for (let i in themes) {
-        let theme = themes[i]
+      this.savedCursorStyle = this.shell.terminal.cursor.style
+      this.shell.terminal.cursor.style = 3
 
-        let name = `  ${i}`.substr(-2)
+      this.fgType = 0
+      this.bgType = 0
 
-        this.emit('write', `Theme ${name}: `)
+      let get24FG = () => this.shell.terminal.defaultFG - 256
+      let set24FG = v => { this.shell.terminal.defaultFG = v + 256 }
 
-        for (let col = 0; col < 16; col++) {
-          let text = `  ${col}`.substr(-2)
-          this.color(theme[col])
-          this.emit('write', text)
-          this.emit('write', '\x1b[m ')
+      this.controls = [
+        {
+          label: 'Theme: ',
+          length: themes.length.toString().length,
+          getValue: () => this.shell.terminal.theme,
+          setValue: value => {
+            let count = themes.length
+            this.shell.terminal.theme = ((value % count) + count) % count
+          }
+        },
+        {
+          label: '  Default Foreground: ',
+          length: 6,
+          getValue: () => this.fgType,
+          getDisplay: () => this.fgType === 0 ? '256' : '24-bit',
+          setValue: value => {
+            this.fgType = ((value % 2) + 2) % 2
+          }
+        },
+        {
+          label: ' ',
+          length: 3,
+          getValue: () => this.shell.terminal.defaultFG,
+          setValue: value => {
+            this.shell.terminal.defaultFG = value & 0xFF
+          },
+          shouldShow: () => this.fgType === 0
+        },
+        {
+          label: ' ',
+          length: 2,
+          fill: '0',
+          getValue: () => get24FG() >> 16,
+          getDisplay: () => (get24FG() >> 16).toString(16),
+          setValue: value => set24FG(get24FG() & 0x00FFFF | ((value & 0xFF) << 16)),
+          shouldShow: () => this.fgType === 1
+        },
+        {
+          length: 2,
+          fill: '0',
+          getValue: () => (get24FG() >> 8) & 0xFF,
+          getDisplay: () => ((get24FG() >> 8) & 0xFF).toString(16),
+          setValue: value => set24FG(get24FG() & 0xFF00FF | ((value & 0xFF) << 8)),
+          shouldShow: () => this.fgType === 1
+        },
+        {
+          length: 2,
+          fill: '0',
+          getValue: () => get24FG() & 0xFF,
+          getDisplay: () => (get24FG() & 0xFF).toString(16),
+          setValue: value => set24FG(get24FG() & 0xFFFF00 | (value & 0xFF)),
+          shouldShow: () => this.fgType === 1
+        },
+        {
+          label: '  Default Background: ',
+          length: 2,
+          getValue: () => this.shell.terminal.defaultBG,
+          getDisplay: () => this.shell.terminal.defaultBG.toString(16),
+          setValue: value => {
+            this.shell.terminal.defaultBG = value & 0xFF
+          }
+        }
+      ]
+      this.selection = 0
+
+      this.emit('write', '\x1b[1mThemes\x1b[m\n\n\n\n\x1b[2A')
+
+      this.render()
+    }
+
+    render () {
+      this.emit('write', '\x1b[m\r')
+      // no ^[2K implementation, here's a hack
+      this.emit('write', ' '.repeat(this.shell.terminal.width - 1) + '\r')
+
+      let index = 0
+      let selectedX = 0
+      for (let control of this.controls) {
+        if (control.shouldShow && !control.shouldShow()) continue
+        if (control.label) {
+          this.emit('write', `\x1b[1m${control.label}\x1b[m`)
+        }
+        // TODO: colors
+        this.emit('write', '\x1b[38;5;255m')
+        let value = control.getDisplay ? control.getDisplay() : control.getValue().toString()
+        this.emit('write', ((control.fill || ' ').repeat(Math.max(0, control.length - value.length))) + value)
+        this.emit('write', '\x1b[m')
+
+        if (index === this.selection) {
+          selectedX = this.shell.terminal.cursor.x - 1
+
+          // draw arrows
+          this.emit('write', '\x1b[m\x1b[D\x1b[A▲\x1b[D\x1b[2B▼\x1b[A')
+        } else {
+          // clear arrows if they were there
+          this.emit('write', '\x1b[m\x1b[D\x1b[A \x1b[D\x1b[2B \x1b[A')
         }
 
-        this.emit('write', '\n')
+        index++
       }
 
-      this.destroy()
+      this.shell.terminal.cursor.x = selectedX
+    }
+
+    write (data) {
+      this.parser.write(data)
+    }
+
+    handler (action, ...args) {
+      console.log(action, ...args)
+
+      if (action === 'move-cursor-x') {
+        this.selection += args[0]
+        let count = this.controls.length
+        this.selection = ((this.selection % count) + count) % count
+      } else if (action === 'move-cursor-y') {
+        let selected = null
+        let index = 0
+        for (let control of this.controls) {
+          if (control.shouldShow && !control.shouldShow()) continue
+          if (index === this.selection) {
+            selected = control
+            break
+          }
+          index++
+        }
+        if (selected) {
+          selected.setValue(selected.getValue() - args[0])
+        }
+      }
+
+      this.render()
     }
   },
   cursor: class SetCursor extends Process {
