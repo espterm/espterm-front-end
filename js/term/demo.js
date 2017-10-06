@@ -670,6 +670,27 @@ let demoshIndex = {
 
       let get24FG = () => this.shell.terminal.defaultFG - 256
       let set24FG = v => { this.shell.terminal.defaultFG = v + 256 }
+      let get24BG = () => this.shell.terminal.defaultBG - 256
+      let set24BG = v => { this.shell.terminal.defaultBG = v + 256 }
+
+      let make24Control = (label, index, getValue, setValue, type) => {
+        index *= 4
+
+        return {
+          label,
+          length: 1,
+          getValue: () => (getValue() >> index) & 0xF,
+          getDisplay: () => ((getValue() >> index) & 0xF).toString(16),
+          setValue: value => {
+            setValue((getValue() & (0xFFFFFF ^ (0xF << index))) | ((value & 0xF) << index))
+          },
+          shouldShow: () => this[type + 'Type'] === 1,
+          parseValue: input => {
+            return parseInt(input, 16) & 0xF
+          },
+          moveAfterInput: index !== 0
+        }
+      }
 
       this.controls = [
         {
@@ -682,7 +703,7 @@ let demoshIndex = {
           }
         },
         {
-          label: '  Default Foreground: ',
+          label: ' Default Foreground: ',
           length: 6,
           getValue: () => this.fgType,
           getDisplay: () => this.fgType === 0 ? '256' : '24-bit',
@@ -693,46 +714,44 @@ let demoshIndex = {
         {
           label: ' ',
           length: 3,
-          getValue: () => this.shell.terminal.defaultFG,
+          getValue: () => this.shell.terminal.defaultFG & 0xFF,
           setValue: value => {
             this.shell.terminal.defaultFG = value & 0xFF
           },
-          shouldShow: () => this.fgType === 0
+          shouldShow: () => this.fgType === 0,
+          parseValue: input => parseInt(input, 16)
+        },
+        make24Control(' #', 5, get24FG, set24FG, 'fg'),
+        make24Control('', 4, get24FG, set24FG, 'fg'),
+        make24Control('', 3, get24FG, set24FG, 'fg'),
+        make24Control('', 2, get24FG, set24FG, 'fg'),
+        make24Control('', 1, get24FG, set24FG, 'fg'),
+        make24Control('', 0, get24FG, set24FG, 'fg'),
+        {
+          label: ' Default Background: ',
+          length: 6,
+          getValue: () => this.bgType,
+          getDisplay: () => this.bgType === 0 ? '256' : '24-bit',
+          setValue: value => {
+            this.bgType = ((value % 2) + 2) % 2
+          }
         },
         {
           label: ' ',
-          length: 2,
-          fill: '0',
-          getValue: () => get24FG() >> 16,
-          getDisplay: () => (get24FG() >> 16).toString(16),
-          setValue: value => set24FG(get24FG() & 0x00FFFF | ((value & 0xFF) << 16)),
-          shouldShow: () => this.fgType === 1
-        },
-        {
-          length: 2,
-          fill: '0',
-          getValue: () => (get24FG() >> 8) & 0xFF,
-          getDisplay: () => ((get24FG() >> 8) & 0xFF).toString(16),
-          setValue: value => set24FG(get24FG() & 0xFF00FF | ((value & 0xFF) << 8)),
-          shouldShow: () => this.fgType === 1
-        },
-        {
-          length: 2,
-          fill: '0',
-          getValue: () => get24FG() & 0xFF,
-          getDisplay: () => (get24FG() & 0xFF).toString(16),
-          setValue: value => set24FG(get24FG() & 0xFFFF00 | (value & 0xFF)),
-          shouldShow: () => this.fgType === 1
-        },
-        {
-          label: '  Default Background: ',
-          length: 2,
-          getValue: () => this.shell.terminal.defaultBG,
-          getDisplay: () => this.shell.terminal.defaultBG.toString(16),
+          length: 3,
+          getValue: () => this.shell.terminal.defaultBG & 0xFF,
           setValue: value => {
             this.shell.terminal.defaultBG = value & 0xFF
-          }
-        }
+          },
+          shouldShow: () => this.bgType === 0,
+          parseValue: input => parseInt(input, 16)
+        },
+        make24Control(' #', 5, get24BG, set24BG, 'bg'),
+        make24Control('', 4, get24BG, set24BG, 'bg'),
+        make24Control('', 3, get24BG, set24BG, 'bg'),
+        make24Control('', 2, get24BG, set24BG, 'bg'),
+        make24Control('', 1, get24BG, set24BG, 'bg'),
+        make24Control('', 0, get24BG, set24BG, 'bg')
       ]
       this.selection = 0
 
@@ -754,9 +773,10 @@ let demoshIndex = {
           this.emit('write', `\x1b[1m${control.label}\x1b[m`)
         }
         // TODO: colors
-        this.emit('write', '\x1b[38;5;255m')
+        this.emit('write', '\x1b[38;5;255m\x1b[48;5;16m')
         let value = control.getDisplay ? control.getDisplay() : control.getValue().toString()
-        this.emit('write', ((control.fill || ' ').repeat(Math.max(0, control.length - value.length))) + value)
+        this.emit('write', (control.fill || ' ').repeat(Math.max(0, control.length - value.length)))
+        this.emit('write', value.substr(0, control.length))
         this.emit('write', '\x1b[m')
 
         if (index === this.selection) {
@@ -779,26 +799,49 @@ let demoshIndex = {
       this.parser.write(data)
     }
 
+    getControlCount () {
+      let count = 0
+      for (let control of this.controls) {
+        if (control.shouldShow && !control.shouldShow()) continue
+        count++
+      }
+      return count
+    }
+
+    getSelectedControl () {
+      let selected = null
+      let index = 0
+      for (let control of this.controls) {
+        if (control.shouldShow && !control.shouldShow()) continue
+        if (index === this.selection) {
+          selected = control
+          break
+        }
+        index++
+      }
+      return selected
+    }
+
     handler (action, ...args) {
       console.log(action, ...args)
 
       if (action === 'move-cursor-x') {
         this.selection += args[0]
-        let count = this.controls.length
+        let count = this.getControlCount()
         this.selection = ((this.selection % count) + count) % count
       } else if (action === 'move-cursor-y') {
-        let selected = null
-        let index = 0
-        for (let control of this.controls) {
-          if (control.shouldShow && !control.shouldShow()) continue
-          if (index === this.selection) {
-            selected = control
-            break
+        let control = this.getSelectedControl()
+        if (control) control.setValue(control.getValue() - args[0])
+      } else if (action === 'write') {
+        let control = this.getSelectedControl()
+        if (control && control.parseValue) {
+          let parsed = control.parseValue(args[0])
+          if (Number.isFinite(parsed)) {
+            control.setValue(parsed)
+            if (control.moveAfterInput) {
+              if (this.selection < this.getControlCount() - 1) this.selection++
+            }
           }
-          index++
-        }
-        if (selected) {
-          selected.setValue(selected.getValue() - args[0])
         }
       }
 
