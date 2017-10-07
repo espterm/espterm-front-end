@@ -215,10 +215,7 @@ module.exports = class ScreenRenderer {
 
     ctx.clearRect(fillX, fillY, fillWidth, fillHeight)
 
-    if (isDefaultBG && bg >= 0 && this.backgroundImage) {
-      ctx.drawImage(this.backgroundImage, fillX, fillY, fillWidth, fillHeight,
-        fillX, fillY, fillWidth, fillHeight)
-    } else {
+    if (!isDefaultBG || bg < 0 || !this.backgroundImage) {
       ctx.fillRect(fillX, fillY, fillWidth, fillHeight)
     }
   }
