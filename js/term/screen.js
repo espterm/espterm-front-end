@@ -314,7 +314,7 @@ module.exports = class TermScreen extends EventEmitter {
     if (this.renderer.backgroundImage !== !!value) {
       this.renderer.backgroundImage = !!value
       this.renderer.resetDrawn()
-      this.scheduleDraw('background-image')
+      this.renderer.scheduleDraw('background-image')
     }
   }
 
