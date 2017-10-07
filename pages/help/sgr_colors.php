@@ -16,6 +16,10 @@
 			can be selected in <a href="<?= url('cfg_term') ?>">Terminal Settings</a>.
 		</p>
 
+		<p>
+			Background image can be set using `\e]70;<i>url</i>\a` (see section System Functions).
+		</p>
+
 		<h3>Foreground colors</h3>
 
 		<div class="colorprev">

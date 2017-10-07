@@ -4,7 +4,7 @@ return [
 	'menu.cfg_wifi' => 'Nastavení WiFi',
 	'menu.cfg_network' => 'Nastavení sítě',
 	'menu.cfg_term' => 'Nastavení terminalu',
-	'menu.about' => 'About',
+	'menu.about' => 'O programu',
 	'menu.help' => 'Nápověda',
 	'menu.term' => 'Zpět k terminálu',
 	'menu.cfg_system' => 'Nastavení systému',
