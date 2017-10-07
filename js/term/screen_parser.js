@@ -96,6 +96,7 @@ module.exports = class ScreenParser {
           break
         }
       }
+      return text
     }
 
     while (ci < strArray.length) {
