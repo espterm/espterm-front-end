@@ -25,6 +25,12 @@ body.term {
 
 	cursor: default;
 
+	canvas {
+		background-repeat: no-repeat;
+		background-position: center center;
+		background-size: contain;
+	}
+
 	canvas.selectable {
 		cursor: text;
 	}

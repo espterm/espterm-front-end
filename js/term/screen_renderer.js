@@ -92,6 +92,9 @@ module.exports = class ScreenRenderer {
       this.defaultFgNum = fg
       this.defaultBgNum = bg
       this.scheduleDraw('default-colors')
+
+      // full bg with default color (goes behind the image)
+      this.screen.canvas.style.backgroundColor = this.getColor(bg)
     }
   }
 
