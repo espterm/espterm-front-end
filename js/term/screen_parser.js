@@ -35,6 +35,7 @@ const TOPIC_BUTTONS      = 'B'
 const TOPIC_CURSOR       = 'C'
 const TOPIC_INTERNAL     = 'D'
 const TOPIC_BELL         = '!'
+const TOPIC_BACKDROP     = 'W'
 
 const OPT_CURSOR_VISIBLE   = (1 << 0)
 const OPT_DEBUGBAR         = (1 << 1)
@@ -83,6 +84,19 @@ module.exports = class ScreenParser {
     let resized = false
     const topics = du(strArray[ci++])
     // this.screen.cursor.hanging = !!(attributes & (1 << 1))
+
+    let collectOneTerminatedString = () => {
+      // TODO optimize this
+      text = ''
+      while (ci < strArray.length) {
+        let c = strArray[ci++]
+        if (c !== '\x01') {
+          text += c
+        } else {
+          break
+        }
+      }
+    }
 
     while (ci < strArray.length) {
       const topic = strArray[ci++]
@@ -179,17 +193,7 @@ module.exports = class ScreenParser {
         this.screen.renderer.scheduleDraw('cursor-moved')
       } else if (topic === TOPIC_TITLE) {
 
-        // TODO optimize this
-        text = ''
-        while (ci < strArray.length) {
-          let c = strArray[ci++]
-          if (c !== '\x01') {
-            text += c
-          } else {
-            break
-          }
-        }
-
+        text = collectOneTerminatedString()
         qs('#screen-title').textContent = text
         if (text.length === 0) text = 'Terminal'
         qs('title').textContent = `${text} :: ESPTerm`
@@ -199,16 +203,16 @@ module.exports = class ScreenParser {
 
         let labels = []
         for (let j = 0; j < count; j++) {
-          text = ''
-          while (ci < strArray.length) {
-            let c = strArray[ci++]
-            if (c === '\x01') break
-            text += c
-          }
+          text = collectOneTerminatedString()
           labels.push(text)
         }
 
         this.screen.emit('button-labels', labels)
+      } else if (topic === TOPIC_BACKDROP) {
+
+        text = collectOneTerminatedString()
+        this.screen.backgroundImage = text
+
       } else if (topic === TOPIC_BELL) {
 
         this.screen.beep()
