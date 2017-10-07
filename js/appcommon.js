@@ -169,6 +169,7 @@ $.ready(function () {
           'Server connection failed! Trying again' +
           '<span class="anim-dots" style="width:1.5em;text-align:left;display:inline-block">.</span>'
         qs('#screen').appendChild(bnr)
+        qs('#screen').classList.add('failed')
         showPage()
       }
     }, 2000)

@@ -1,4 +1,22 @@
-const { themes, buildColorTable, SELECTION_FG, SELECTION_BG } = require('./themes')
+const {
+  themes,
+  buildColorTable,
+  SELECTION_FG, SELECTION_BG
+} = require('./themes')
+
+const {
+  ATTR_FG,
+  ATTR_BG,
+  ATTR_BOLD,
+  ATTR_UNDERLINE,
+  ATTR_INVERSE,
+  ATTR_BLINK,
+  ATTR_ITALIC,
+  ATTR_STRIKE,
+  ATTR_OVERLINE,
+  ATTR_FAINT,
+  ATTR_FRAKTUR
+} = require('./screen_attr_bits')
 
 // Some non-bold Fraktur symbols are outside the contiguous block
 const frakturExceptions = {
@@ -8,21 +26,6 @@ const frakturExceptions = {
   'R': '\u211c',
   'Z': '\u2128'
 }
-
-// TODO do not repeat - this is also defined in screen_parser ...
-/* eslint-disable no-multi-spaces */
-const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
-const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
-const ATTR_BOLD      = (1 << 2)  // Bold font
-const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
-const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
-const ATTR_BLINK     = (1 << 5)  // Blinking
-const ATTR_ITALIC    = (1 << 6)  // Italic font
-const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
-const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
-const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
-const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
-/* eslint-enable no-multi-spaces */
 
 module.exports = class ScreenRenderer {
   constructor (screen) {

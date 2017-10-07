@@ -1,6 +1,17 @@
 const $ = require('../lib/chibi')
 const { qs } = require('../utils')
 
+const {
+  ATTR_FG,
+  ATTR_BG,
+  ATTR_BOLD,
+  ATTR_UNDERLINE,
+  ATTR_BLINK,
+  ATTR_STRIKE,
+  ATTR_OVERLINE,
+  ATTR_FAINT
+} = require('./screen_attr_bits')
+
 // constants for decoding the update blob
 const SEQ_SKIP = 1
 const SEQ_REPEAT = 2
@@ -39,17 +50,6 @@ const OPT_CRLF_MODE        = (1 << 12)
 const OPT_BRACKETED_PASTE  = (1 << 13)
 const OPT_REVERSE_VIDEO    = (1 << 14)
 
-const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
-const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
-const ATTR_BOLD      = (1 << 2)  // Bold font
-const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
-const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
-const ATTR_BLINK     = (1 << 5)  // Blinking
-const ATTR_ITALIC    = (1 << 6)  // Italic font
-const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
-const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
-const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
-const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
 /* eslint-enable no-multi-spaces */
 
 module.exports = class ScreenParser {
@@ -65,7 +65,9 @@ module.exports = class ScreenParser {
    */
   hideLoadFailedMsg () {
     if (!this.contentLoaded) {
+      let scr = qs('#screen')
       let errmsg = qs('#load-failed')
+      if (scr) scr.classList.remove('failed')
       if (errmsg) errmsg.parentNode.removeChild(errmsg)
       this.contentLoaded = true
     }
