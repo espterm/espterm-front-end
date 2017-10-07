@@ -80,6 +80,7 @@ return [
 	'term.colors_preview' => '',
 	'term.debugbar' => 'Rozšířené ladění',
 	'term.ascii_debug' => 'Ladění vstupních dat',
+	'term.backdrop' => 'URL obrázku na pozadí',
 
 	'cursor.block_blink' => 'Blok, blikající',
     'cursor.block_steady' => 'Blok, stálý',

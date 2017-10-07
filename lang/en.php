@@ -79,6 +79,7 @@ return [
 	'term.colors_preview' => '',
 	'term.debugbar' => 'Debug internal state',
 	'term.ascii_debug' => 'Display control codes',
+	'term.backdrop' => 'Background image URL',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
