@@ -305,6 +305,19 @@ module.exports = class TermScreen extends EventEmitter {
     this._scheduledSizeUpdate = setTimeout(() => this.updateSize(), 1)
   }
 
+  get backgroundImage () {
+    return this.canvas.style.backgroundImage
+  }
+
+  set backgroundImage (value) {
+    this.canvas.style.backgroundImage = value ? `url(${value})` : ''
+    if (this.renderer.backgroundImage !== !!value) {
+      this.renderer.backgroundImage = !!value
+      this.renderer.resetDrawn()
+      this.scheduleDraw('background-image')
+    }
+  }
+
   /**
    * Returns a CSS font string with this TermScreen's font settings and the
    * font modifiers.
