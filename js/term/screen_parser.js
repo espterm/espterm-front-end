@@ -52,17 +52,7 @@ const OPT_REVERSE_VIDEO    = (1 << 14)
 /* eslint-enable no-multi-spaces */
 
 module.exports = class ScreenParser {
-  constructor (screen) {
-    // this.screen = screen
-    let didWarn = false
-    Object.defineProperty(this, 'screen', {
-      get () {
-        if (!didWarn) console.warn('Deprecated get ScreenParser#screen')
-        didWarn = true
-        return screen
-      }
-    })
-
+  constructor () {
     // true if full content was loaded
     this.contentLoaded = false
   }
@@ -361,8 +351,10 @@ module.exports = class ScreenParser {
         break
 
       case 'G':
-        this.screen.showNotification(content)
-        break
+        return [{
+          topic: 'notification',
+          content
+        }]
 
       default:
         console.warn(`Bad data message type; ignoring.\n${JSON.stringify(message)}`)

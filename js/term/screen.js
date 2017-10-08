@@ -13,7 +13,7 @@ module.exports = class TermScreen extends EventEmitter {
     this.canvas = mk('canvas')
     this.ctx = this.canvas.getContext('2d')
 
-    this.parser = new ScreenParser(this)
+    this.parser = new ScreenParser()
     this.renderer = new ScreenRenderer(this)
 
     // debug screen handle
@@ -735,6 +735,10 @@ module.exports = class TermScreen extends EventEmitter {
 
         case 'full-load-complete':
           this.emit('TEMP:hide-load-failed-msg')
+          break
+
+        case 'notification':
+          this.showNotification(update.content)
           break
 
         default:
