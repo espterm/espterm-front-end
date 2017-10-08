@@ -69,13 +69,13 @@ module.exports = class ScreenParser {
 
   parseUpdate (str) {
     // console.log(`update ${str}`)
+
     // current index
     let ci = 0
     let strArray = Array.from ? Array.from(str) : str.split('')
 
     let text
     const topics = du(strArray[ci++])
-    // this.screen.cursor.hanging = !!(attributes & (1 << 1))
 
     let collectOneTerminatedString = () => {
       // TODO optimize this
@@ -256,15 +256,6 @@ module.exports = class ScreenParser {
             cellAttrs ^= MASK_BLINK
           }
 
-          // TODO: reimplement
-          /*
-          // update blinking cells counter if blink state changed
-          if ((this.screen.screenAttrs[cell] & MASK_BLINK) !== (cellAttrs & MASK_BLINK)) {
-            if (cellAttrs & MASK_BLINK) this.screen.blinkingCellCount++
-            else this.screen.blinkingCellCount--
-          }
-          */
-
           // 8 dark system colors turn bright when bold
           if ((cellAttrs & ATTR_BOLD) && !(cellAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
             cellFG += 8
@@ -333,9 +324,6 @@ module.exports = class ScreenParser {
               cell++
           }
         }
-
-        // TODO (see above)
-        // if (this.screen.window.debug) console.log(`Blinky cells: ${this.screen.blinkingCellCount}`)
 
         updates.push({
           topic: 'content',

@@ -4,6 +4,7 @@ const { mk, qs } = require('../utils')
 const notify = require('../notif')
 const ScreenParser = require('./screen_parser')
 const ScreenRenderer = require('./screen_renderer')
+const { ATTR_BLINK } = require('./screen_attr_bits')
 
 module.exports = class TermScreen extends EventEmitter {
   constructor () {
@@ -714,11 +715,18 @@ module.exports = class TermScreen extends EventEmitter {
             let cellYInFrame = Math.floor(cell / frameWidth)
             let index = (frameY + cellYInFrame) * this.window.width + frameX + cellXInFrame
 
+            if (this.screenAttrs[index] & ATTR_BLINK !== data[3] & ATTR_BLINK) {
+              if (data[3] & ATTR_BLINK) this.blinkingCellCount++
+              else this.blinkingCellCount--
+            }
+
             this.screen[index] = data[0]
             this.screenFG[index] = data[1]
             this.screenBG[index] = data[2]
             this.screenAttrs[index] = data[3]
           }
+
+          if (this.window.debug) console.log(`Blinking cells: ${this.blinkingCellCount}`)
 
           this.renderer.scheduleDraw('load', 16)
           this.conn.emit('load')
