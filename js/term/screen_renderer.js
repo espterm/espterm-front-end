@@ -31,9 +31,8 @@ const frakturExceptions = {
  * A terminal screen renderer, using canvas 2D
  */
 module.exports = class CanvasRenderer {
-  constructor (screen) {
-    this.screen = screen
-    this.ctx = screen.ctx
+  constructor (context) {
+    this.ctx = context
 
     this._palette = null    // colors 0-15
     this.defaultBgNum = 0

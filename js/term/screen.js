@@ -2,7 +2,7 @@ const EventEmitter = require('events')
 const { mk } = require('../utils')
 const notify = require('../notif')
 const ScreenParser = require('./screen_parser')
-const ScreenRenderer = require('./screen_renderer')
+const ScreenLayout = require('./screen_layout')
 const { ATTR_BLINK } = require('./screen_attr_bits')
 
 /**
@@ -12,11 +12,8 @@ module.exports = class TermScreen extends EventEmitter {
   constructor () {
     super()
 
-    this.canvas = mk('canvas')
-    this.ctx = this.canvas.getContext('2d')
-
     this.parser = new ScreenParser()
-    this.renderer = new ScreenRenderer(this)
+    this.layout = new ScreenLayout()
 
     // debug screen handle
     this._debug = null
@@ -36,43 +33,6 @@ module.exports = class TermScreen extends EventEmitter {
       style: 'block'
     }
 
-    this._window = {
-      width: 0,
-      height: 0,
-      devicePixelRatio: 1,
-      fontFamily: '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace',
-      fontSize: 20,
-      padding: 6,
-      gridScaleX: 1.0,
-      gridScaleY: 1.2,
-      fitIntoWidth: 0,
-      fitIntoHeight: 0,
-      // two bits. LSB: debug enabled by user, MSB: debug enabled by server
-      debug: 0,
-      graphics: 0,
-      statusScreen: null
-    }
-
-    // scaling caused by fitIntoWidth/fitIntoHeight
-    this._windowScale = 1
-
-    // actual padding, as it may be disabled by fullscreen mode etc.
-    this._padding = 0
-
-    // properties of this.window that require updating size and redrawing
-    this.windowState = {
-      width: 0,
-      height: 0,
-      devicePixelRatio: 0,
-      padding: 0,
-      gridScaleX: 0,
-      gridScaleY: 0,
-      fontFamily: '',
-      fontSize: 0,
-      fitIntoWidth: 0,
-      fitIntoHeight: 0
-    }
-
     const self = this
 
     // current selection
@@ -87,28 +47,13 @@ module.exports = class TermScreen extends EventEmitter {
 
       setSelectable (value) {
         if (value !== this.selectable) {
-          this.selectable = value
-          if (value) self.canvas.classList.add('selectable')
-          else self.canvas.classList.remove('selectable')
+          this.selectable = self.layout.selectable = value
         }
       }
     }
 
     // mouse features
     this.mouseMode = { clicks: false, movement: false }
-
-    // make writing to window update size and draw
-    this.window = new Proxy(this._window, {
-      set (target, key, value, receiver) {
-        if (target[key] !== value) {
-          target[key] = value
-          self.scheduleSizeUpdate()
-          self.renderer.scheduleDraw(`window:${key}=${value}`)
-          self.emit(`update-window:${key}`, value)
-        }
-        return true
-      }
-    })
 
     this.bracketedPaste = false
     this.blinkingCellCount = 0
@@ -125,26 +70,26 @@ module.exports = class TermScreen extends EventEmitter {
       if (selecting) return
       selecting = true
       this.selection.start = this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-start')
+      this.layout.scheduleDraw('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
       this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-move')
+      this.layout.scheduleDraw('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
       this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-end')
+      this.layout.scheduleDraw('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
     // bind event listeners
 
-    this.canvas.addEventListener('mousedown', e => {
+    this.layout.on('mousedown', e => {
       this.emit('hide-touch-select-menu')
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
@@ -173,13 +118,13 @@ module.exports = class TermScreen extends EventEmitter {
       return [touch.clientX - rect.left, touch.clientY - rect.top]
     }
 
-    this.canvas.addEventListener('touchstart', e => {
+    this.layout.on('touchstart', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
     }, { passive: true })
 
-    this.canvas.addEventListener('touchmove', e => {
+    this.layout.on('touchmove', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
 
       if (!selecting && touchDidMove === false) {
@@ -194,7 +139,7 @@ module.exports = class TermScreen extends EventEmitter {
       touchDidMove = true
     })
 
-    this.canvas.addEventListener('touchend', e => {
+    this.layout.on('touchend', e => {
       if (e.touches[0]) {
         touchPosition = getTouchPositionOffset(e.touches[0])
       }
@@ -230,20 +175,20 @@ module.exports = class TermScreen extends EventEmitter {
         // reset selection
         this.selection.start = this.selection.end = [0, 0]
         this.emit('hide-touch-select-menu')
-        this.renderer.scheduleDraw('select-reset')
+        this.layout.scheduleDraw('select-reset')
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
       }
     })
 
-    this.canvas.addEventListener('mousemove', e => {
+    this.layout.on('mousemove', e => {
       if (!selecting) {
         this.emit('mousemove', ...this.screenToGrid(e.offsetX, e.offsetY))
       }
     })
 
-    this.canvas.addEventListener('mouseup', e => {
+    this.layout.on('mouseup', e => {
       if (!selecting) {
         this.emit('mouseup', ...this.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
@@ -251,7 +196,7 @@ module.exports = class TermScreen extends EventEmitter {
     })
 
     let aggregateWheelDelta = 0
-    this.canvas.addEventListener('wheel', e => {
+    this.layout.on('wheel', e => {
       if (this.mouseMode.clicks) {
         if (Math.abs(e.wheelDeltaY) === 120) {
           // mouse wheel scrolling
@@ -270,178 +215,13 @@ module.exports = class TermScreen extends EventEmitter {
       }
     })
 
-    this.canvas.addEventListener('contextmenu', e => {
+    this.layout.on('contextmenu', e => {
       if (this.mouseMode.clicks) {
         // prevent mouse keys getting stuck
         e.preventDefault()
       }
       selectEnd(e.offsetX, e.offsetY)
     })
-  }
-
-  /**
-   * Schedule a size update in the next millisecond
-   */
-  scheduleSizeUpdate () {
-    clearTimeout(this._scheduledSizeUpdate)
-    this._scheduledSizeUpdate = setTimeout(() => this.updateSize(), 1)
-  }
-
-  get backgroundImage () {
-    return this.canvas.style.backgroundImage
-  }
-
-  set backgroundImage (value) {
-    this.canvas.style.backgroundImage = value ? `url(${value})` : ''
-    if (this.renderer.backgroundImage !== !!value) {
-      this.renderer.backgroundImage = !!value
-      this.renderer.resetDrawn()
-      this.renderer.scheduleDraw('background-image')
-    }
-  }
-
-  /**
-   * Returns a CSS font string with this TermScreen's font settings and the
-   * font modifiers.
-   * @param {Object} modifiers
-   * @param {string} [modifiers.style] - the font style
-   * @param {string} [modifiers.weight] - the font weight
-   * @returns {string} a CSS font string
-   */
-  getFont (modifiers = {}) {
-    let fontStyle = modifiers.style || 'normal'
-    let fontWeight = modifiers.weight || 'normal'
-    return `${fontStyle} normal ${fontWeight} ${this.window.fontSize}px ${this.window.fontFamily}`
-  }
-
-  /**
-   * Converts screen coordinates to grid coordinates.
-   * @param {number} x - x in pixels
-   * @param {number} y - y in pixels
-   * @param {boolean} rounded - whether to round the coord, used for select highlighting
-   * @returns {number[]} a tuple of (x, y) in cells
-   */
-  screenToGrid (x, y, rounded = false) {
-    let cellSize = this.getCellSize()
-
-    x = x / this._windowScale - this._padding
-    y = y / this._windowScale - this._padding
-    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
-    y = Math.floor(y / cellSize.height)
-    x = Math.max(0, Math.min(this.window.width - 1, x))
-    y = Math.max(0, Math.min(this.window.height - 1, y))
-
-    return [x, y]
-  }
-
-  /**
-   * Converts grid coordinates to screen coordinates.
-   * @param {number} x - x in cells
-   * @param {number} y - y in cells
-   * @param {boolean} [withScale] - when true, will apply window scale
-   * @returns {number[]} a tuple of (x, y) in pixels
-   */
-  gridToScreen (x, y, withScale = false) {
-    let cellSize = this.getCellSize()
-
-    return [x * cellSize.width, y * cellSize.height].map(v => this._padding + (withScale ? v * this._windowScale : v))
-  }
-
-  /**
-   * The character size, used for calculating the cell size. The space character
-   * is used for measuring.
-   * @returns {Object} the character size with `width` and `height` in pixels
-   */
-  getCharSize () {
-    this.ctx.font = this.getFont()
-
-    return {
-      width: Math.floor(this.ctx.measureText(' ').width),
-      height: this.window.fontSize
-    }
-  }
-
-  /**
-   * The cell size, which is the character size multiplied by the grid scale.
-   * @returns {Object} the cell size with `width` and `height` in pixels
-   */
-  getCellSize () {
-    let charSize = this.getCharSize()
-
-    return {
-      width: Math.ceil(charSize.width * this.window.gridScaleX),
-      height: Math.ceil(charSize.height * this.window.gridScaleY)
-    }
-  }
-
-  /**
-   * Updates the canvas size if it changed
-   */
-  updateSize () {
-    // see below (this is just updating it)
-    this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
-
-    let didChange = false
-    for (let key in this.windowState) {
-      if (this.windowState.hasOwnProperty(key) && this.windowState[key] !== this.window[key]) {
-        didChange = true
-        this.windowState[key] = this.window[key]
-      }
-    }
-
-    if (didChange) {
-      const {
-        width,
-        height,
-        fitIntoWidth,
-        fitIntoHeight,
-        padding
-      } = this.window
-      const cellSize = this.getCellSize()
-
-      // real height of the canvas element in pixels
-      let realWidth = width * cellSize.width
-      let realHeight = height * cellSize.height
-      let originalWidth = realWidth
-
-      if (fitIntoWidth && fitIntoHeight) {
-        let terminalAspect = realWidth / realHeight
-        let fitAspect = fitIntoWidth / fitIntoHeight
-
-        if (terminalAspect < fitAspect) {
-          // align heights
-          realHeight = fitIntoHeight - 2 * padding
-          realWidth = realHeight * terminalAspect
-        } else {
-          // align widths
-          realWidth = fitIntoWidth - 2 * padding
-          realHeight = realWidth / terminalAspect
-        }
-      }
-
-      // store new window scale
-      this._windowScale = realWidth / originalWidth
-
-      realWidth += 2 * padding
-      realHeight += 2 * padding
-
-      // store padding
-      this._padding = padding * (originalWidth / realWidth)
-
-      // the DPR must be rounded to a very nice value to prevent gaps between cells
-      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
-
-      this.canvas.width = (width * cellSize.width + 2 * Math.round(this._padding)) * devicePixelRatio
-      this.canvas.style.width = `${realWidth}px`
-      this.canvas.height = (height * cellSize.height + 2 * Math.round(this._padding)) * devicePixelRatio
-      this.canvas.style.height = `${realHeight}px`
-
-      // the screen has been cleared (by changing canvas width)
-      this.renderer.resetDrawn()
-
-      // draw immediately; the canvas shouldn't flash
-      this.renderer.draw('update-size')
-    }
   }
 
   resetScreen () {
