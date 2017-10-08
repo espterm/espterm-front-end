@@ -19,9 +19,10 @@ module.exports = class TermConnection extends EventEmitter {
     this.autoXoffTimeout = null
     this.reconnTimeout = null
     this.forceClosing = false
+    this.queue = []
 
     try {
-      this.blobReader = new FileReader()
+      this.blobReader = new window.FileReader()
       this.blobReader.onload = (evt) => {
         this.onDecodedWSMessage(this.blobReader.result)
       }
@@ -90,12 +91,14 @@ module.exports = class TermConnection extends EventEmitter {
         this.xoff = true
         this.autoXoffTimeout = setTimeout(() => {
           this.xoff = false
+          this.flushQueue()
         }, 250)
         break
 
       case '+':
         // console.log('xon');
         this.xoff = false
+        this.flushQueue()
         clearTimeout(this.autoXoffTimeout)
         break
 
@@ -143,7 +146,8 @@ module.exports = class TermConnection extends EventEmitter {
     }
     if (this.xoff) {
       // TODO queue
-      console.log("Can't send, flood control.")
+      console.log("Can't send, flood control. Queueing")
+      this.queue.push(message)
       return false
     }
 
@@ -157,6 +161,12 @@ module.exports = class TermConnection extends EventEmitter {
     }
     this.ws.send(message)
     return true
+  }
+
+  flushQueue () {
+    console.log('Flushing input queue')
+    for (let message of this.queue) this.send(message)
+    this.queue = []
   }
 
   /** Safely close the socket */
