@@ -122,6 +122,7 @@ body.term {
 		.heartbeat {
 			float: right;
 			font-family: $font-stack;
+			color: crimson;
 
 			&.beat {
 				animation-name: heartbeat-beat;
