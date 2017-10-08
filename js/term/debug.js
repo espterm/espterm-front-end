@@ -1,6 +1,6 @@
 const { mk } = require('../utils')
 
-module.exports = function attachDebugScreen (screen) {
+module.exports = function attachDebugger (screen, connection) {
   const debugCanvas = mk('canvas')
   const ctx = debugCanvas.getContext('2d')
 
@@ -215,16 +215,33 @@ module.exports = function attachDebugScreen (screen) {
   const toolbar = mk('div')
   toolbar.classList.add('debug-toolbar')
   let toolbarAttached = false
+
+  const heartbeat = mk('div')
+  heartbeat.classList.add('heartbeat')
+  heartbeat.textContent = '❤'
+  toolbar.appendChild(heartbeat)
+
   const dataDisplay = mk('div')
   dataDisplay.classList.add('data-display')
   toolbar.appendChild(dataDisplay)
+
   const internalDisplay = mk('div')
   internalDisplay.classList.add('internal-display')
   toolbar.appendChild(internalDisplay)
+
   toolbar.appendChild(drawInfo)
+
   const buttons = mk('div')
   buttons.classList.add('toolbar-buttons')
   toolbar.appendChild(buttons)
+
+  // heartbeat
+  connection.on('heartbeat', () => {
+    heartbeat.classList.remove('beat')
+    window.requestAnimationFrame(() => {
+      heartbeat.classList.add('beat')
+    })
+  })
 
   {
     const redraw = mk('button')
@@ -330,8 +347,6 @@ module.exports = function attachDebugScreen (screen) {
           key = attr
           value = true
         }
-
-        if (key === 'color') console.log(value)
 
         if (key === 'bold') attrs.style += 'font-weight:bold;'
         if (key === 'italic') attrs.style += 'font-style:italic;'

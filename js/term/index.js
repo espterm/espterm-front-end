@@ -6,7 +6,7 @@ const TermConnection = require('./connection')
 const TermInput = require('./input')
 const TermUpload = require('./upload')
 const initSoftKeyboard = require('./soft_keyboard')
-const attachDebugScreen = require('./debug_screen')
+const attachDebugger = require('./debug')
 const initButtons = require('./buttons')
 
 /** Init the terminal sub-module - called from HTML */
@@ -102,7 +102,7 @@ module.exports = function (opts) {
   qs('#screen').appendChild(screen.canvas)
 
   initSoftKeyboard(screen, input)
-  if (attachDebugScreen) attachDebugScreen(screen)
+  if (attachDebugger) attachDebugger(screen, conn)
 
   let fullscreenIcon = {} // dummy
   let isFullscreen = false

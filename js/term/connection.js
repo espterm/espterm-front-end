@@ -194,6 +194,7 @@ module.exports = class TermConnection extends EventEmitter {
   }
 
   heartbeat () {
+    this.emit('heartbeat')
     clearTimeout(this.heartbeatTimeout)
     this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), HEARTBEAT_TIME)
   }

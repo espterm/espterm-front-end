@@ -118,6 +118,32 @@ body.term {
 		font-family: $screen-stack;
 		font-size: 12px;
 		white-space: normal;
+
+		.heartbeat {
+			float: right;
+			font-family: $font-stack;
+
+			&.beat {
+				animation-name: heartbeat-beat;
+				animation-duration: 2s;
+				animation-fill-mode: forwards;
+
+				@keyframes heartbeat-beat {
+					0% {
+						transform: scale(1);
+						animation-timing-function: ease-out;
+					}
+					5% {
+						transform: scale(1.2);
+						animation-timing-function: linear;
+					}
+					100% {
+						transform: scale(0);
+						opacity: 0;
+					}
+				}
+			}
+		}
 	}
 }
 
