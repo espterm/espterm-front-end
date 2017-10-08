@@ -46,6 +46,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
     this.graphics = 0
 
+    this.statusFont = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif"
+
     // screen data, considered immutable
     this.width = 0
     this.height = 0
