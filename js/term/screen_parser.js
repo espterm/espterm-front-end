@@ -63,18 +63,8 @@ module.exports = class ScreenParser {
       }
     })
 
-    // true if TermScreen#load was called at least once
+    // true if full content was loaded
     this.contentLoaded = false
-  }
-
-  /**
-   * Hide the warning message about failed data load
-   */
-  hideLoadFailedMsg () {
-    if (!this.contentLoaded) {
-      this.screen.emit('TEMP:hide-load-failed-msg')
-      this.contentLoaded = true
-    }
   }
 
   parseUpdate (str) {
@@ -141,11 +131,6 @@ module.exports = class ScreenParser {
         if (cursorStyle === 0) cursorStyle = 'block'
         else if (cursorStyle === 1) cursorStyle = 'line'
         else cursorStyle = 'bar'
-
-        if (this.screen.cursor.blinking !== cursorBlinking) {
-          this.screen.cursor.blinking = cursorBlinking
-          this.screen.renderer.resetCursorBlink()
-        }
 
         const showButtons = !!(attributes & OPT_SHOW_BUTTONS)
         const showConfigLinks = !!(attributes & OPT_SHOW_CONFIG_LINKS)
@@ -232,145 +217,140 @@ module.exports = class ScreenParser {
         })
       } else if (topic === TOPIC_CONTENT) {
         // set screen content
-        let _ci = ci
+        const frameY = du(strArray[ci++])
+        const frameX = du(strArray[ci++])
+        const frameHeight = du(strArray[ci++])
+        const frameWidth = du(strArray[ci++])
 
-        let tempDoNotCommitUpstream = () => {
-          let ci = _ci
-          const frameY = du(strArray[ci++])
-          const frameX = du(strArray[ci++])
-          const frameHeight = du(strArray[ci++])
-          const frameWidth = du(strArray[ci++])
+        // content
+        let fg = 7
+        let bg = 0
+        let attrs = 0
+        let cell = 0 // cell index
+        let lastChar = ' '
+        let frameLength = frameWidth * frameHeight
 
-          if (this.screen._debug && this.screen.window.debug) {
-            this.screen._debug.pushFrame([frameX, frameY, frameWidth, frameHeight])
+        const MASK_LINE_ATTR = ATTR_UNDERLINE | ATTR_OVERLINE | ATTR_STRIKE
+        const MASK_BLINK = ATTR_BLINK
+
+        const cells = []
+
+        let pushCell = () => {
+          let hasFG = attrs & ATTR_FG
+          let hasBG = attrs & ATTR_BG
+          let cellFG = fg
+          let cellBG = bg
+          let cellAttrs = attrs
+
+          // use 0,0 if no fg/bg. this is to match back-end implementation
+          // and allow leaving out fg/bg setting for cells with none
+          if (!hasFG) cellFG = 0
+          if (!hasBG) cellBG = 0
+
+          // Remove blink attribute if it wouldn't have any effect
+          if ((cellAttrs & MASK_BLINK) &&
+            ((lastChar === ' ' && ((cellAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
+              (fg === bg && hasFG && hasBG) // invisible text
+            )
+          ) {
+            cellAttrs ^= MASK_BLINK
           }
 
-          // content
-          let fg = 7
-          let bg = 0
-          let attrs = 0
-          let cell = 0 // cell index
-          let lastChar = ' '
-          let frameLength = frameWidth * frameHeight
+          // TODO: reimplement
+          /*
+          // update blinking cells counter if blink state changed
+          if ((this.screen.screenAttrs[cell] & MASK_BLINK) !== (cellAttrs & MASK_BLINK)) {
+            if (cellAttrs & MASK_BLINK) this.screen.blinkingCellCount++
+            else this.screen.blinkingCellCount--
+          }
+          */
 
-          const MASK_LINE_ATTR = ATTR_UNDERLINE | ATTR_OVERLINE | ATTR_STRIKE
-          const MASK_BLINK = ATTR_BLINK
-
-          let pushCell = () => {
-            // Remove blink attribute if it wouldn't have any effect
-            let myAttrs = attrs
-            let hasFG = attrs & ATTR_FG
-            let hasBG = attrs & ATTR_BG
-            let cellFG = fg
-            let cellBG = bg
-
-            // use 0,0 if no fg/bg. this is to match back-end implementation
-            // and allow leaving out fg/bg setting for cells with none
-            if (!hasFG) cellFG = 0
-            if (!hasBG) cellBG = 0
-
-            if ((myAttrs & MASK_BLINK) !== 0 &&
-              ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
-                (fg === bg && hasFG && hasBG) // invisible text
-              )
-            ) {
-              myAttrs ^= MASK_BLINK
-            }
-            // update blinking cells counter if blink state changed
-            if ((this.screen.screenAttrs[cell] & MASK_BLINK) !== (myAttrs & MASK_BLINK)) {
-              if (myAttrs & MASK_BLINK) this.screen.blinkingCellCount++
-              else this.screen.blinkingCellCount--
-            }
-
-            let cellXInFrame = cell % frameWidth
-            let cellYInFrame = Math.floor(cell / frameWidth)
-            let index = (frameY + cellYInFrame) * this.screen.window.width + frameX + cellXInFrame
-
-            // 8 dark system colors turn bright when bold
-            if ((myAttrs & ATTR_BOLD) && !(myAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
-              cellFG += 8
-            }
-
-            this.screen.screen[index] = lastChar
-            this.screen.screenFG[index] = cellFG
-            this.screen.screenBG[index] = cellBG
-            this.screen.screenAttrs[index] = myAttrs
+          // 8 dark system colors turn bright when bold
+          if ((cellAttrs & ATTR_BOLD) && !(cellAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
+            cellFG += 8
           }
 
-          while (ci < strArray.length && cell < frameLength) {
-            let character = strArray[ci++]
-            let charCode = character.codePointAt(0)
-
-            let data, count
-            switch (charCode) {
-              case SEQ_REPEAT:
-                count = du(strArray[ci++])
-                for (let j = 0; j < count; j++) {
-                  pushCell()
-                  if (++cell > frameLength) break
-                }
-                break
-
-              case SEQ_SKIP:
-                cell += du(strArray[ci++])
-                break
-
-              case SEQ_SET_COLORS:
-                data = du(strArray[ci++])
-                fg = data & 0xFF
-                bg = (data >> 8) & 0xFF
-                break
-
-              case SEQ_SET_ATTRS:
-                data = du(strArray[ci++])
-                attrs = data & 0xFFFF
-                break
-
-              case SEQ_SET_ATTR_0:
-                attrs = 0
-                break
-
-              case SEQ_SET_FG:
-                data = du(strArray[ci++])
-                if (data & 0x10000) {
-                  data &= 0xFFF
-                  data |= (du(strArray[ci++]) & 0xFFF) << 12
-                  data += 256
-                }
-                fg = data
-                break
-
-              case SEQ_SET_BG:
-                data = du(strArray[ci++])
-                if (data & 0x10000) {
-                  data &= 0xFFF
-                  data |= (du(strArray[ci++]) & 0xFFF) << 12
-                  data += 256
-                }
-                bg = data
-                break
-
-              default:
-                if (charCode < 32) character = '\ufffd'
-                lastChar = character
-                pushCell()
-                cell++
-            }
-          }
-
-          if (this.screen.window.debug) console.log(`Blinky cells: ${this.screen.blinkingCellCount}`)
-
-          this.screen.renderer.scheduleDraw('load', 16)
-          this.screen.conn.emit('load')
+          cells.push([lastChar, cellFG, cellBG, cellAttrs])
         }
+
+        while (ci < strArray.length && cell < frameLength) {
+          let character = strArray[ci++]
+          let charCode = character.codePointAt(0)
+
+          let data, count
+          switch (charCode) {
+            case SEQ_REPEAT:
+              count = du(strArray[ci++])
+              for (let j = 0; j < count; j++) {
+                pushCell()
+                if (++cell > frameLength) break
+              }
+              break
+
+            case SEQ_SKIP:
+              cell += du(strArray[ci++])
+              break
+
+            case SEQ_SET_COLORS:
+              data = du(strArray[ci++])
+              fg = data & 0xFF
+              bg = (data >> 8) & 0xFF
+              break
+
+            case SEQ_SET_ATTRS:
+              data = du(strArray[ci++])
+              attrs = data & 0xFFFF
+              break
+
+            case SEQ_SET_ATTR_0:
+              attrs = 0
+              break
+
+            case SEQ_SET_FG:
+              data = du(strArray[ci++])
+              if (data & 0x10000) {
+                data &= 0xFFF
+                data |= (du(strArray[ci++]) & 0xFFF) << 12
+                data += 256
+              }
+              fg = data
+              break
+
+            case SEQ_SET_BG:
+              data = du(strArray[ci++])
+              if (data & 0x10000) {
+                data &= 0xFFF
+                data |= (du(strArray[ci++]) & 0xFFF) << 12
+                data += 256
+              }
+              bg = data
+              break
+
+            default:
+              if (charCode < 32) character = '\ufffd'
+              lastChar = character
+              pushCell()
+              cell++
+          }
+        }
+
+        // TODO (see above)
+        // if (this.screen.window.debug) console.log(`Blinky cells: ${this.screen.blinkingCellCount}`)
 
         updates.push({
           topic: 'content',
-          tempDoNotCommitUpstream
+          frameX,
+          frameY,
+          frameWidth,
+          frameHeight,
+          cells
         })
       }
 
-      if ((topics & 0x3B) !== 0) this.hideLoadFailedMsg()
+      if (topics & 0x3B && !this.contentLoaded) {
+        updates.push({ topic: 'full-load-complete' })
+        this.contentLoaded = true
+      }
     }
 
     return updates

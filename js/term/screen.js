@@ -688,6 +688,10 @@ module.exports = class TermScreen extends EventEmitter {
           this.emit('button-labels', update.labels)
           break
 
+        case 'backdrop':
+          this.backgroundImage = update.image
+          break
+
         case 'bell':
           this.beep()
           break
@@ -697,7 +701,32 @@ module.exports = class TermScreen extends EventEmitter {
           break
 
         case 'content':
-          update.tempDoNotCommitUpstream()
+          const { frameX, frameY, frameWidth, frameHeight, cells } = update
+
+          if (this._debug && this.window.debug) {
+            this._debug.pushFrame([frameX, frameY, frameWidth, frameHeight])
+          }
+
+          for (let cell = 0; cell < cells.length; cell++) {
+            let data = cells[cell]
+
+            let cellXInFrame = cell % frameWidth
+            let cellYInFrame = Math.floor(cell / frameWidth)
+            let index = (frameY + cellYInFrame) * this.window.width + frameX + cellXInFrame
+
+            this.screen[index] = data[0]
+            this.screenFG[index] = data[1]
+            this.screenBG[index] = data[2]
+            this.screenAttrs[index] = data[3]
+          }
+
+          this.renderer.scheduleDraw('load', 16)
+          this.conn.emit('load')
+          this.emit('load')
+          break
+
+        case 'full-load-complete':
+          this.emit('TEMP:hide-load-failed-msg')
           break
 
         default:
