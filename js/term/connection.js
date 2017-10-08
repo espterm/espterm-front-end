@@ -82,7 +82,6 @@ module.exports = class TermConnection extends EventEmitter {
   onDecodedWSMessage (str) {
     switch (str.charAt(0)) {
       case '.':
-        console.log(str)
         // heartbeat, no-op message
         break
 
