@@ -145,10 +145,7 @@ exports.getColor = function (i, palette = []) {
 exports.toHex = function (shade, themeN) {
   if (/^\d+$/.test(shade)) {
     shade = +shade
-    if (shade < 16) shade = themes[themeN][shade]
-    else {
-      shade = exports.buildColorTable()[shade]
-    }
+    return exports.getColor(shade, themes[themeN])
   }
   return shade
 }

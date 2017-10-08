@@ -92,7 +92,7 @@ module.exports = class TermScreen extends EventEmitter {
     this.selection = {
       // when false, this will prevent selection in favor of mouse events,
       // though alt can be held to override it
-      selectable: true,
+      selectable: null,
 
       // selection start and end (x, y) tuples
       start: [0, 0],
