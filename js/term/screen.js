@@ -671,7 +671,7 @@ module.exports = class TermScreen extends EventEmitter {
           break
 
         case 'cursor':
-          if (this.cursor.x !== update.x || this.cursor.y !== update.y) {
+          if (this.cursor.x !== update.x || this.cursor.y !== update.y || this.cursor.hanging !== update.hanging) {
             this.cursor.x = update.x
             this.cursor.y = update.y
             this.cursor.hanging = update.hanging
