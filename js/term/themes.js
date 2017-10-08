@@ -73,7 +73,7 @@ exports.buildColorTable = function () {
   if (colorTable256 !== null) return colorTable256
 
   // 256color lookup table
-  // should not be used to look up 0-15 (will return transparent)
+  // should not be used to look up 0-15
   colorTable256 = new Array(16).fill('#000000')
 
   // fill color table
@@ -111,6 +111,35 @@ exports.themePreview = function (themeN) {
     if (/^\d+$/.test(shade)) shade = exports.toHex(shade, themeN)
     elem.style.backgroundColor = shade
   })
+}
+
+exports.colorTable256 = null
+exports.ensureColorTable256 = function () {
+  if (!exports.colorTable256) exports.colorTable256 = exports.buildColorTable()
+}
+
+exports.getColor = function (i, palette = []) {
+  // return palette color if it exists
+  if (i < 16 && i in palette) return palette[i]
+
+  // -1 for selection foreground, -2 for selection background
+  if (i === -1) return exports.SELECTION_FG
+  if (i === -2) return exports.SELECTION_BG
+
+  // 256 color
+  if (i > 15 && i < 256) {
+    exports.ensureColorTable256()
+    return exports.colorTable256[i]
+  }
+
+  // 24-bit color, encoded as (hex) + 256 (such that #000000 == 256)
+  if (i > 255) {
+    i -= 256
+    return '#' + `000000${i.toString(16)}`.substr(-6)
+  }
+
+  // return error color
+  return Math.floor(Date.now() / 1000) % 2 === 0 ? '#f0f' : '#0f0'
 }
 
 exports.toHex = function (shade, themeN) {

@@ -1,7 +1,7 @@
 const {
   themes,
   buildColorTable,
-  SELECTION_FG, SELECTION_BG
+  getColor
 } = require('./themes')
 
 const {
@@ -118,27 +118,7 @@ module.exports = class ScreenRenderer {
    * @returns {string} the CSS color
    */
   getColor (i) {
-    // return palette color if it exists
-    if (i < 16 && i in this.palette) return this.palette[i]
-
-    // -1 for selection foreground, -2 for selection background
-    if (i === -1) return SELECTION_FG
-    if (i === -2) return SELECTION_BG
-
-    // 256 color
-    if (i > 15 && i < 256) return this.colorTable256[i]
-
-    // true color, encoded as (hex) + 256 (such that #000 == 256)
-    if (i > 255) {
-      i -= 256
-      let red = (i >> 16) & 0xFF
-      let green = (i >> 8) & 0xFF
-      let blue = i & 0xFF
-      return `rgb(${red}, ${green}, ${blue})`
-    }
-
-    // return error color
-    return (Date.now() / 1000) % 2 === 0 ? '#f0f' : '#0f0'
+    return getColor(i, this.palette)
   }
 
   /**
