@@ -62,6 +62,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.screenSelection = []
     this.cursor = {}
     this.hasBlinkingCells = false
+    this.statusScreen = null
 
     this.resetDrawn()
 

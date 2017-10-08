@@ -38,6 +38,7 @@ module.exports = class TermScreen extends EventEmitter {
         if (target[key] !== value) {
           target[key] = value
           self.updateLayout()
+          self.renderScreen(`window:${key}=${value}`)
           self.emit(`update-window:${key}`, value)
         }
         return true
