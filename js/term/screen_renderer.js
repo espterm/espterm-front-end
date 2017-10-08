@@ -1,4 +1,22 @@
-const { themes, buildColorTable, SELECTION_FG, SELECTION_BG } = require('./themes')
+const {
+  themes,
+  buildColorTable,
+  SELECTION_FG, SELECTION_BG
+} = require('./themes')
+
+const {
+  ATTR_FG,
+  ATTR_BG,
+  ATTR_BOLD,
+  ATTR_UNDERLINE,
+  ATTR_INVERSE,
+  ATTR_BLINK,
+  ATTR_ITALIC,
+  ATTR_STRIKE,
+  ATTR_OVERLINE,
+  ATTR_FAINT,
+  ATTR_FRAKTUR
+} = require('./screen_attr_bits')
 
 // Some non-bold Fraktur symbols are outside the contiguous block
 const frakturExceptions = {
@@ -8,21 +26,6 @@ const frakturExceptions = {
   'R': '\u211c',
   'Z': '\u2128'
 }
-
-// TODO do not repeat - this is also defined in screen_parser ...
-/* eslint-disable no-multi-spaces */
-const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
-const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
-const ATTR_BOLD      = (1 << 2)  // Bold font
-const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
-const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
-const ATTR_BLINK     = (1 << 5)  // Blinking
-const ATTR_ITALIC    = (1 << 6)  // Italic font
-const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
-const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
-const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
-const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
-/* eslint-enable no-multi-spaces */
 
 module.exports = class ScreenRenderer {
   constructor (screen) {
@@ -89,6 +92,9 @@ module.exports = class ScreenRenderer {
       this.defaultFgNum = fg
       this.defaultBgNum = bg
       this.scheduleDraw('default-colors')
+
+      // full bg with default color (goes behind the image)
+      this.screen.canvas.style.backgroundColor = this.getColor(bg)
     }
   }
 
@@ -180,8 +186,9 @@ module.exports = class ScreenRenderer {
    * @param {number} options.cellWidth - cell width in pixels
    * @param {number} options.cellHeight - cell height in pixels
    * @param {number} options.bg - the background color
+   * @param {number} options.isDefaultBG - if true, will draw image background if available
    */
-  drawBackground ({ x, y, cellWidth, cellHeight, bg }) {
+  drawBackground ({ x, y, cellWidth, cellHeight, bg, isDefaultBG }) {
     const ctx = this.ctx
     const { width, height } = this.screen.window
     const padding = Math.round(this.screen._padding)
@@ -189,6 +196,8 @@ module.exports = class ScreenRenderer {
     let screenX = x * cellWidth + padding
     let screenY = y * cellHeight + padding
     let isBorderCell = x === 0 || y === 0 || x === width - 1 || y === height - 1
+
+    let fillX, fillY, fillWidth, fillHeight
     if (isBorderCell) {
       let left = screenX
       let top = screenY
@@ -198,11 +207,22 @@ module.exports = class ScreenRenderer {
       else if (x === width - 1) right += padding
       if (y === 0) top -= padding
       else if (y === height - 1) bottom += padding
-      ctx.clearRect(left, top, right - left, bottom - top)
-      ctx.fillRect(left, top, right - left, bottom - top)
+
+      fillX = left
+      fillY = top
+      fillWidth = right - left
+      fillHeight = bottom - top
     } else {
-      ctx.clearRect(screenX, screenY, cellWidth, cellHeight)
-      ctx.fillRect(screenX, screenY, cellWidth, cellHeight)
+      fillX = screenX
+      fillY = screenY
+      fillWidth = cellWidth
+      fillHeight = cellHeight
+    }
+
+    ctx.clearRect(fillX, fillY, fillWidth, fillHeight)
+
+    if (!isDefaultBG || bg < 0 || !this.backgroundImage) {
+      ctx.fillRect(fillX, fillY, fillWidth, fillHeight)
     }
   }
 
@@ -497,8 +517,13 @@ module.exports = class ScreenRenderer {
       let bg = this.screen.screenBG[cell] | 0
       let attrs = this.screen.screenAttrs[cell] | 0
 
+      let isDefaultBG = false
+
       if (!(attrs & ATTR_FG)) fg = this.defaultFgNum
-      if (!(attrs & ATTR_BG)) bg = this.defaultBgNum
+      if (!(attrs & ATTR_BG)) {
+        bg = this.defaultBgNum
+        isDefaultBG = true
+      }
 
       if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
       if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
@@ -525,7 +550,7 @@ module.exports = class ScreenRenderer {
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
 
-      fontGroups.get(font).push({ cell, x, y, text, fg, bg, attrs, isCursor, inSelection })
+      fontGroups.get(font).push({ cell, x, y, text, fg, bg, attrs, isCursor, inSelection, isDefaultBG })
       updateMap.set(cell, didUpdate)
     }
 
@@ -595,10 +620,10 @@ module.exports = class ScreenRenderer {
     // pass 1: backgrounds
     for (let font of fontGroups.keys()) {
       for (let data of fontGroups.get(font)) {
-        let { cell, x, y, text, bg } = data
+        let { cell, x, y, text, bg, isDefaultBG } = data
 
         if (redrawMap.get(cell)) {
-          this.drawBackground({ x, y, cellWidth, cellHeight, bg })
+          this.drawBackground({ x, y, cellWidth, cellHeight, bg, isDefaultBG })
 
           if (this.screen.window.debug && this.screen._debug) {
             // set cell flags

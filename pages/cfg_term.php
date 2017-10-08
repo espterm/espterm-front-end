@@ -172,6 +172,11 @@
 		<input class="tiny" type="text" name="bm5" id="bm5" value="%h:bm5%">
 	</div>
 
+	<div class="Row">
+		<label for="backdrop"><?= tr('term.backdrop') ?></label>
+		<input type="text" name="backdrop" id="backdrop" value="%h:backdrop%" required>
+	</div>
+
 	<div class="Row checkbox" >
 		<label><?= tr('term.crlf_mode') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
@@ -281,7 +286,6 @@
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="ascii_debug" name="ascii_debug" value="%ascii_debug%">
 	</div>
-
 
 	<div class="Row checkbox" >
 		<label><?= tr('term.fn_alt_mode') ?></label><!--

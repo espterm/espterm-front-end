@@ -1,6 +1,17 @@
 const $ = require('../lib/chibi')
 const { qs } = require('../utils')
 
+const {
+  ATTR_FG,
+  ATTR_BG,
+  ATTR_BOLD,
+  ATTR_UNDERLINE,
+  ATTR_BLINK,
+  ATTR_STRIKE,
+  ATTR_OVERLINE,
+  ATTR_FAINT
+} = require('./screen_attr_bits')
+
 // constants for decoding the update blob
 const SEQ_SKIP = 1
 const SEQ_REPEAT = 2
@@ -24,6 +35,7 @@ const TOPIC_BUTTONS      = 'B'
 const TOPIC_CURSOR       = 'C'
 const TOPIC_INTERNAL     = 'D'
 const TOPIC_BELL         = '!'
+const TOPIC_BACKDROP     = 'W'
 
 const OPT_CURSOR_VISIBLE   = (1 << 0)
 const OPT_DEBUGBAR         = (1 << 1)
@@ -39,17 +51,6 @@ const OPT_CRLF_MODE        = (1 << 12)
 const OPT_BRACKETED_PASTE  = (1 << 13)
 const OPT_REVERSE_VIDEO    = (1 << 14)
 
-const ATTR_FG        = (1 << 0)  // 1 if not using default background color (ignore cell bg) - color extension bit
-const ATTR_BG        = (1 << 1)  // 1 if not using default foreground color (ignore cell fg) - color extension bit
-const ATTR_BOLD      = (1 << 2)  // Bold font
-const ATTR_UNDERLINE = (1 << 3)  // Underline decoration
-const ATTR_INVERSE   = (1 << 4)  // Invert colors - this is useful so we can clear then with SGR manipulation commands
-const ATTR_BLINK     = (1 << 5)  // Blinking
-const ATTR_ITALIC    = (1 << 6)  // Italic font
-const ATTR_STRIKE    = (1 << 7)  // Strike-through decoration
-const ATTR_OVERLINE  = (1 << 8)  // Over-line decoration
-const ATTR_FAINT     = (1 << 9)  // Faint foreground color (reduced alpha)
-const ATTR_FRAKTUR   = (1 << 10) // Fraktur font (unicode substitution)
 /* eslint-enable no-multi-spaces */
 
 module.exports = class ScreenParser {
@@ -65,7 +66,9 @@ module.exports = class ScreenParser {
    */
   hideLoadFailedMsg () {
     if (!this.contentLoaded) {
+      let scr = qs('#screen')
       let errmsg = qs('#load-failed')
+      if (scr) scr.classList.remove('failed')
       if (errmsg) errmsg.parentNode.removeChild(errmsg)
       this.contentLoaded = true
     }
@@ -81,6 +84,20 @@ module.exports = class ScreenParser {
     let resized = false
     const topics = du(strArray[ci++])
     // this.screen.cursor.hanging = !!(attributes & (1 << 1))
+
+    let collectOneTerminatedString = () => {
+      // TODO optimize this
+      text = ''
+      while (ci < strArray.length) {
+        let c = strArray[ci++]
+        if (c !== '\x01') {
+          text += c
+        } else {
+          break
+        }
+      }
+      return text
+    }
 
     while (ci < strArray.length) {
       const topic = strArray[ci++]
@@ -177,17 +194,7 @@ module.exports = class ScreenParser {
         this.screen.renderer.scheduleDraw('cursor-moved')
       } else if (topic === TOPIC_TITLE) {
 
-        // TODO optimize this
-        text = ''
-        while (ci < strArray.length) {
-          let c = strArray[ci++]
-          if (c !== '\x01') {
-            text += c
-          } else {
-            break
-          }
-        }
-
+        text = collectOneTerminatedString()
         qs('#screen-title').textContent = text
         if (text.length === 0) text = 'Terminal'
         qs('title').textContent = `${text} :: ESPTerm`
@@ -197,16 +204,16 @@ module.exports = class ScreenParser {
 
         let labels = []
         for (let j = 0; j < count; j++) {
-          text = ''
-          while (ci < strArray.length) {
-            let c = strArray[ci++]
-            if (c === '\x01') break
-            text += c
-          }
+          text = collectOneTerminatedString()
           labels.push(text)
         }
 
         this.screen.emit('button-labels', labels)
+      } else if (topic === TOPIC_BACKDROP) {
+
+        text = collectOneTerminatedString()
+        this.screen.backgroundImage = text
+
       } else if (topic === TOPIC_BELL) {
 
         this.screen.beep()

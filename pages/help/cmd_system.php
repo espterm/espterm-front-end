@@ -12,10 +12,27 @@
 			<thead><tr><th>Code</th><th>Meaning</th></tr></thead>
 			<tbody>
 			<tr>
+				<td>_CAN_ (24)</td>
+				<td>
+					This ASCII code is sent by ESPTerm when it becomes ready to receive commands.
+					When this code is received on the UART, it means ESPTerm has restarted and is ready.
+					Use this to detect spontaneous restarts which require a full screen repaint.
+					As a control character sent to ESPTerm, CAN aborts any currently received commands
+					and clears the parser.
+				</td>
+			</tr>
+			<tr>
+				<td>_ENQ_ (5)</td>
+				<td>
+					ESPTerm responds to this control characters with an "answerback message".
+					This message contains the curretn version, unique ID, and the IP address if in Client mode.
+				</td>
+			</tr>
+			<tr>
 				<td>`\ec`</td>
 				<td>
 					Clear screen, reset attributes and cursor. This command also restores the default
-					screen size, title, button labels and messages.
+					screen size, title, button labels and messages and the background URL.
 				</td>
 			</tr>
 			<tr>
@@ -30,14 +47,6 @@
 				</td>
 			</tr>
 			<tr>
-				<td>_CAN_ (24)</td>
-				<td>
-					This ASCII code is not a command, but is sent by ESPTerm when it becomes ready to receive commands.
-					When this code is received on the UART, it means ESPTerm has restarted and is ready. Use this to detect
-					spontaneous restarts which require a full screen repaint.
-				</td>
-			</tr>
-			<tr>
 				<td>`\e[<i>n</i> q`</td>
 				<td>
 					Set cursor style: eg. `\e[3 q` (the space is part of the command!).
@@ -49,6 +58,16 @@
 			<tr>
 				<td>`\e]0;<i>t</i>\a`</td>
 				<td>Set screen title to _t_ (this is a standard OSC command)</td>
+			</tr>
+			<tr>
+				<td>`\e]70;<i>u</i>\a`</td>
+				<td>
+					Set background image to URL _u_ (including protocol)
+					that can be resolved by the user's browser. The image will be scaled
+					to fit the screen, preserving aspect ratio. A certain border must be added
+					to account for the screen margins. Use empty string to disable the image feature.
+					Note that this *won't work for users connected to the built-in AP*.
+				</td>
 			</tr>
 			<tr>
 				<td>
@@ -68,8 +87,8 @@
 					</code>
 				</td>
 				<td>
-					Set message for button 1-5 (code 91-95) to _m_ - e.g.`\e]94;*\a`
-					sets the 3rd button to send "*" when pressed. The message can be up to
+					Set message for button 1-5 (code 91-95) to _m_ - e.g.`\e]94;+\a`
+					sets the 3rd button to send "+" when pressed. The message can be up to
 					10 bytes long.
 				</td>
 			</tr>

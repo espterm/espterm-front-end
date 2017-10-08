@@ -4,7 +4,7 @@ return [
 	'menu.cfg_wifi' => 'Nastavení WiFi',
 	'menu.cfg_network' => 'Nastavení sítě',
 	'menu.cfg_term' => 'Nastavení terminalu',
-	'menu.about' => 'About',
+	'menu.about' => 'O programu',
 	'menu.help' => 'Nápověda',
 	'menu.term' => 'Zpět k terminálu',
 	'menu.cfg_system' => 'Nastavení systému',
@@ -80,6 +80,7 @@ return [
 	'term.colors_preview' => '',
 	'term.debugbar' => 'Rozšířené ladění',
 	'term.ascii_debug' => 'Ladění vstupních dat',
+	'term.backdrop' => 'URL obrázku na pozadí',
 
 	'cursor.block_blink' => 'Blok, blikající',
     'cursor.block_steady' => 'Blok, stálý',

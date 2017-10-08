@@ -21,6 +21,8 @@
 			<li>`A` - UK ASCII: # replaced with £</li>
 			<li>`0` - Symbols and basic line drawing (standard DEC alternate character set)</li>
 			<li>`1` - Symbols and advanced line drawing (based on DOS codepage 437, ESPTerm specific)</li>
+			<li>`2` - Block characters and thick line drawing (ESPTerm specific)</li>
+			<li>`3` - Extra line drawing (ESPTerm specific)</li>
 		</ul>
 
 		<p>
