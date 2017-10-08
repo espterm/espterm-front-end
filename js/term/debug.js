@@ -10,7 +10,7 @@ module.exports = function attachDebugger (screen, connection) {
   let updateToolbar
 
   let onMouseMove = e => {
-    mouseHoverCell = screen.screenToGrid(e.offsetX, e.offsetY)
+    mouseHoverCell = screen.layout.screenToGrid(e.offsetX, e.offsetY)
     startDrawing()
     updateToolbar()
   }
@@ -32,8 +32,8 @@ module.exports = function attachDebugger (screen, connection) {
     }
   }
   let updateCanvasSize = function () {
-    let { width, height, devicePixelRatio } = screen.window
-    let cellSize = screen.getCellSize()
+    let { width, height, devicePixelRatio } = screen.layout.window
+    let cellSize = screen.layout.getCellSize()
     debugCanvas.width = width * cellSize.width * devicePixelRatio
     debugCanvas.height = height * cellSize.height * devicePixelRatio
     debugCanvas.style.width = `${width * cellSize.width}px`
@@ -50,7 +50,7 @@ module.exports = function attachDebugger (screen, connection) {
 
   let startDrawing
 
-  screen._debug = {
+  screen._debug = screen.layout.renderer._debug = {
     drawStart (reason) {
       lastReason = reason
       startTime = Date.now()
@@ -58,7 +58,7 @@ module.exports = function attachDebugger (screen, connection) {
     },
     drawEnd () {
       endTime = Date.now()
-      console.log(drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms) with graphics=${screen.window.graphics}`)
+      console.log(drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms) with graphics=${screen.layout.renderer.graphics}`)
       startDrawing()
     },
     setCell (cell, flags) {
@@ -107,8 +107,8 @@ module.exports = function attachDebugger (screen, connection) {
     lastDrawTime = Date.now()
     t += dt
 
-    let { devicePixelRatio, width, height } = screen.window
-    let { width: cellWidth, height: cellHeight } = screen.getCellSize()
+    let { devicePixelRatio, width, height } = screen.layout.window
+    let { width: cellWidth, height: cellHeight } = screen.layout.getCellSize()
     let screenLength = width * height
     let now = Date.now()
 
@@ -247,15 +247,16 @@ module.exports = function attachDebugger (screen, connection) {
     const redraw = mk('button')
     redraw.textContent = 'Redraw'
     redraw.addEventListener('click', e => {
-      screen.renderer.resetDrawn()
-      screen.renderer.draw('debug-redraw')
+      screen.layout.renderer.resetDrawn()
+      screen.layout.renderer.draw('debug-redraw')
     })
     buttons.appendChild(redraw)
 
     const fancyGraphics = mk('button')
     fancyGraphics.textContent = 'Toggle Graphics'
     fancyGraphics.addEventListener('click', e => {
-      screen.window.graphics = +!screen.window.graphics
+      screen.layout.renderer.graphics = +!screen.layout.renderer.graphics
+      screen.layout.renderer.draw('set-graphics')
     })
     buttons.appendChild(fancyGraphics)
   }
@@ -303,14 +304,14 @@ module.exports = function attachDebugger (screen, connection) {
   const formatColor = color => color < 256 ? color : `#${`000000${(color - 256).toString(16)}`.substr(-6)}`
   const getCellData = cell => {
     if (cell < 0 || cell > screen.screen.length) return '(-)'
-    let cellAttrs = screen.renderer.drawnScreenAttrs[cell] | 0
-    let cellFG = screen.renderer.drawnScreenFG[cell] | 0
-    let cellBG = screen.renderer.drawnScreenBG[cell] | 0
+    let cellAttrs = screen.layout.renderer.drawnScreenAttrs[cell] | 0
+    let cellFG = screen.layout.renderer.drawnScreenFG[cell] | 0
+    let cellBG = screen.layout.renderer.drawnScreenBG[cell] | 0
     let fgText = formatColor(cellFG)
     let bgText = formatColor(cellBG)
-    fgText += `\\[color=${screen.renderer.getColor(cellFG).replace(/ /g, '')}]●\\[]`
-    bgText += `\\[color=${screen.renderer.getColor(cellBG).replace(/ /g, '')}]●\\[]`
-    let cellCode = (screen.renderer.drawnScreen[cell] || '').codePointAt(0) | 0
+    fgText += `\\[color=${screen.layout.renderer.getColor(cellFG).replace(/ /g, '')}]●\\[]`
+    bgText += `\\[color=${screen.layout.renderer.getColor(cellBG).replace(/ /g, '')}]●\\[]`
+    let cellCode = (screen.layout.renderer.drawnScreen[cell] || '').codePointAt(0) | 0
     let hexcode = cellCode.toString(16).toUpperCase()
     if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
     hexcode = `U+${hexcode}`

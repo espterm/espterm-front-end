@@ -1,7 +1,6 @@
 const EventEmitter = require('events')
 const {
   themes,
-  buildColorTable,
   getColor
 } = require('./themes')
 
@@ -38,15 +37,14 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.canvas = canvas
     this.ctx = this.canvas.getContext('2d')
 
-    this._palette = null    // colors 0-15
-    this.defaultBgNum = 0
-    this.defaultFgNum = 7
-
-    // 256color lookup table
-    // should not be used to look up 0-15 (will return transparent)
-    this.colorTable256 = buildColorTable()
+    this._palette = null // colors 0-15
+    this.defaultBG = 0
+    this.defaultFG = 7
 
     this.debug = false
+    this._debug = null
+
+    this.graphics = 0
 
     // screen data, considered immutable
     this.width = 0
@@ -88,7 +86,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.drawnScreenFG = []
     this.drawnScreenBG = []
     this.drawnScreenAttrs = []
-    this.drawnCursor = [-1, -1, '']
+    this.drawnCursor = [-1, -1, '', false]
   }
 
   /**
@@ -118,10 +116,10 @@ module.exports = class CanvasRenderer extends EventEmitter {
   }
 
   setDefaultColors (fg, bg) {
-    if (fg !== this.defaultFgNum || bg !== this.defaultBgNum) {
+    if (fg !== this.defaultFG || bg !== this.defaultBG) {
       this.resetDrawn()
-      this.defaultFgNum = fg
-      this.defaultBgNum = bg
+      this.defaultFG = fg
+      this.defaultBG = bg
       this.scheduleDraw('default-colors')
 
       // full bg with default color (goes behind the image)
@@ -492,7 +490,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
 
-    // if (this.debug) this.screen._debug.drawStart(why)
+    if (this.debug && this._debug) this._debug.drawStart(why)
 
     ctx.font = this.fonts[0]
     ctx.textAlign = 'center'
@@ -525,9 +523,9 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
       let isDefaultBG = false
 
-      if (!(attrs & ATTR_FG)) fg = this.defaultFgNum
+      if (!(attrs & ATTR_FG)) fg = this.defaultFG
       if (!(attrs & ATTR_BG)) {
-        bg = this.defaultBgNum
+        bg = this.defaultBG
         isDefaultBG = true
       }
 
@@ -536,8 +534,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
       if (attrs & ATTR_BLINK && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
-        // set text to nothing so drawCharacter doesn't draw anything
-        text = ''
+        // set text to nothing so drawCharacter only draws decoration
+        text = ' '
       }
 
       if (inSelection) {
@@ -549,7 +547,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
         fg !== this.drawnScreenFG[cell] || // foreground updated, and this cell has text
         bg !== this.drawnScreenBG[cell] || // background updated
         attrs !== this.drawnScreenAttrs[cell] || // attributes updated
-        isCursor !== wasCursor || // cursor blink/position updated
+        // TODO: fix artifacts or keep this hack:
+        isCursor || wasCursor || // cursor blink/position updated
         (isCursor && this.cursor.style !== this.drawnCursor[2]) || // cursor style updated
         (isCursor && this.cursor.hanging !== this.drawnCursor[3]) // cursor hanging updated
 
@@ -612,13 +611,13 @@ module.exports = class CanvasRenderer extends EventEmitter {
           if (redrawing && regionStart === null) regionStart = x
           if (!redrawing && regionStart !== null) {
             ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
-            // if (this.debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            if (this.debug && this._debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
           }
         }
         if (regionStart !== null) {
           ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
-          // if (this.debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          if (this.debug && this._debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
         }
       }
       ctx.clip()
@@ -637,14 +636,14 @@ module.exports = class CanvasRenderer extends EventEmitter {
             let flags = (+redrawMap.get(cell))
             flags |= (+updateMap.get(cell)) << 1
             flags |= (+isTextWide(text)) << 2
-            // this.screen._debug.setCell(cell, flags)
+            this._debug.setCell(cell, flags)
           }
         }
       }
     }
 
     // reset drawn cursor
-    this.drawnCursor = [-1, -1, -1]
+    this.drawnCursor = [-1, -1, '', false]
 
     // pass 2: characters
     for (let font of fontGroups.keys()) {
@@ -717,7 +716,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
     if (this.graphics >= 1) ctx.restore()
 
-    // if (this.debug) this.screen._debug.drawEnd()
+    if (this.debug && this._debug) this._debug.drawEnd()
 
     this.emit('draw', why)
   }
@@ -733,11 +732,11 @@ module.exports = class CanvasRenderer extends EventEmitter {
     const screenHeight = height * cellSize.height + 2 * this.padding
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-    ctx.fillStyle = this.getColor(this.defaultBgNum)
+    ctx.fillStyle = this.getColor(this.defaultBG)
     ctx.fillRect(0, 0, screenWidth, screenHeight)
 
     ctx.font = `24px ${this.statusFont}`
-    ctx.fillStyle = this.getColor(this.defaultFgNum)
+    ctx.fillStyle = this.getColor(this.defaultFG)
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(statusScreen.title || '', screenWidth / 2, screenHeight / 2 - 50)
@@ -747,7 +746,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
       ctx.save()
       ctx.translate(screenWidth / 2, screenHeight / 2 + 20)
 
-      ctx.strokeStyle = this.getColor(this.defaultFgNum)
+      ctx.strokeStyle = this.getColor(this.defaultFG)
       ctx.lineWidth = 5
       ctx.lineCap = 'round'
 
