@@ -63,10 +63,17 @@ foreach($_pages as $_k => $p) {
 	if (ESP_PROD) {
 		$tmpfile = tempnam('/tmp', 'espterm').'.html';
 		file_put_contents($tmpfile, $s);
-		// using https://github.com/tdewolff/minify
-		system('minify --html-keep-default-attrvals '.
-			'-o '.escapeshellarg($outputPath).' '.
-			''.escapeshellarg($tmpfile), $rv);
+		system('npm run html-minifier --'.
+			' --remove-optional-tags'.
+			' --remove-script-type-attributes'.
+			' --remove-style-link-type-attributes'.
+			' --remove-comments'.
+			' --collapse-whitespace'.
+			' --collapse-boolean-attributes'.
+			' --html5'.
+			//' --max-line-length 120'.
+			' -o '.escapeshellarg($outputPath).
+			' '.escapeshellarg($tmpfile), $rv);
 
 		// fallback if minify is not installed
 		if (!file_exists($outputPath)) file_put_contents($outputPath, $s);

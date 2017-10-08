@@ -10,7 +10,7 @@
 		<p>
 			Networking commands use the format `\e^...\a`, a Privacy Message (PM).
 			PM is similar to OSC, which uses `]` in place of `^`. The PM payload (text between `\e^` and `\a`)
-			must be shorter than 256 bytes,	and should not contain any control characters (ASCII < 32).
+			must be shorter than 256 bytes,	and should not contain any control characters (ASCII &lt; 32).
 		</p>
 
 		<h3>Device-to-device Messaging</h3>

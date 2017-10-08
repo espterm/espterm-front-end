@@ -151,7 +151,8 @@ if (!function_exists('load_esp_charsets')) {
 		if (! file_exists($chsf)) {
 			return [
 				'!! ERROR: `../user/character_sets.h` not found !!' => [
-					['65', 'A', '&'],
+					'start' => 65,
+					'chars' => ['&'],
 				],
 			];
 		}
@@ -189,13 +190,15 @@ if (!function_exists('load_esp_charsets')) {
 					$v = intval($v);
 				}
 				$ascii = $start+$j;
-				$table[] = [
-					$ascii,
-					chr($ascii),
-					$literal ? $v : utf8($v==0? $ascii :$v),
-				];
+				$table[] = $literal ? $v : utf8($v==0? $ascii :$v);
 			}
-			$cps[$name] = $table;
+
+			$obj = [
+				'start' => $start,
+				'chars' => $table,
+			];
+
+			$cps[$name] = $obj;
 		}
 		return $cps;
 	}

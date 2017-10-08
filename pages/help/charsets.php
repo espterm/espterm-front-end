@@ -30,16 +30,30 @@
 			stays unchanged.
 		</p>
 
+		<script>
+			function bchst(start, str) {
+			  var ar = str.split(' ');
+			  for(var i=0;i<ar.length;i++) {
+			    var a = String.fromCharCode(start+i);
+			    var r = ar[i];
+			    document.write('<div'+(r===a?' class="none"':'')+'><span>'+(start+i)+'</span><span>'+$.htmlEscape(a)+'</span><span>'+$.htmlEscape(r)+'</span></div>');
+			  }
+			}
+		</script>
+
 		<?php
 			$codepages = load_esp_charsets();
 			foreach($codepages as $name => $cp) {
 				echo "<h4>Codepage `$name`</h4>\n";
 				echo '<div class="charset">';
-				foreach($cp as $point) {
-					$dis = $point[1]==$point[2]?' class="none"' : '';
-					echo "<div$dis><span>$point[0]</span><span>$point[1]</span><span>$point[2]</span></div>";
-				}
-				echo '</div>';
+
+				$t = implode("\x01", $cp['chars']);
+				$t = json_encode($t, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+				$t = str_replace('\u0001', " ", $t); // space is never included
+				$t = htmlspecialchars($t,ENT_HTML5);
+
+				echo '<script>bchst('.$cp['start'].','.$t.')';
+				echo '</script></div>';
 			}
 		?>
 
