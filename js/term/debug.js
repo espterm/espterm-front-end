@@ -58,7 +58,7 @@ module.exports = function attachDebugger (screen, connection) {
     },
     drawEnd () {
       endTime = Date.now()
-      drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms), fancy_gfx=${screen.window.graphics}`
+      drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms), fancy gfx=${screen.layout.renderer.graphics}`
       startDrawing()
     },
     setCell (cell, flags) {
