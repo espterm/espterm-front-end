@@ -101,8 +101,8 @@ module.exports = class TermScreen extends EventEmitter {
       setSelectable (value) {
         if (value !== this.selectable) {
           this.selectable = value
-          if (value) self.classList.add('selectable')
-          else self.classList.remove('selectable')
+          if (value) self.canvas.classList.add('selectable')
+          else self.canvas.classList.remove('selectable')
         }
       }
     }
