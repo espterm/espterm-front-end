@@ -58,7 +58,7 @@ module.exports = function attachDebugger (screen, connection) {
     },
     drawEnd () {
       endTime = Date.now()
-      console.log(drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms) with graphics=${screen.layout.renderer.graphics}`)
+      drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms), fancy_gfx=${screen.window.graphics}`
       startDrawing()
     },
     setCell (cell, flags) {
@@ -253,7 +253,7 @@ module.exports = function attachDebugger (screen, connection) {
     buttons.appendChild(redraw)
 
     const fancyGraphics = mk('button')
-    fancyGraphics.textContent = 'Toggle Graphics'
+    fancyGraphics.textContent = 'Toggle Fancy Graphics'
     fancyGraphics.addEventListener('click', e => {
       screen.layout.renderer.graphics = +!screen.layout.renderer.graphics
       screen.layout.renderer.draw('set-graphics')

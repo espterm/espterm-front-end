@@ -114,18 +114,27 @@ body.term {
 	.debug-toolbar {
 		line-height: 1.5;
 		text-align: left;
-		padding: 6px;
+		padding: 6px 12px 12px 12px;
 		font-family: $screen-stack;
 		font-size: 12px;
 		white-space: normal;
 
+		.toolbar-buttons {
+			button {
+				margin-right: 5px;
+			}
+		}
+
 		.heartbeat {
 			float: right;
 			font-family: $font-stack;
+			color: crimson;
+			font-size: 120%;
+			padding-right: 5px;
 
 			&.beat {
 				animation-name: heartbeat-beat;
-				animation-duration: 2s;
+				animation-duration: 3s;
 				animation-fill-mode: forwards;
 
 				@keyframes heartbeat-beat {
