@@ -138,28 +138,28 @@ module.exports = function (opts) {
   let isFullscreen = false
   let properFullscreen = false
   let fitScreen = false
-  let screenPadding = screen.window.padding
+  let screenPadding = screen.layout.window.padding
   let fitScreenIfNeeded = function fitScreenIfNeeded () {
     if (isFullscreen) {
       fullscreenIcon.className = 'icn-resize-small'
       if (properFullscreen) {
-        screen.window.fitIntoWidth = window.screen.width
-        screen.window.fitIntoHeight = window.screen.height
-        screen.window.padding = 0
+        screen.layout.window.fitIntoWidth = window.screen.width
+        screen.layout.window.fitIntoHeight = window.screen.height
+        screen.layout.window.padding = 0
       } else {
-        screen.window.fitIntoWidth = window.innerWidth
+        screen.layout.window.fitIntoWidth = window.innerWidth
         if (qs('#term-nav').classList.contains('hidden')) {
-          screen.window.fitIntoHeight = window.innerHeight
+          screen.layout.window.fitIntoHeight = window.innerHeight
         } else {
-          screen.window.fitIntoHeight = window.innerHeight - 24
+          screen.layout.window.fitIntoHeight = window.innerHeight - 24
         }
-        screen.window.padding = 0
+        screen.layout.window.padding = 0
       }
     } else {
       fullscreenIcon.className = 'icn-resize-full'
-      screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
-      screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
-      screen.window.padding = screenPadding
+      screen.layout.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
+      screen.layout.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
+      screen.layout.window.padding = screenPadding
     }
   }
   fitScreenIfNeeded()
@@ -213,11 +213,11 @@ module.exports = function (opts) {
 
     isFullscreen = true
     fitScreenIfNeeded()
-    screen.updateSize()
+    screen.layout.updateSize()
 
     if (properFullscreen) {
-      if (screen.canvas.requestFullscreen) screen.canvas.requestFullscreen()
-      else screen.canvas.webkitRequestFullscreen()
+      if (screen.layout.canvas.requestFullscreen) screen.layout.canvas.requestFullscreen()
+      else screen.layout.canvas.webkitRequestFullscreen()
     } else {
       document.body.classList.add('pseudo-fullscreen')
     }
