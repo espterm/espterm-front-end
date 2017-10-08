@@ -92,20 +92,20 @@ module.exports = class TermScreen extends EventEmitter {
       if (selecting) return
       selecting = true
       this.selection.start = this.selection.end = this.layout.screenToGrid(x, y, true)
-      this.layout.scheduleDraw('select-start')
+      this.renderScreen('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
       this.selection.end = this.layout.screenToGrid(x, y, true)
-      this.layout.scheduleDraw('select-move')
+      this.renderScreen('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
       this.selection.end = this.layout.screenToGrid(x, y, true)
-      this.layout.scheduleDraw('select-end')
+      this.renderScreen('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
@@ -197,7 +197,7 @@ module.exports = class TermScreen extends EventEmitter {
         // reset selection
         this.selection.start = this.selection.end = [0, 0]
         this.emit('hide-touch-select-menu')
-        this.layout.scheduleDraw('select-reset')
+        this.renderScreen('select-reset')
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
@@ -260,13 +260,20 @@ module.exports = class TermScreen extends EventEmitter {
     this.layout.window.height = this.window.height
   }
 
-  renderScreen () {
-    this.layout.render({
+  renderScreen (reason) {
+    let selection = []
+
+    for (let cell = 0; cell < this.screen.length; cell++) {
+      selection.push(this.isInSelection(cell % this.window.width, Math.floor(cell / this.window.width)))
+    }
+
+    this.layout.render(reason, {
       width: this.window.width,
       height: this.window.height,
       screen: this.screen,
       screenFG: this.screenFG,
       screenBG: this.screenBG,
+      screenSelection: selection,
       screenAttrs: this.screenAttrs,
       cursor: this.cursor,
       statusScreen: this.window.statusScreen
@@ -468,7 +475,7 @@ module.exports = class TermScreen extends EventEmitter {
             this.cursor.hanging = update.hanging
             this.layout.renderer.resetCursorBlink()
             this.emit('cursor-moved')
-            this.layout.renderer.scheduleDraw('cursor-moved')
+            this.renderScreen('cursor-moved')
           }
           break
 
@@ -519,7 +526,7 @@ module.exports = class TermScreen extends EventEmitter {
 
           if (this.window.debug) console.log(`Blinking cells: ${this.blinkingCellCount}`)
 
-          this.layout.renderer.scheduleDraw('load', 16)
+          this.renderScreen('load')
           this.emit('load')
           break
 

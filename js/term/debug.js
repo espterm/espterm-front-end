@@ -18,16 +18,16 @@ module.exports = function attachDebugger (screen, connection) {
 
   let addCanvas = function () {
     if (!debugCanvas.parentNode) {
-      screen.canvas.parentNode.appendChild(debugCanvas)
-      screen.canvas.addEventListener('mousemove', onMouseMove)
-      screen.canvas.addEventListener('mouseout', onMouseOut)
+      screen.layout.canvas.parentNode.appendChild(debugCanvas)
+      screen.layout.canvas.addEventListener('mousemove', onMouseMove)
+      screen.layout.canvas.addEventListener('mouseout', onMouseOut)
     }
   }
   let removeCanvas = function () {
     if (debugCanvas.parentNode) {
       debugCanvas.parentNode.removeChild(debugCanvas)
-      screen.canvas.removeEventListener('mousemove', onMouseMove)
-      screen.canvas.removeEventListener('mouseout', onMouseOut)
+      screen.layout.canvas.removeEventListener('mousemove', onMouseMove)
+      screen.layout.canvas.removeEventListener('mouseout', onMouseOut)
       onMouseOut()
     }
   }
@@ -261,7 +261,7 @@ module.exports = function attachDebugger (screen, connection) {
   }
 
   const attachToolbar = function () {
-    screen.canvas.parentNode.appendChild(toolbar)
+    screen.layout.canvas.parentNode.appendChild(toolbar)
   }
   const detachToolbar = function () {
     toolbar.parentNode.removeChild(toolbar)

@@ -59,6 +59,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.screenFG = []
     this.screenBG = []
     this.screenAttrs = []
+    this.screenSelection = []
     this.cursor = {}
 
     this.resetDrawn()
@@ -71,6 +72,11 @@ module.exports = class CanvasRenderer extends EventEmitter {
     // start blink timers
     this.resetBlink()
     this.resetCursorBlink()
+  }
+
+  render (reason, data) {
+    Object.assign(this, data)
+    this.scheduleDraw(reason)
   }
 
   resetDrawn () {
@@ -511,12 +517,11 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
-      let inSelection = this.screen.isInSelection(x, y)
-
       let text = this.screen[cell]
       let fg = this.screenFG[cell] | 0
       let bg = this.screenBG[cell] | 0
       let attrs = this.screenAttrs[cell] | 0
+      let inSelection = this.screenSelection[cell]
 
       let isDefaultBG = false
 

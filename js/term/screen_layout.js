@@ -171,6 +171,8 @@ module.exports = class ScreenLayout extends EventEmitter {
    * @returns {Object} the cell size with `width` and `height` in pixels
    */
   getCellSize () {
+    if (!this.charSize.height && this.window.fontSize) this.updateCharSize()
+
     return {
       width: Math.ceil(this.charSize.width * this.window.gridScaleX),
       height: Math.ceil(this.charSize.height * this.window.gridScaleY)
@@ -244,12 +246,31 @@ module.exports = class ScreenLayout extends EventEmitter {
       // the screen has been cleared (by changing canvas width)
       this.renderer.resetDrawn()
 
-      // draw immediately; the canvas shouldn't flash
-      this.renderer.draw('update-size')
+      this.renderer.render('update-size', this.serializeRenderData())
     }
   }
 
-  render (...args) {
-    this.renderer.render(...args)
+  serializeRenderData () {
+    return {
+      padding: Math.round(this._padding),
+      devicePixelRatio: this.window.devicePixelRatio,
+      charSize: this.charSize,
+      cellSize: this.getCellSize(),
+      fonts: [
+        this.getFont(),
+        this.getFont({ weight: 'bold' }),
+        this.getFont({ style: 'italic' }),
+        this.getFont({ weight: 'bold', style: 'italic' })
+      ]
+    }
+  }
+
+  render (reason, data) {
+    this.window.width = data.width
+    this.window.height = data.height
+
+    Object.assign(data, this.serializeRenderData())
+
+    this.renderer.render(reason, data)
   }
 }
