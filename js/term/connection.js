@@ -145,7 +145,6 @@ module.exports = class TermConnection extends EventEmitter {
       return true // Simulate success
     }
     if (this.xoff) {
-      // TODO queue
       console.log("Can't send, flood control. Queueing")
       this.queue.push(message)
       return false

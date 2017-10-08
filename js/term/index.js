@@ -20,11 +20,7 @@ module.exports = function (opts) {
   input.termUpload = termUpload
 
   const buttons = initButtons(input)
-  screen.on('button-labels', labels => {
-    // TODO: don't use pointers for this
-    buttons.labels.splice(0, buttons.labels.length, ...labels)
-    buttons.update()
-  })
+  screen.on('button-labels', labels => { buttons.labels = labels })
 
   screen.on('TEMP:hide-load-failed-msg', () => {
     let scr = qs('#screen')

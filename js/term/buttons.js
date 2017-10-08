@@ -60,5 +60,14 @@ module.exports = function initButtons (input) {
     }
   }
 
-  return { update, labels }
+  return {
+    update,
+    get labels () {
+      return labels
+    },
+    set labels (value) {
+      labels = value
+      update()
+    }
+  }
 }
