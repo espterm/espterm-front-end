@@ -1,3 +1,4 @@
+const $ = require('../lib/chibi')
 const { qs, mk } = require('../utils')
 const localize = require('../lang')
 const Notify = require('../notif')
@@ -15,9 +16,34 @@ module.exports = function (opts) {
   const conn = new TermConnection(screen)
   const input = TermInput(conn, screen)
   const termUpload = TermUpload(conn, input, screen)
-  screen.input = input
-  screen.conn = conn
   input.termUpload = termUpload
+
+  screen.on('mousedown', (...args) => input.onMouseDown(...args))
+  screen.on('mousemove', (...args) => input.onMouseMove(...args))
+  screen.on('mouseup', (...args) => input.onMouseUp(...args))
+  screen.on('mousewheel', (...args) => input.onMouseWheel(...args))
+  screen.on('input-alts', (...args) => input.setAlts(...args))
+  screen.on('mouse-mode', (...args) => input.setMouseMode(...args))
+
+  $.ready(() => {
+    const touchSelectMenu = qs('#touch-select-menu')
+    screen.on('show-touch-select-menu', (x, y) => {
+      let rect = touchSelectMenu.getBoundingClientRect()
+      x -= rect.width / 2
+      y -= rect.height / 2
+
+      touchSelectMenu.classList.add('open')
+      touchSelectMenu.style.transform = `translate(${x}px,${y}px)`
+    })
+    screen.on('hide-touch-select-menu', () => touchSelectMenu.classList.remove('open'))
+
+    const copyButton = qs('#touch-select-copy-btn')
+    if (copyButton) {
+      copyButton.addEventListener('click', () => {
+        this.copySelectionToClipboard()
+      })
+    }
+  })
 
   const buttons = initButtons(input)
   screen.on('button-labels', labels => { buttons.labels = labels })
@@ -62,7 +88,7 @@ module.exports = function (opts) {
     // console.log('*connect')
     showSplash({ title: localize('term_conn.waiting_content'), loading: true })
   })
-  conn.on('load', () => {
+  screen.on('load', () => {
     // console.log('*load')
     clearTimeout(showSplashTimeout)
     if (screen.window.statusScreen) screen.window.statusScreen = null

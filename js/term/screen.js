@@ -1,6 +1,5 @@
 const EventEmitter = require('events')
-const $ = require('../lib/chibi')
-const { mk, qs } = require('../utils')
+const { mk } = require('../utils')
 const notify = require('../notif')
 const ScreenParser = require('./screen_parser')
 const ScreenRenderer = require('./screen_renderer')
@@ -24,22 +23,6 @@ module.exports = class TermScreen extends EventEmitter {
     } else {
       console.warn('No AudioContext!')
     }
-
-    // dummy. Handle for Input
-    this.input = new Proxy({}, {
-      get () {
-        return () => console.warn('TermScreen#input not set!')
-      }
-    })
-    // dummy. Handle for Conn
-    this.conn = new Proxy({}, {
-      get () {
-        return () => console.warn('TermScreen#conn not set!')
-      },
-      set (a, b) {
-        return () => console.warn('TermScreen#conn not set!')
-      }
-    })
 
     this.cursor = {
       x: 0,
@@ -159,11 +142,11 @@ module.exports = class TermScreen extends EventEmitter {
     // bind event listeners
 
     this.canvas.addEventListener('mousedown', e => {
+      this.emit('hide-touch-select-menu')
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
       } else {
-        this.input.onMouseDown(...this.screenToGrid(e.offsetX, e.offsetY),
-          e.button + 1)
+        this.emit('mousedown', ...this.screenToGrid(e.offsetX, e.offsetY), e.button + 1)
       }
     })
 
@@ -218,19 +201,13 @@ module.exports = class TermScreen extends EventEmitter {
         selectEnd(...touchPosition)
 
         // selection ended; show touch select menu
-        let touchSelectMenu = qs('#touch-select-menu')
-        touchSelectMenu.classList.add('open')
-        let rect = touchSelectMenu.getBoundingClientRect()
-
         // use middle position for x and one line above for y
         let selectionPos = this.gridToScreen(
           (this.selection.start[0] + this.selection.end[0]) / 2,
           this.selection.start[1] - 1
         )
-        selectionPos[0] -= rect.width / 2
-        selectionPos[1] -= rect.height / 2
-        touchSelectMenu.style.transform = `translate(${selectionPos[0]}px, ${
-          selectionPos[1]}px)`
+
+        this.emit('show-touch-select-menu', selectionPos[0], selectionPos[1])
       }
 
       if (!touchDidMove && !this.mouseMode.clicks) {
@@ -249,7 +226,7 @@ module.exports = class TermScreen extends EventEmitter {
         // selection is not empty
         // reset selection
         this.selection.start = this.selection.end = [0, 0]
-        qs('#touch-select-menu').classList.remove('open')
+        this.emit('hide-touch-select-menu')
         this.renderer.scheduleDraw('select-reset')
       } else {
         e.preventDefault()
@@ -257,24 +234,15 @@ module.exports = class TermScreen extends EventEmitter {
       }
     })
 
-    $.ready(() => {
-      let copyButton = qs('#touch-select-copy-btn')
-      if (copyButton) {
-        copyButton.addEventListener('click', () => {
-          this.copySelectionToClipboard()
-        })
-      }
-    })
-
     this.canvas.addEventListener('mousemove', e => {
       if (!selecting) {
-        this.input.onMouseMove(...this.screenToGrid(e.offsetX, e.offsetY))
+        this.emit('mousemove', ...this.screenToGrid(e.offsetX, e.offsetY))
       }
     })
 
     this.canvas.addEventListener('mouseup', e => {
       if (!selecting) {
-        this.input.onMouseUp(...this.screenToGrid(e.offsetX, e.offsetY),
+        this.emit('mouseup', ...this.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
@@ -284,12 +252,12 @@ module.exports = class TermScreen extends EventEmitter {
       if (this.mouseMode.clicks) {
         if (Math.abs(e.wheelDeltaY) === 120) {
           // mouse wheel scrolling
-          this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
+          this.emit('mousewheel', ...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
         } else {
           // smooth scrolling
           aggregateWheelDelta -= e.wheelDeltaY
           if (Math.abs(aggregateWheelDelta) >= 40) {
-            this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
+            this.emit('mousewheel', ...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
             aggregateWheelDelta = 0
           }
         }
@@ -651,10 +619,10 @@ module.exports = class TermScreen extends EventEmitter {
           this.renderer.loadTheme(update.theme)
           this.renderer.setDefaultColors(update.defFG, update.defBG)
           this.cursor.visible = update.cursorVisible
-          this.input.setAlts(...update.inputAlts)
+          this.emit('input-alts', ...update.inputAlts)
           this.mouseMode.clicks = update.trackMouseClicks
           this.mouseMode.movement = update.trackMouseMovement
-          this.input.setMouseMode(update.trackMouseClicks, update.trackMouseMovement)
+          this.emit('mouse-mode', update.trackMouseClicks, update.trackMouseMovement)
           this.selection.setSelectable(!update.trackMouseClicks && !update.trackMouseMovement)
           if (this.cursor.blinking !== update.cursorBlinking) {
             this.cursor.blinking = update.cursorBlinking
@@ -729,7 +697,6 @@ module.exports = class TermScreen extends EventEmitter {
           if (this.window.debug) console.log(`Blinking cells: ${this.blinkingCellCount}`)
 
           this.renderer.scheduleDraw('load', 16)
-          this.conn.emit('load')
           this.emit('load')
           break
 
