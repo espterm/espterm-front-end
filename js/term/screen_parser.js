@@ -18,6 +18,7 @@ const SEQ_SET_FG = 5
 const SEQ_SET_BG = 6
 const SEQ_SET_ATTR_0 = 7
 
+// decode a number encoded as a unicode code point
 function du (str) {
   if (!str) return NaN
   let num = str.codePointAt(0)
@@ -51,6 +52,9 @@ const OPT_REVERSE_VIDEO    = (1 << 14)
 
 /* eslint-enable no-multi-spaces */
 
+/**
+ * A parser for screen update messages
+ */
 module.exports = class ScreenParser {
   constructor () {
     // true if full content was loaded

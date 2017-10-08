@@ -18,6 +18,7 @@ module.exports = function (opts) {
   const termUpload = TermUpload(conn, input, screen)
   input.termUpload = termUpload
 
+  // forward screen input events
   screen.on('mousedown', (...args) => input.onMouseDown(...args))
   screen.on('mousemove', (...args) => input.onMouseMove(...args))
   screen.on('mouseup', (...args) => input.onMouseUp(...args))
@@ -25,6 +26,7 @@ module.exports = function (opts) {
   screen.on('input-alts', (...args) => input.setAlts(...args))
   screen.on('mouse-mode', (...args) => input.setMouseMode(...args))
 
+  // touch selection menu (the Copy button)
   $.ready(() => {
     const touchSelectMenu = qs('#touch-select-menu')
     screen.on('show-touch-select-menu', (x, y) => {
@@ -40,14 +42,16 @@ module.exports = function (opts) {
     const copyButton = qs('#touch-select-copy-btn')
     if (copyButton) {
       copyButton.addEventListener('click', () => {
-        this.copySelectionToClipboard()
+        screen.copySelectionToClipboard()
       })
     }
   })
 
+  // buttons
   const buttons = initButtons(input)
   screen.on('button-labels', labels => { buttons.labels = labels })
 
+  // TEMPORARY CODE
   screen.on('TEMP:hide-load-failed-msg', () => {
     let scr = qs('#screen')
     let errmsg = qs('#load-failed')
@@ -71,6 +75,8 @@ module.exports = function (opts) {
     if (!text) text = 'Terminal'
     qs('title').textContent = `${text} :: ESPTerm`
   })
+
+  // connection status
 
   let showSplashTimeout = null
   let showSplash = (obj, delay = 250) => {
@@ -125,6 +131,8 @@ module.exports = function (opts) {
 
   initSoftKeyboard(screen, input)
   if (attachDebugger) attachDebugger(screen, conn)
+
+  // fullscreen mode
 
   let fullscreenIcon = {} // dummy
   let isFullscreen = false

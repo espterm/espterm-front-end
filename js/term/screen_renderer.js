@@ -27,7 +27,10 @@ const frakturExceptions = {
   'Z': '\u2128'
 }
 
-module.exports = class ScreenRenderer {
+/**
+ * A terminal screen renderer, using canvas 2D
+ */
+module.exports = class CanvasRenderer {
   constructor (screen) {
     this.screen = screen
     this.ctx = screen.ctx
@@ -231,7 +234,7 @@ module.exports = class ScreenRenderer {
     let overline = false
     if (attrs & ATTR_FAINT) ctx.globalAlpha = 0.5
     if (attrs & ATTR_UNDERLINE) underline = true
-    if (attrs & ATTR_FRAKTUR) text = ScreenRenderer.alphaToFraktur(text)
+    if (attrs & ATTR_FRAKTUR) text = CanvasRenderer.alphaToFraktur(text)
     if (attrs & ATTR_STRIKE) strike = true
     if (attrs & ATTR_OVERLINE) overline = true
 

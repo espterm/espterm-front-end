@@ -5,6 +5,9 @@ const ScreenParser = require('./screen_parser')
 const ScreenRenderer = require('./screen_renderer')
 const { ATTR_BLINK } = require('./screen_attr_bits')
 
+/**
+ * A terminal screen.
+ */
 module.exports = class TermScreen extends EventEmitter {
   constructor () {
     super()
@@ -709,7 +712,7 @@ module.exports = class TermScreen extends EventEmitter {
           break
 
         default:
-          console.log('Unhandled update', update)
+          console.warn('Unhandled update', update)
       }
     }
   }
