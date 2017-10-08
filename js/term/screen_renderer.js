@@ -1,3 +1,4 @@
+const EventEmitter = require('events')
 const {
   themes,
   buildColorTable,
@@ -30,9 +31,12 @@ const frakturExceptions = {
 /**
  * A terminal screen renderer, using canvas 2D
  */
-module.exports = class CanvasRenderer {
-  constructor (context) {
-    this.ctx = context
+module.exports = class CanvasRenderer extends EventEmitter {
+  constructor (canvas) {
+    super()
+
+    this.canvas = canvas
+    this.ctx = this.canvas.getContext('2d')
 
     this._palette = null    // colors 0-15
     this.defaultBgNum = 0
@@ -41,6 +45,21 @@ module.exports = class CanvasRenderer {
     // 256color lookup table
     // should not be used to look up 0-15 (will return transparent)
     this.colorTable256 = buildColorTable()
+
+    this.debug = false
+
+    // screen data, considered immutable
+    this.width = 0
+    this.height = 0
+    this.padding = 0
+    this.charSize = { width: 0, height: 0 }
+    this.cellSize = { width: 0, height: 0 }
+    this.fonts = ['', '', '', ''] // normal, bold, italic, bold-italic
+    this.screen = []
+    this.screenFG = []
+    this.screenBG = []
+    this.screenAttrs = []
+    this.cursor = {}
 
     this.resetDrawn()
 
@@ -57,9 +76,8 @@ module.exports = class CanvasRenderer {
   resetDrawn () {
     // used to determine if a cell should be redrawn; storing the current state
     // as it is on screen
-    if (this.screen.window && this.screen.window.debug) {
-      console.log('Resetting drawn screen')
-    }
+    if (this.debug) console.log('Resetting drawn screen')
+
     this.drawnScreen = []
     this.drawnScreenFG = []
     this.drawnScreenBG = []
@@ -84,6 +102,11 @@ module.exports = class CanvasRenderer {
     }
   }
 
+  getCharWidthFor (font) {
+    this.ctx.font = font
+    return Math.floor(this.ctx.measureText(' ').width)
+  }
+
   loadTheme (i) {
     if (i in themes) this.palette = themes[i]
   }
@@ -96,7 +119,7 @@ module.exports = class CanvasRenderer {
       this.scheduleDraw('default-colors')
 
       // full bg with default color (goes behind the image)
-      this.screen.canvas.style.backgroundColor = this.getColor(bg)
+      this.canvas.style.backgroundColor = this.getColor(bg)
     }
   }
 
@@ -130,10 +153,8 @@ module.exports = class CanvasRenderer {
     this.cursorBlinkOn = true
     clearInterval(this.cursorBlinkInterval)
     this.cursorBlinkInterval = setInterval(() => {
-      this.cursorBlinkOn = this.screen.cursor.blinking
-        ? !this.cursorBlinkOn
-        : true
-      if (this.screen.cursor.blinking) this.scheduleDraw('cursor-blink')
+      this.cursorBlinkOn = this.cursor.blinking ? !this.cursorBlinkOn : true
+      if (this.cursor.blinking) this.scheduleDraw('cursor-blink')
     }, 500)
   }
 
@@ -145,7 +166,7 @@ module.exports = class CanvasRenderer {
     clearInterval(this.blinkInterval)
     let intervals = 0
     this.blinkInterval = setInterval(() => {
-      if (this.screen.blinkingCellCount <= 0) return
+      if (this.blinkingCellCount <= 0) return
 
       intervals++
       if (intervals >= 4 && this.blinkStyleOn) {
@@ -171,9 +192,8 @@ module.exports = class CanvasRenderer {
    * @param {number} options.isDefaultBG - if true, will draw image background if available
    */
   drawBackground ({ x, y, cellWidth, cellHeight, bg, isDefaultBG }) {
-    const ctx = this.ctx
-    const { width, height } = this.screen.window
-    const padding = Math.round(this.screen._padding)
+    const { ctx, width, height, padding } = this
+
     ctx.fillStyle = this.getColor(bg)
     let screenX = x * cellWidth + padding
     let screenY = y * cellHeight + padding
@@ -225,8 +245,7 @@ module.exports = class CanvasRenderer {
   drawCharacter ({ x, y, charSize, cellWidth, cellHeight, text, fg, attrs }) {
     if (!text) return
 
-    const ctx = this.ctx
-    const padding = Math.round(this.screen._padding)
+    const { ctx, padding } = this
 
     let underline = false
     let strike = false
@@ -426,7 +445,7 @@ module.exports = class CanvasRenderer {
    * @returns {number[]} an array of cell indices
    */
   getAdjacentCells (cell, radius = 1) {
-    const { width, height } = this.screen.window
+    const { width, height } = this
     const screenLength = width * height
 
     let cells = []
@@ -452,7 +471,7 @@ module.exports = class CanvasRenderer {
       height,
       devicePixelRatio,
       statusScreen
-    } = this.screen.window
+    } = this
 
     if (statusScreen) {
       // draw status screen instead
@@ -461,15 +480,15 @@ module.exports = class CanvasRenderer {
       return
     } else this.stopDrawLoop()
 
-    const charSize = this.screen.getCharSize()
-    const { width: cellWidth, height: cellHeight } = this.screen.getCellSize()
+    const charSize = this.charSize
+    const { width: cellWidth, height: cellHeight } = this.cellSize
     const screenLength = width * height
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
 
-    if (this.screen.window.debug && this.screen._debug) this.screen._debug.drawStart(why)
+    // if (this.debug) this.screen._debug.drawStart(why)
 
-    ctx.font = this.screen.getFont()
+    ctx.font = this.fonts[0]
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
 
@@ -486,18 +505,18 @@ module.exports = class CanvasRenderer {
       let x = cell % width
       let y = Math.floor(cell / width)
       let isCursor = this.cursorBlinkOn &&
-        this.screen.cursor.x === x &&
-        this.screen.cursor.y === y &&
-        this.screen.cursor.visible
+        this.cursor.x === x &&
+        this.cursor.y === y &&
+        this.cursor.visible
 
       let wasCursor = x === this.drawnCursor[0] && y === this.drawnCursor[1]
 
       let inSelection = this.screen.isInSelection(x, y)
 
-      let text = this.screen.screen[cell]
-      let fg = this.screen.screenFG[cell] | 0
-      let bg = this.screen.screenBG[cell] | 0
-      let attrs = this.screen.screenAttrs[cell] | 0
+      let text = this.screen[cell]
+      let fg = this.screenFG[cell] | 0
+      let bg = this.screenBG[cell] | 0
+      let attrs = this.screenAttrs[cell] | 0
 
       let isDefaultBG = false
 
@@ -526,8 +545,8 @@ module.exports = class CanvasRenderer {
         bg !== this.drawnScreenBG[cell] || // background updated
         attrs !== this.drawnScreenAttrs[cell] || // attributes updated
         isCursor !== wasCursor || // cursor blink/position updated
-        (isCursor && this.screen.cursor.style !== this.drawnCursor[2]) || // cursor style updated
-        (isCursor && this.screen.cursor.hanging !== this.drawnCursor[3]) // cursor hanging updated
+        (isCursor && this.cursor.style !== this.drawnCursor[2]) || // cursor style updated
+        (isCursor && this.cursor.hanging !== this.drawnCursor[3]) // cursor hanging updated
 
       let font = attrs & FONT_MASK
       if (!fontGroups.has(font)) fontGroups.set(font, [])
@@ -547,7 +566,7 @@ module.exports = class CanvasRenderer {
       let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell) || false
 
       // TODO: fonts (necessary?)
-      let text = this.screen.screen[cell]
+      let text = this.screen[cell]
       let isWideCell = isTextWide(text)
       let checkRadius = isWideCell ? 2 : 1
 
@@ -559,7 +578,7 @@ module.exports = class CanvasRenderer {
           // update this cell if:
           // - the adjacent cell updated (For now, this'll always be true because characters can be slightly larger than they say they are)
           // - the adjacent cell updated and this cell or the adjacent cell is wide
-          if (updateMap.get(adjacentCell) && (this.screen.window.graphics < 2 || isWideCell || isTextWide(this.screen.screen[adjacentCell]))) {
+          if (updateMap.get(adjacentCell) && (this.graphics < 2 || isWideCell || isTextWide(this.screen[adjacentCell]))) {
             adjacentDidUpdate = true
             break
           }
@@ -574,9 +593,10 @@ module.exports = class CanvasRenderer {
     for (let cell of updateMap.keys()) updateRedrawMapAt(cell)
 
     // mask to redrawing regions only
-    if (this.screen.window.graphics >= 1) {
-      let debug = this.screen.window.debug && this.screen._debug
-      let padding = Math.round(this.screen._padding)
+    if (this.graphics >= 1) {
+      // TODO: include padding in border cells
+      const padding = this.padding
+
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -587,13 +607,13 @@ module.exports = class CanvasRenderer {
           if (redrawing && regionStart === null) regionStart = x
           if (!redrawing && regionStart !== null) {
             ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
-            if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            // if (this.debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
           }
         }
         if (regionStart !== null) {
           ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
-          if (debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          // if (this.debug) this.screen._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
         }
       }
       ctx.clip()
@@ -607,12 +627,12 @@ module.exports = class CanvasRenderer {
         if (redrawMap.get(cell)) {
           this.drawBackground({ x, y, cellWidth, cellHeight, bg, isDefaultBG })
 
-          if (this.screen.window.debug && this.screen._debug) {
+          if (this.debug) {
             // set cell flags
             let flags = (+redrawMap.get(cell))
             flags |= (+updateMap.get(cell)) << 1
             flags |= (+isTextWide(text)) << 2
-            this.screen._debug.setCell(cell, flags)
+            // this.screen._debug.setCell(cell, flags)
           }
         }
       }
@@ -625,10 +645,10 @@ module.exports = class CanvasRenderer {
     for (let font of fontGroups.keys()) {
       // set font once because in Firefox, this is a really slow action for some
       // reason
-      let modifiers = {}
-      if (font & ATTR_BOLD) modifiers.weight = 'bold'
-      if (font & ATTR_ITALIC) modifiers.style = 'italic'
-      ctx.font = this.screen.getFont(modifiers)
+      let fontIndex = 0
+      if (font & ATTR_BOLD) fontIndex |= 1
+      if (font & ATTR_ITALIC) fontIndex |= 2
+      ctx.font = this.fonts[fontIndex]
 
       for (let data of fontGroups.get(font)) {
         let { cell, x, y, text, fg, bg, attrs, isCursor, inSelection } = data
@@ -643,7 +663,7 @@ module.exports = class CanvasRenderer {
           this.drawnScreenBG[cell] = bg
           this.drawnScreenAttrs[cell] = attrs
 
-          if (isCursor) this.drawnCursor = [x, y, this.screen.cursor.style, this.screen.cursor.hanging]
+          if (isCursor) this.drawnCursor = [x, y, this.cursor.style, this.cursor.hanging]
 
           // draw cursor
           if (isCursor && !inSelection) {
@@ -653,21 +673,21 @@ module.exports = class CanvasRenderer {
             let cursorX = x
             let cursorY = y
 
-            if (this.screen.cursor.hanging) {
+            if (this.cursor.hanging) {
               // draw hanging cursor in the margin
               cursorX += 1
             }
 
-            let screenX = cursorX * cellWidth + this.screen._padding
-            let screenY = cursorY * cellHeight + this.screen._padding
-            if (this.screen.cursor.style === 'block') {
+            let screenX = cursorX * cellWidth + this.padding
+            let screenY = cursorY * cellHeight + this.padding
+            if (this.cursor.style === 'block') {
               // block
               ctx.rect(screenX, screenY, cellWidth, cellHeight)
-            } else if (this.screen.cursor.style === 'bar') {
+            } else if (this.cursor.style === 'bar') {
               // vertical bar
               let barWidth = 2
               ctx.rect(screenX, screenY, barWidth, cellHeight)
-            } else if (this.screen.cursor.style === 'line') {
+            } else if (this.cursor.style === 'line') {
               // underline
               let lineHeight = 2
               ctx.rect(screenX, screenY + charSize.height, cellWidth, lineHeight)
@@ -690,34 +710,28 @@ module.exports = class CanvasRenderer {
       }
     }
 
-    if (this.screen.window.graphics >= 1) ctx.restore()
+    if (this.graphics >= 1) ctx.restore()
 
-    if (this.screen.window.debug && this.screen._debug) this.screen._debug.drawEnd()
+    // if (this.debug) this.screen._debug.drawEnd()
 
-    this.screen.emit('draw', why)
+    this.emit('draw', why)
   }
 
   drawStatus (statusScreen) {
-    const ctx = this.ctx
-    const {
-      fontFamily,
-      width,
-      height,
-      devicePixelRatio
-    } = this.screen.window
+    const { ctx, width, height, devicePixelRatio } = this
 
     // reset drawnScreen to force redraw when statusScreen is disabled
     this.drawnScreen = []
 
-    const cellSize = this.screen.getCellSize()
-    const screenWidth = width * cellSize.width + 2 * this.screen._padding
-    const screenHeight = height * cellSize.height + 2 * this.screen._padding
+    const cellSize = this.cellSize
+    const screenWidth = width * cellSize.width + 2 * this.padding
+    const screenHeight = height * cellSize.height + 2 * this.padding
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
     ctx.fillStyle = this.getColor(this.defaultBgNum)
     ctx.fillRect(0, 0, screenWidth, screenHeight)
 
-    ctx.font = `24px ${fontFamily}`
+    ctx.font = `24px ${this.statusFont}`
     ctx.fillStyle = this.getColor(this.defaultFgNum)
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'

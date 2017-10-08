@@ -127,7 +127,7 @@ module.exports = function (opts) {
     return false
   }
 
-  qs('#screen').appendChild(screen.canvas)
+  qs('#screen').appendChild(screen.layout.canvas)
 
   initSoftKeyboard(screen, input)
   if (attachDebugger) attachDebugger(screen, conn)

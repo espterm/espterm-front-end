@@ -24,6 +24,28 @@ module.exports = class TermScreen extends EventEmitter {
       console.warn('No AudioContext!')
     }
 
+    this._window = {
+      width: 0,
+      height: 0,
+      // two bits. LSB: debug enabled by user, MSB: debug enabled by server
+      debug: 0,
+      statusScreen: null
+    }
+
+    // make writing to window update size and draw
+    this.window = new Proxy(this._window, {
+      set (target, key, value) {
+        if (target[key] !== value) {
+          target[key] = value
+          self.updateLayout()
+          self.emit(`update-window:${key}`, value)
+        }
+        return true
+      }
+    })
+
+    this.on('update-window:debug', debug => { this.layout.window.debug = !!debug })
+
     this.cursor = {
       x: 0,
       y: 0,
@@ -69,20 +91,20 @@ module.exports = class TermScreen extends EventEmitter {
     let selectStart = (x, y) => {
       if (selecting) return
       selecting = true
-      this.selection.start = this.selection.end = this.screenToGrid(x, y, true)
+      this.selection.start = this.selection.end = this.layout.screenToGrid(x, y, true)
       this.layout.scheduleDraw('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
-      this.selection.end = this.screenToGrid(x, y, true)
+      this.selection.end = this.layout.screenToGrid(x, y, true)
       this.layout.scheduleDraw('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
-      this.selection.end = this.screenToGrid(x, y, true)
+      this.selection.end = this.layout.screenToGrid(x, y, true)
       this.layout.scheduleDraw('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
@@ -94,7 +116,7 @@ module.exports = class TermScreen extends EventEmitter {
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
       } else {
-        this.emit('mousedown', ...this.screenToGrid(e.offsetX, e.offsetY), e.button + 1)
+        this.emit('mousedown', ...this.layout.screenToGrid(e.offsetX, e.offsetY), e.button + 1)
       }
     })
 
@@ -150,7 +172,7 @@ module.exports = class TermScreen extends EventEmitter {
 
         // selection ended; show touch select menu
         // use middle position for x and one line above for y
-        let selectionPos = this.gridToScreen(
+        let selectionPos = this.layout.gridToScreen(
           (this.selection.start[0] + this.selection.end[0]) / 2,
           this.selection.start[1] - 1
         )
@@ -184,13 +206,13 @@ module.exports = class TermScreen extends EventEmitter {
 
     this.layout.on('mousemove', e => {
       if (!selecting) {
-        this.emit('mousemove', ...this.screenToGrid(e.offsetX, e.offsetY))
+        this.emit('mousemove', ...this.layout.screenToGrid(e.offsetX, e.offsetY))
       }
     })
 
     this.layout.on('mouseup', e => {
       if (!selecting) {
-        this.emit('mouseup', ...this.screenToGrid(e.offsetX, e.offsetY),
+        this.emit('mouseup', ...this.layout.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
@@ -200,12 +222,12 @@ module.exports = class TermScreen extends EventEmitter {
       if (this.mouseMode.clicks) {
         if (Math.abs(e.wheelDeltaY) === 120) {
           // mouse wheel scrolling
-          this.emit('mousewheel', ...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
+          this.emit('mousewheel', ...this.layout.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
         } else {
           // smooth scrolling
           aggregateWheelDelta -= e.wheelDeltaY
           if (Math.abs(aggregateWheelDelta) >= 40) {
-            this.emit('mousewheel', ...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
+            this.emit('mousewheel', ...this.layout.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
             aggregateWheelDelta = 0
           }
         }
@@ -231,6 +253,24 @@ module.exports = class TermScreen extends EventEmitter {
     this.screen.screenFG = new Array(width * height).fill(0)
     this.screen.screenBG = new Array(width * height).fill(0)
     this.screen.screenAttrs = new Array(width * height).fill(0)
+  }
+
+  updateLayout () {
+    this.layout.window.width = this.window.width
+    this.layout.window.height = this.window.height
+  }
+
+  renderScreen () {
+    this.layout.render({
+      width: this.window.width,
+      height: this.window.height,
+      screen: this.screen,
+      screenFG: this.screenFG,
+      screenBG: this.screenBG,
+      screenAttrs: this.screenAttrs,
+      cursor: this.cursor,
+      statusScreen: this.window.statusScreen
+    })
   }
 
   /**
@@ -399,8 +439,8 @@ module.exports = class TermScreen extends EventEmitter {
             this.window.height = update.height
             this.resetScreen()
           }
-          this.renderer.loadTheme(update.theme)
-          this.renderer.setDefaultColors(update.defFG, update.defBG)
+          this.layout.renderer.loadTheme(update.theme)
+          this.layout.renderer.setDefaultColors(update.defFG, update.defBG)
           this.cursor.visible = update.cursorVisible
           this.emit('input-alts', ...update.inputAlts)
           this.mouseMode.clicks = update.trackMouseClicks
@@ -409,7 +449,7 @@ module.exports = class TermScreen extends EventEmitter {
           this.selection.setSelectable(!update.trackMouseClicks && !update.trackMouseMovement)
           if (this.cursor.blinking !== update.cursorBlinking) {
             this.cursor.blinking = update.cursorBlinking
-            this.renderer.resetCursorBlink()
+            this.layout.renderer.resetCursorBlink()
           }
           this.cursor.style = update.cursorStyle
           this.bracketedPaste = update.bracketedPaste
@@ -426,9 +466,9 @@ module.exports = class TermScreen extends EventEmitter {
             this.cursor.x = update.x
             this.cursor.y = update.y
             this.cursor.hanging = update.hanging
-            this.renderer.resetCursorBlink()
+            this.layout.renderer.resetCursorBlink()
             this.emit('cursor-moved')
-            this.renderer.scheduleDraw('cursor-moved')
+            this.layout.renderer.scheduleDraw('cursor-moved')
           }
           break
 
@@ -479,7 +519,7 @@ module.exports = class TermScreen extends EventEmitter {
 
           if (this.window.debug) console.log(`Blinking cells: ${this.blinkingCellCount}`)
 
-          this.renderer.scheduleDraw('load', 16)
+          this.layout.renderer.scheduleDraw('load', 16)
           this.emit('load')
           break
 

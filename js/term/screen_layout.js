@@ -9,8 +9,7 @@ module.exports = class ScreenLayout extends EventEmitter {
     super()
 
     this.canvas = document.createElement('canvas')
-
-    this.renderer = new CanvasRenderer(this.canvas.getContext('2d'))
+    this.renderer = new CanvasRenderer(this.canvas)
 
     this._window = {
       width: 0,
@@ -23,10 +22,7 @@ module.exports = class ScreenLayout extends EventEmitter {
       gridScaleY: 1.2,
       fitIntoWidth: 0,
       fitIntoHeight: 0,
-      // two bits. LSB: debug enabled by user, MSB: debug enabled by server
-      debug: 0,
-      graphics: 0,
-      statusScreen: null
+      graphics: 0
     }
 
     // scaling caused by fitIntoWidth/fitIntoHeight
@@ -46,7 +42,8 @@ module.exports = class ScreenLayout extends EventEmitter {
       fontFamily: '',
       fontSize: 0,
       fitIntoWidth: 0,
-      fitIntoHeight: 0
+      fitIntoHeight: 0,
+      debug: false
     }
 
     this.charSize = { width: 0, height: 0 }
@@ -55,7 +52,7 @@ module.exports = class ScreenLayout extends EventEmitter {
 
     // make writing to window update size and draw
     this.window = new Proxy(this._window, {
-      set (target, key, value, receiver) {
+      set (target, key, value) {
         if (target[key] !== value) {
           target[key] = value
           self.scheduleSizeUpdate()
@@ -65,6 +62,8 @@ module.exports = class ScreenLayout extends EventEmitter {
         return true
       }
     })
+
+    this.on('update-window:debug', debug => { this.renderer.debug = debug })
 
     this.canvas.addEventListener('mousedown', e => this.emit('mousedown', e))
     this.canvas.addEventListener('mousemove', e => this.emit('mousemove', e))
@@ -159,10 +158,8 @@ module.exports = class ScreenLayout extends EventEmitter {
    * @returns {Object} the character size with `width` and `height` in pixels
    */
   updateCharSize () {
-    this.ctx.font = this.getFont()
-
     this.charSize = {
-      width: Math.floor(this.ctx.measureText(' ').width),
+      width: this.renderer.getCharWidthFor(this.getFont()),
       height: this.window.fontSize
     }
 
@@ -250,5 +247,9 @@ module.exports = class ScreenLayout extends EventEmitter {
       // draw immediately; the canvas shouldn't flash
       this.renderer.draw('update-size')
     }
+  }
+
+  render (...args) {
+    this.renderer.render(...args)
   }
 }
