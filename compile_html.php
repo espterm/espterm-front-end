@@ -71,7 +71,7 @@ foreach($_pages as $_k => $p) {
 			' --collapse-whitespace'.
 			' --collapse-boolean-attributes'.
 			' --html5'.
-			' --max-line-length 120'.
+			//' --max-line-length 120'.
 			' -o '.escapeshellarg($outputPath).
 			' '.escapeshellarg($tmpfile), $rv);
 
