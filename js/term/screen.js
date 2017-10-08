@@ -60,7 +60,8 @@ module.exports = class TermScreen extends EventEmitter {
       gridScaleY: 1.2,
       fitIntoWidth: 0,
       fitIntoHeight: 0,
-      debug: false,
+      // two bits. LSB: debug enabled by user, MSB: debug enabled by server
+      debug: 0,
       graphics: 0,
       statusScreen: null
     }
@@ -85,6 +86,8 @@ module.exports = class TermScreen extends EventEmitter {
       fitIntoHeight: 0
     }
 
+    const self = this
+
     // current selection
     this.selection = {
       // when false, this will prevent selection in favor of mouse events,
@@ -93,14 +96,21 @@ module.exports = class TermScreen extends EventEmitter {
 
       // selection start and end (x, y) tuples
       start: [0, 0],
-      end: [0, 0]
+      end: [0, 0],
+
+      setSelectable (value) {
+        if (value !== this.selectable) {
+          this.selectable = value
+          if (value) self.classList.add('selectable')
+          else self.classList.remove('selectable')
+        }
+      }
     }
 
     // mouse features
     this.mouseMode = { clicks: false, movement: false }
 
     // make writing to window update size and draw
-    const self = this
     this.window = new Proxy(this._window, {
       set (target, key, value, receiver) {
         if (target[key] !== value) {

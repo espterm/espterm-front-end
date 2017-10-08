@@ -1,6 +1,3 @@
-const $ = require('../lib/chibi')
-const { qs } = require('../utils')
-
 const {
   ATTR_FG,
   ATTR_BG,
@@ -66,10 +63,7 @@ module.exports = class ScreenParser {
    */
   hideLoadFailedMsg () {
     if (!this.contentLoaded) {
-      let scr = qs('#screen')
-      let errmsg = qs('#load-failed')
-      if (scr) scr.classList.remove('failed')
-      if (errmsg) errmsg.parentNode.removeChild(errmsg)
+      this.screen.emit('TEMP:hide-load-failed-msg')
       this.contentLoaded = true
     }
   }
@@ -150,8 +144,7 @@ module.exports = class ScreenParser {
         }
 
         this.screen.input.setMouseMode(trackMouseClicks, trackMouseMovement)
-        this.screen.selection.selectable = !trackMouseClicks && !trackMouseMovement
-        $(this.screen.canvas).toggleClass('selectable', this.screen.selection.selectable)
+        this.screen.selection.setSelectable(!trackMouseClicks && !trackMouseMovement)
         this.screen.mouseMode = {
           clicks: trackMouseClicks,
           movement: trackMouseMovement
@@ -160,15 +153,15 @@ module.exports = class ScreenParser {
         const showButtons = !!(attributes & OPT_SHOW_BUTTONS)
         const showConfigLinks = !!(attributes & OPT_SHOW_CONFIG_LINKS)
 
-        $('.x-term-conf-btn').toggleClass('hidden', !showConfigLinks)
-        $('#action-buttons').toggleClass('hidden', !showButtons)
+        this.screen.emit('TEMP:show-config-links', showConfigLinks)
+        this.screen.emit('TEMP:show-buttons', showButtons)
 
         this.screen.bracketedPaste = !!(attributes & OPT_BRACKETED_PASTE)
         this.screen.reverseVideo = !!(attributes & OPT_REVERSE_VIDEO)
 
         const debugbar = !!(attributes & OPT_DEBUGBAR)
-        // TODO do something with debugbar
 
+        this.screen.window.debug &= 0b01 | (+debugbar < 1)
       } else if (topic === TOPIC_CURSOR) {
 
         // cursor position
@@ -193,12 +186,7 @@ module.exports = class ScreenParser {
 
         this.screen.renderer.scheduleDraw('cursor-moved')
       } else if (topic === TOPIC_TITLE) {
-
-        text = collectOneTerminatedString()
-        qs('#screen-title').textContent = text
-        if (text.length === 0) text = 'Terminal'
-        qs('title').textContent = `${text} :: ESPTerm`
-
+        this.screen.emit('TEMP:update-title', collectOneTerminatedString())
       } else if (topic === TOPIC_BUTTONS) {
         const count = du(strArray[ci++])
 

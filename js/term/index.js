@@ -26,6 +26,30 @@ module.exports = function (opts) {
     buttons.update()
   })
 
+  screen.on('TEMP:hide-load-failed-msg', () => {
+    let scr = qs('#screen')
+    let errmsg = qs('#load-failed')
+    if (scr) scr.classList.remove('failed')
+    if (errmsg) errmsg.parentNode.removeChild(errmsg)
+  })
+
+  screen.on('TEMP:show-config-links', show => {
+    let buttons = [...document.querySelectorAll('.x-term-conf-btn')]
+    if (show) buttons.forEach(x => x.classList.remove('hidden'))
+    else buttons.forEach(x => x.classList.add('hidden'))
+  })
+
+  screen.on('TEMP:show-buttons', show => {
+    if (show) qs('#action-buttons').classList.remove('hidden')
+    else qs('#action-buttons').classList.add('hidden')
+  })
+
+  screen.on('TEMP:update-title', text => {
+    qs('#screen-title').textContent = text
+    if (!text) text = 'Terminal'
+    qs('title').textContent = `${text} :: ESPTerm`
+  })
+
   let showSplashTimeout = null
   let showSplash = (obj, delay = 250) => {
     clearTimeout(showSplashTimeout)
