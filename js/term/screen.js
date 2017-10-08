@@ -276,7 +276,8 @@ module.exports = class TermScreen extends EventEmitter {
       screenSelection: selection,
       screenAttrs: this.screenAttrs,
       cursor: this.cursor,
-      statusScreen: this.window.statusScreen
+      statusScreen: this.window.statusScreen,
+      hasBlinkingCells: !!this.blinkingCellCount
     })
   }
 
@@ -513,7 +514,7 @@ module.exports = class TermScreen extends EventEmitter {
             let cellYInFrame = Math.floor(cell / frameWidth)
             let index = (frameY + cellYInFrame) * this.window.width + frameX + cellXInFrame
 
-            if (this.screenAttrs[index] & ATTR_BLINK !== data[3] & ATTR_BLINK) {
+            if ((this.screenAttrs[index] & ATTR_BLINK) !== (data[3] & ATTR_BLINK)) {
               if (data[3] & ATTR_BLINK) this.blinkingCellCount++
               else this.blinkingCellCount--
             }

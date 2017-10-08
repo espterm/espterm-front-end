@@ -59,6 +59,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.screenAttrs = []
     this.screenSelection = []
     this.cursor = {}
+    this.hasBlinkingCells = false
 
     this.resetDrawn()
 
@@ -73,6 +74,11 @@ module.exports = class CanvasRenderer extends EventEmitter {
   }
 
   render (reason, data) {
+    if ('hasBlinkingCells' in data && data.hasBlinkingCells !== this.hasBlinkingCells) {
+      if (data.hasBlinkingCells) this.resetBlink()
+      else clearInterval(this.blinkInterval)
+    }
+
     Object.assign(this, data)
     this.scheduleDraw(reason)
   }
