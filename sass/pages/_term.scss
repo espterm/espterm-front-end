@@ -123,10 +123,12 @@ body.term {
 			float: right;
 			font-family: $font-stack;
 			color: crimson;
+			font-size: 120%;
+			padding-right: 5px;
 
 			&.beat {
 				animation-name: heartbeat-beat;
-				animation-duration: 2s;
+				animation-duration: 3s;
 				animation-fill-mode: forwards;
 
 				@keyframes heartbeat-beat {
