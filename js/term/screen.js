@@ -472,6 +472,15 @@ module.exports = class TermScreen extends EventEmitter {
     }
   }
 
+  resetScreen () {
+    const { width, height } = this.window
+    this.blinkingCellCount = 0
+    this.screen.screen = new Array(width * height).fill(' ')
+    this.screen.screenFG = new Array(width * height).fill(0)
+    this.screen.screenBG = new Array(width * height).fill(0)
+    this.screen.screenAttrs = new Array(width * height).fill(0)
+  }
+
   /**
    * Returns a normalized version of the current selection, such that `start`
    * is always before `end`.
@@ -628,6 +637,72 @@ module.exports = class TermScreen extends EventEmitter {
   }
 
   load (...args) {
-    this.parser.load(...args)
+    const updates = this.parser.parse(...args)
+
+    for (let update of updates) {
+      switch (update.topic) {
+        case 'screen-opts':
+          if (update.width !== this.window.width || update.height !== this.window.height) {
+            this.window.width = update.width
+            this.window.height = update.height
+            this.resetScreen()
+          }
+          this.renderer.loadTheme(update.theme)
+          this.renderer.setDefaultColors(update.defFG, update.defBG)
+          this.cursor.visible = update.cursorVisible
+          this.input.setAlts(...update.inputAlts)
+          this.mouseMode.clicks = update.trackMouseClicks
+          this.mouseMode.movement = update.trackMouseMovement
+          this.input.setMouseMode(update.trackMouseClicks, update.trackMouseMovement)
+          this.selection.setSelectable(!update.trackMouseClicks && !update.trackMouseMovement)
+          if (this.cursor.blinking !== update.cursorBlinking) {
+            this.cursor.blinking = update.cursorBlinking
+            this.renderer.resetCursorBlink()
+          }
+          this.cursor.style = update.cursorStyle
+          this.bracketedPaste = update.bracketedPaste
+          this.reverseVideo = update.reverseVideo
+          this.window.debug &= 0b01
+          this.window.debug |= (+update.debugEnabled << 1)
+
+          this.emit('TEMP:show-buttons', update.showButtons)
+          this.emit('TEMP:show-links', update.showConfigLinks)
+          break
+
+        case 'cursor':
+          if (this.cursor.x !== update.x || this.cursor.y !== update.y) {
+            this.cursor.x = update.x
+            this.cursor.y = update.y
+            this.cursor.hanging = update.hanging
+            this.renderer.resetCursorBlink()
+            this.emit('cursor-moved')
+            this.renderer.scheduleDraw('cursor-moved')
+          }
+          break
+
+        case 'title':
+          this.emit('TEMP:update-title', update.title)
+          break
+
+        case 'button-labels':
+          this.emit('button-labels', update.labels)
+          break
+
+        case 'bell':
+          this.beep()
+          break
+
+        case 'internal':
+          this.emit('internal', update)
+          break
+
+        case 'content':
+          update.tempDoNotCommitUpstream()
+          break
+
+        default:
+          console.log('Unhandled update', update)
+      }
+    }
   }
 }
