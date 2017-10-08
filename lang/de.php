@@ -79,6 +79,7 @@ return [
 	'term.colors_preview' => '',
 	'term.debugbar' => 'Debug-Leiste anzeigen',
 	'term.ascii_debug' => 'Kontrollcodes anzeigen',
+	'term.backdrop' => 'URL Hintergrundbild',
 
 	'cursor.block_blink' => 'Block, blinkend',
 		'cursor.block_steady' => 'Block, ruhig',
