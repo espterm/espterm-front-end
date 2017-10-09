@@ -137,7 +137,7 @@ module.exports = class TermScreen extends EventEmitter {
     let touchDidMove = false
 
     let getTouchPositionOffset = touch => {
-      let rect = this.canvas.getBoundingClientRect()
+      let rect = this.layout.canvas.getBoundingClientRect()
       return [touch.clientX - rect.left, touch.clientY - rect.top]
     }
 
@@ -145,7 +145,7 @@ module.exports = class TermScreen extends EventEmitter {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
-    }, { passive: true })
+    })
 
     this.layout.on('touchmove', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
