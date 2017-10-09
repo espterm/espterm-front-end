@@ -638,7 +638,6 @@ module.exports = class CanvasRenderer extends EventEmitter {
         if (y === height - 1) rectHeight += padding
 
         ctx.rect(rectX, rectY, rectWidth, rectHeight)
-        if (this.debug && this._debug) this._debug.clipRect(rectX, rectY, rectWidth, rectHeight)
       }
 
       ctx.save()
@@ -673,7 +672,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
             // set cell flags
             let flags = (+redrawMap.get(cell))
             flags |= (+updateMap.get(cell)) << 1
-            flags |= (+isTextWide(text)) << 2
+            flags |= (+maskedCells.get(cell)) << 2
+            flags |= (+isTextWide(text)) << 3
             this._debug.setCell(cell, flags)
           }
         }
