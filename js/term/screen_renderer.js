@@ -619,6 +619,28 @@ module.exports = class CanvasRenderer extends EventEmitter {
       // TODO: include padding in border cells
       const padding = this.padding
 
+      let clipRegion = (regionStart, y, endX) => {
+        let rectX = padding + regionStart * cellWidth
+        let rectY = padding + y * cellHeight
+        let rectWidth = (endX - regionStart) * cellWidth
+        let rectHeight = cellHeight
+
+        // compensate for padding
+        if (regionStart === 0) {
+          rectX -= padding
+          rectWidth += padding
+        }
+        if (y === 0) {
+          rectY -= padding
+          rectHeight += padding
+        }
+        if (endX === width - 1) rectWidth += padding
+        if (y === height - 1) rectHeight += padding
+
+        ctx.rect(rectX, rectY, rectWidth, rectHeight)
+        if (this.debug && this._debug) this._debug.clipRect(rectX, rectY, rectWidth, rectHeight)
+      }
+
       ctx.save()
       ctx.beginPath()
       for (let y = 0; y < height; y++) {
@@ -628,14 +650,12 @@ module.exports = class CanvasRenderer extends EventEmitter {
           let masked = maskedCells.get(cell)
           if (masked && regionStart === null) regionStart = x
           if (!masked && regionStart !== null) {
-            ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
-            if (this.debug && this._debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
+            clipRegion(regionStart, y, x)
             regionStart = null
           }
         }
         if (regionStart !== null) {
-          ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
-          if (this.debug && this._debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (width - regionStart) * cellWidth, cellHeight)
+          clipRegion(regionStart, y, width)
         }
       }
       ctx.clip()
