@@ -570,12 +570,13 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
     // Map of (cell index) -> boolean, whether or not a cell should be redrawn
     const redrawMap = new Map()
+    const maskedCells = new Map()
 
     let isTextWide = text =>
       text !== ' ' && ctx.measureText(text).width >= (cellWidth + 0.05)
 
     // decide for each cell if it should be redrawn
-    let updateRedrawMapAt = cell => {
+    for (let cell of updateMap.keys()) {
       let shouldUpdate = updateMap.get(cell) || redrawMap.get(cell) || false
 
       // TODO: fonts (necessary?)
@@ -593,6 +594,11 @@ module.exports = class CanvasRenderer extends EventEmitter {
           // - the adjacent cell updated and this cell or the adjacent cell is wide
           if (updateMap.get(adjacentCell) && (this.graphics < 2 || isWideCell || isTextWide(this.screen[adjacentCell]))) {
             adjacentDidUpdate = true
+
+            if (this.getAdjacentCells(cell, 1).includes(adjacentCell)) {
+              // this is within a radius of 1, therefore this cell should be included in the mask as well
+              maskedCells.set(cell, true)
+            }
             break
           }
         }
@@ -600,12 +606,15 @@ module.exports = class CanvasRenderer extends EventEmitter {
         if (adjacentDidUpdate) shouldUpdate = true
       }
 
+      if (updateMap.get(cell)) {
+        // this was updated, it should definitely be included in the mask
+        maskedCells.set(cell, true)
+      }
+
       redrawMap.set(cell, shouldUpdate)
     }
 
-    for (let cell of updateMap.keys()) updateRedrawMapAt(cell)
-
-    // mask to redrawing regions only
+    // mask to masked regions only
     if (this.graphics >= 1) {
       // TODO: include padding in border cells
       const padding = this.padding
@@ -616,9 +625,9 @@ module.exports = class CanvasRenderer extends EventEmitter {
         let regionStart = null
         for (let x = 0; x < width; x++) {
           let cell = y * width + x
-          let redrawing = redrawMap.get(cell)
-          if (redrawing && regionStart === null) regionStart = x
-          if (!redrawing && regionStart !== null) {
+          let masked = maskedCells.get(cell)
+          if (masked && regionStart === null) regionStart = x
+          if (!masked && regionStart !== null) {
             ctx.rect(padding + regionStart * cellWidth, padding + y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             if (this.debug && this._debug) this._debug.clipRect(regionStart * cellWidth, y * cellHeight, (x - regionStart) * cellWidth, cellHeight)
             regionStart = null
