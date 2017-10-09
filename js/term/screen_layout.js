@@ -22,7 +22,8 @@ module.exports = class ScreenLayout extends EventEmitter {
       gridScaleY: 1.2,
       fitIntoWidth: 0,
       fitIntoHeight: 0,
-      graphics: 0
+      graphics: 0,
+      debug: false
     }
 
     // scaling caused by fitIntoWidth/fitIntoHeight
@@ -42,8 +43,7 @@ module.exports = class ScreenLayout extends EventEmitter {
       fontFamily: '',
       fontSize: 0,
       fitIntoWidth: 0,
-      fitIntoHeight: 0,
-      debug: false
+      fitIntoHeight: 0
     }
 
     this.charSize = { width: 0, height: 0 }
@@ -202,6 +202,8 @@ module.exports = class ScreenLayout extends EventEmitter {
         fitIntoHeight,
         padding
       } = this.window
+
+      this.updateCharSize()
       const cellSize = this.getCellSize()
 
       // real height of the canvas element in pixels
@@ -240,8 +242,6 @@ module.exports = class ScreenLayout extends EventEmitter {
       this.canvas.style.width = `${realWidth}px`
       this.canvas.height = (height * cellSize.height + 2 * Math.round(this._padding)) * devicePixelRatio
       this.canvas.style.height = `${realHeight}px`
-
-      this.updateCharSize()
 
       // the screen has been cleared (by changing canvas width)
       this.renderer.resetDrawn()
