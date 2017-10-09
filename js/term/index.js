@@ -51,26 +51,29 @@ module.exports = function (opts) {
   const buttons = initButtons(input)
   screen.on('button-labels', labels => { buttons.labels = labels })
 
-  // TEMPORARY CODE
-  screen.on('TEMP:hide-load-failed-msg', () => {
+  screen.on('full-load', () => {
     let scr = qs('#screen')
     let errmsg = qs('#load-failed')
     if (scr) scr.classList.remove('failed')
     if (errmsg) errmsg.parentNode.removeChild(errmsg)
   })
 
-  screen.on('TEMP:show-config-links', show => {
+  let setLinkVisibility = visible => {
     let buttons = [...document.querySelectorAll('.x-term-conf-btn')]
-    if (show) buttons.forEach(x => x.classList.remove('hidden'))
+    if (visible) buttons.forEach(x => x.classList.remove('hidden'))
     else buttons.forEach(x => x.classList.add('hidden'))
-  })
-
-  screen.on('TEMP:show-buttons', show => {
-    if (show) qs('#action-buttons').classList.remove('hidden')
+  }
+  let setButtonVisibility = visible => {
+    if (visible) qs('#action-buttons').classList.remove('hidden')
     else qs('#action-buttons').classList.add('hidden')
+  }
+
+  screen.on('opts-update', () => {
+    setLinkVisibility(screen.showLinks)
+    setButtonVisibility(screen.showButtons)
   })
 
-  screen.on('TEMP:update-title', text => {
+  screen.on('title-update', text => {
     qs('#screen-title').textContent = text
     if (!text) text = 'Terminal'
     qs('title').textContent = `${text} :: ESPTerm`

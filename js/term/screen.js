@@ -78,6 +78,10 @@ module.exports = class TermScreen extends EventEmitter {
     // mouse features
     this.mouseMode = { clicks: false, movement: false }
 
+    this.showLinks = false
+    this.showButtons = false
+    this.title = ''
+
     this.bracketedPaste = false
     this.blinkingCellCount = 0
     this.reverseVideo = false
@@ -466,8 +470,9 @@ module.exports = class TermScreen extends EventEmitter {
           this.window.debug &= 0b01
           this.window.debug |= (+update.debugEnabled << 1)
 
-          this.emit('TEMP:show-buttons', update.showButtons)
-          this.emit('TEMP:show-links', update.showConfigLinks)
+          this.showLinks = update.showConfigLinks
+          this.showButtons = update.showButtons
+          this.emit('opts-update')
           break
 
         case 'cursor':
@@ -482,7 +487,7 @@ module.exports = class TermScreen extends EventEmitter {
           break
 
         case 'title':
-          this.emit('TEMP:update-title', update.title)
+          this.emit('title-update', this.title = update.title)
           break
 
         case 'button-labels':
@@ -533,7 +538,7 @@ module.exports = class TermScreen extends EventEmitter {
           break
 
         case 'full-load-complete':
-          this.emit('TEMP:hide-load-failed-msg')
+          this.emit('full-load')
           break
 
         case 'notification':
