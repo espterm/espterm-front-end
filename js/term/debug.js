@@ -1,3 +1,5 @@
+const { getColor } = require('./themes')
+
 module.exports = function attachDebugger (screen, connection) {
   const debugCanvas = document.createElement('canvas')
   debugCanvas.classList.add('debug-canvas')
@@ -6,9 +8,21 @@ module.exports = function attachDebugger (screen, connection) {
   const toolbar = document.createElement('div')
   toolbar.classList.add('debug-toolbar')
 
+  const tooltip = document.createElement('div')
+  tooltip.classList.add('debug-tooltip')
+
+  let updateTooltip
+
   let selectedCell = null
+  let mousePosition = null
   const onMouseMove = (e) => {
+    if (e.target !== screen.layout.canvas) {
+      selectedCell = null
+      return
+    }
     selectedCell = screen.layout.screenToGrid(e.offsetX, e.offsetY)
+    mousePosition = [e.offsetX, e.offsetY]
+    updateTooltip()
   }
   const onMouseOut = (e) => {
     selectedCell = null
@@ -49,8 +63,10 @@ module.exports = function attachDebugger (screen, connection) {
   const setToolbarAttached = function (attached) {
     if (attached && !toolbar.parentNode) {
       screen.layout.canvas.parentNode.appendChild(toolbar)
+      screen.layout.canvas.parentNode.appendChild(tooltip)
     } else if (!attached && toolbar.parentNode) {
       screen.layout.canvas.parentNode.removeChild(toolbar)
+      screen.layout.canvas.parentNode.removeChild(tooltip)
     }
   }
 
@@ -204,5 +220,59 @@ module.exports = function attachDebugger (screen, connection) {
     if (isDrawing) return
     isDrawing = true
     drawLoop()
+  }
+
+  // tooltip
+  updateTooltip = function () {
+    tooltip.innerHTML = ''
+    let cell = selectedCell[1] * screen.window.width + selectedCell[0]
+    if (!screen.screen[cell]) return
+
+    let foreground = document.createElement('span')
+    foreground.textContent = screen.screenFG[cell]
+    let preview = document.createElement('span')
+    preview.textContent = ' ●'
+    preview.style.color = getColor(screen.screenFG[cell], screen.layout.renderer.palette)
+    foreground.appendChild(preview)
+
+    let background = document.createElement('span')
+    background.textContent = screen.screenBG[cell]
+    let bgPreview = document.createElement('span')
+    bgPreview.textContent = ' ●'
+    bgPreview.style.color = getColor(screen.screenBG[cell], screen.layout.renderer.palette)
+    background.appendChild(bgPreview)
+
+    let character = screen.screen[cell]
+    let codePoint = character.codePointAt(0)
+    let formattedCodePoint = codePoint.toString(16).length <= 4
+      ? `0000${codePoint.toString(16)}`.substr(-4)
+      : codePoint.toString(16)
+
+    let data = {
+      Foreground: foreground,
+      Background: background,
+      Character: `U+${formattedCodePoint}`
+    }
+
+    let table = document.createElement('table')
+
+    for (let name in data) {
+      let row = document.createElement('tr')
+      let label = document.createElement('td')
+      label.appendChild(new window.Text(name))
+      label.classList.add('label')
+
+      let value = document.createElement('td')
+      value.appendChild(typeof data[name] === 'string' ? new window.Text(data[name]) : data[name])
+      value.classList.add('value')
+
+      row.appendChild(label)
+      row.appendChild(value)
+      table.appendChild(row)
+    }
+
+    tooltip.appendChild(table)
+
+    tooltip.style.transform = `translate(${mousePosition.map(x => x + 'px').join(',')})`
   }
 }
