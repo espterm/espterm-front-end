@@ -111,6 +111,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     if (this._palette !== palette) {
       this._palette = palette
       this.resetDrawn()
+      this.emit('palette-update', palette)
       this.scheduleDraw('palette')
     }
   }

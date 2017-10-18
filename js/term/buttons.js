@@ -1,10 +1,17 @@
+const { getColor } = require('./themes')
 const { qs } = require('../utils')
 
 module.exports = function initButtons (input) {
   let container = qs('#action-buttons')
 
+  // current color palette
+  let palette = []
+
   // button labels
   let labels = []
+
+  // button colors
+  let colors = {}
 
   // button elements
   let buttons = []
@@ -54,9 +61,15 @@ module.exports = function initButtons (input) {
     for (let i = 0; i < labels.length; i++) {
       let label = labels[i].trim()
       let button = buttons[i]
+      let color = colors[i]
+
       button.textContent = label || '\u00a0' // label or nbsp
+
       if (!label) button.classList.add('inactive')
       else button.classList.remove('inactive')
+
+      if (Number.isFinite(color)) button.style.background = getColor(color, palette)
+      else button.style.background = null
     }
   }
 
@@ -67,6 +80,20 @@ module.exports = function initButtons (input) {
     },
     set labels (value) {
       labels = value
+      update()
+    },
+    get colors () {
+      return colors
+    },
+    set colors (value) {
+      colors = value
+      update()
+    },
+    get palette () {
+      return palette
+    },
+    set palette (value) {
+      palette = value
       update()
     }
   }

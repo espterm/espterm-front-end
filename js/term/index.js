@@ -50,6 +50,11 @@ module.exports = function (opts) {
   // buttons
   const buttons = initButtons(input)
   screen.on('button-labels', labels => { buttons.labels = labels })
+  // TODO: don't access the renderer here
+  buttons.palette = screen.layout.renderer.palette
+  screen.layout.renderer.on('palette-update', palette => {
+    buttons.palette = palette
+  })
 
   screen.on('full-load', () => {
     let scr = qs('#screen')
@@ -235,6 +240,7 @@ module.exports = function (opts) {
 
   // for debugging
   window.termScreen = screen
+  window.buttons = buttons
   window.conn = conn
   window.input = input
   window.termUpl = termUpload
