@@ -229,6 +229,11 @@ return [
 	'persist.restore_hard_explain' =>
 		'(This clears the WiFi config! Does not affect saved defaults or admin password.)',
 
+	'backup.title' => 'Back-up Config File',
+	'backup.explain' => 'All config except the admin password can be backed up and restored using an INI file.',
+	'backup.export' => 'Export to file',
+	'backup.import' => 'Import!',
+
 	// UART settings form
 
 	'uart.title' => 'Serial Port Parameters',

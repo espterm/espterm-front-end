@@ -41,7 +41,9 @@ pg('help',  'cfg page-help',  'help', '/help');
 pg('about', 'cfg page-about', 'about', '/about');
 pg('term',  'term',           '', '/', 'title.term');
 
-pg('reset_screen',  'api',     '', '/api/v1/clear', 'title.term');
+pg('reset_screen',  'api',     '', '/api/v1/clear');
+pg('ini_export',  'api',     '', '/cfg/system/export');
+pg('ini_import',  'api',     '', '/cfg/system/import');
 
 pg('index',  'api',           '', '/', '');
 

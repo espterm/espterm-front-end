@@ -110,6 +110,13 @@ form { @include naked(); }
 		border-top: 2px solid rgba(255, 255, 255, 0.1);
 	}
 
+	.filewrap {
+		background: $c-form-field-bg;
+		padding: 6px 10px;
+		border-radius: 3px;
+		border: 1px solid #666666;
+	}
+
 	textarea {
 		display: inline-block;
 		vertical-align: top;
