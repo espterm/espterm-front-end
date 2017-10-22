@@ -134,18 +134,18 @@
 
 	<div class="Row">
 		<div class="SubRow">
-			<label for="term_width"><?= tr('term.term_width') ?></label>
-			<input type="number" step=1 min=1 max=255 name="term_width" id="term_width" value="%term_width%" required>
+			<label for="width"><?= tr('term.term_width') ?></label>
+			<input type="number" step=1 min=1 max=255 name="width" id="width" value="%width%" required>
 		</div>
 		<div class="SubRow">
-			<label for="term_height"><?= tr('term.term_height') ?></label>
-			<input type="number" step=1 min=1 max=255 name="term_height" id="term_height" value="%term_height%" required>
+			<label for="height"><?= tr('term.term_height') ?></label>
+			<input type="number" step=1 min=1 max=255 name="height" id="height" value="%height%" required>
 		</div>
 	</div>
 
 	<div class="Row">
-		<label for="term_title"><?= tr('term.term_title') ?></label>
-		<input type="text" name="term_title" id="term_title" value="%h:term_title%" required>
+		<label for="title"><?= tr('term.term_title') ?></label>
+		<input type="text" name="title" id="title" value="%h:title%" required>
 	</div>
 
 	<div class="Row checkbox" >
@@ -203,8 +203,8 @@
 	</div>
 
 	<div class="Row">
-		<label for="uart_baud"><?= tr('uart.baud') ?><span class="mq-phone">&nbsp;(bps)</span></label>
-		<select name="uart_baud" id="uart_baud" class="short">
+		<label for="uart_baudrate"><?= tr('uart.baud') ?><span class="mq-phone">&nbsp;(bps)</span></label>
+		<select name="uart_baudrate" id="uart_baudrate" class="short">
 			<?php
 			foreach([
 				300, 600, 1200, 2400, 4800, 9600, 19200, 38400,
@@ -320,7 +320,7 @@
   $.ready(function () {
     $('#cursor_shape').val('%cursor_shape%');
     $('#theme').val('%theme%');
-    $('#uart_baud').val('%uart_baud%');
+    $('#uart_baudrate').val('%uart_baudrate%');
     $('#uart_parity').val('%uart_parity%');
     $('#uart_stopbits').val('%uart_stopbits%');
 

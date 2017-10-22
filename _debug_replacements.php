@@ -20,7 +20,7 @@ if (file_exists($versfn)) {
 }
 
 return [
-	'term_title' => ESP_DEMO ? 'ESPTerm Web UI Demo' : 'ESPTerm local debug',
+	'title' => ESP_DEMO ? 'ESPTerm Web UI Demo' : 'ESPTerm local debug',
 
 	'btn1' => 'OK',
 	'btn2' => 'Cancel',
@@ -79,14 +79,14 @@ return [
 	'sta_mac' => '5c:cf:7f:02:74:51',
 	'ap_mac' => '5e:cf:7f:02:74:51',
 
-	'term_width' => '80',
-	'term_height' => '25',
+	'width' => '80',
+	'height' => '25',
 	'default_bg' => '0',
 	'default_fg' => '7',
 	'show_buttons' => '1',
 	'show_config_links' => '1',
 
-	'uart_baud' => 115200,
+	'uart_baudrate' => 115200,
 	'uart_stopbits' => 1,
 	'uart_parity' => 2,
 
