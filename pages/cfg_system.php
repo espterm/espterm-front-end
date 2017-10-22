@@ -44,8 +44,8 @@
 
 	<div class="Row buttons2">
 		<form method="POST" action="<?= e(url('ini_import')) ?>" enctype='multipart/form-data'>
-			<span class="filewrap"><input accept=".ini,text/plain" type="file" name="file"></span>
-			<input type="submit" value="<?= tr('backup.import') ?>">
+			<span class="filewrap"><input accept=".ini,text/plain" type="file" name="file"></span><!--
+			--><input type="submit" value="<?= tr('backup.import') ?>">
 		</form>
 	</div>
 </div>
