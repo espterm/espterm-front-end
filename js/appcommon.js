@@ -90,42 +90,60 @@ $.ready(function () {
     e.preventDefault()
   })
 
-  // populate the form errors box from GET arg ?err=...
-  // (a way to pass errors back from server via redirect)
-  let errAt = window.location.search.indexOf('err=')
-  if (errAt !== -1 && qs('.Box.errors')) {
-    let errs = decodeURIComponent(window.location.search.substr(errAt + 4)).split(',')
-    let humanReadableErrors = []
-    errs.forEach(function (er) {
-      let lbls = qsa('label[for="' + er + '"]')
-      if (lbls) {
-        for (let i = 0; i < lbls.length; i++) {
-          let lbl = lbls[i]
-          lbl.classList.add('error')
-          if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+  do {
+    let msgAt, box
+    // populate the form errors box from GET arg ?err=...
+    // (a way to pass errors back from server via redirect)
+    msgAt = window.location.search.indexOf('err=')
+    if (msgAt !== -1 && qs('.Box.errors')) {
+      let errs = decodeURIComponent(window.location.search.substr(msgAt + 4)).split(',')
+      let humanReadableErrors = []
+      errs.forEach(function (er) {
+        let lbls = qsa('label[for="' + er + '"]')
+        if (lbls) {
+          for (let i = 0; i < lbls.length; i++) {
+            let lbl = lbls[i]
+            lbl.classList.add('error')
+            if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
+          }
+        } else {
+          humanReadableErrors.push(er)
         }
-      } else {
-        humanReadableErrors.push(er)
-      }
-    })
+      })
 
-    qs('.Box.errors .list').innerHTML = humanReadableErrors.join(', ')
-    qs('.Box.errors').classList.remove('hidden')
-  }
+      qs('.Box.errors .list').innerHTML = humanReadableErrors.join(', ')
+      qs('.Box.errors').classList.remove('hidden')
+      break
+    }
 
-  let msgAt = window.location.search.indexOf('msg=')
-  if (msgAt !== -1 && qs('.Box.message')) {
-    let msg = decodeURIComponent(window.location.search.substr(msgAt + 4))
-    let box = qs('.Box.message')
-    box.innerHTML = msg
-    box.classList.remove('hidden')
-    setTimeout(() => {
-      box.classList.add('hiding')
+    let fademsgbox = function (box, time) {
+      box.classList.remove('hidden')
       setTimeout(() => {
-        box.classList.add('hidden')
-      }, 1000)
-    }, 2000)
-  }
+        box.classList.add('hiding')
+        setTimeout(() => {
+          box.classList.add('hidden')
+        }, 1000)
+      }, time)
+    }
+
+    msgAt = window.location.search.indexOf('errmsg=')
+    box = qs('.Box.errmessage')
+    if (msgAt !== -1 && box) {
+      let msg = decodeURIComponent(window.location.search.substr(msgAt + 7))
+      box.innerHTML = msg
+      fademsgbox(box, 3000)
+      break
+    }
+
+    msgAt = window.location.search.indexOf('msg=')
+    box = qs('.Box.message')
+    if (msgAt !== -1 && box) {
+      let msg = decodeURIComponent(window.location.search.substr(msgAt + 4))
+      box.innerHTML = msg
+      fademsgbox(box, 2000)
+      break
+    }
+  } while (0)
 
   modal.init()
   notify.init()

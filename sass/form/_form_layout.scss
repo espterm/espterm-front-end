@@ -22,6 +22,11 @@ form { @include naked(); }
 	}
 }
 
+.Box.errmessage {
+	@extend .Box.message;
+	color: crimson;
+}
+
 .Row {
 	vertical-align: middle;
 	margin: 12px auto;
