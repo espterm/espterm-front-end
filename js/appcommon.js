@@ -100,14 +100,16 @@ $.ready(function () {
         let errs = decodeURIComponent(window.location.search.substr(msgAt + 4)).split(',')
         let humanReadableErrors = []
         errs.forEach(function (er) {
+          if (er.length === 0) return
           let lbls = qsa('label[for="' + er + '"]')
-          if (lbls) {
+          if (lbls && lbls.length > 0) {
             for (let i = 0; i < lbls.length; i++) {
               let lbl = lbls[i]
               lbl.classList.add('error')
               if (i === 0) humanReadableErrors.push(lbl.childNodes[0].textContent.trim().replace(/: ?$/, ''))
             }
           } else {
+            console.log(JSON.stringify(er))
             humanReadableErrors.push(er)
           }
         })
