@@ -5,6 +5,7 @@ try { demo = require('./demo') } catch (err) {}
 
 const RECONN_DELAY = 2000
 const HEARTBEAT_TIME = 3000
+const HTTPS = window.location.protocol.match(/s:/)
 
 /** Handle connections */
 module.exports = class TermConnection extends EventEmitter {
@@ -192,7 +193,7 @@ module.exports = class TermConnection extends EventEmitter {
 
     this.closeSocket()
 
-    this.ws = new window.WebSocket('ws://' + window._root + '/term/update.ws')
+    this.ws = new window.WebSocket(`${HTTPS ? 'wss' : 'ws'}://${window._root}/term/update.ws`)
     this.ws.addEventListener('open', (...args) => this.onWSOpen(...args))
     this.ws.addEventListener('close', (...args) => this.onWSClose(...args))
     this.ws.addEventListener('message', (...args) => this.onWSMessage(...args))
@@ -211,7 +212,7 @@ module.exports = class TermConnection extends EventEmitter {
   sendPing () {
     console.log('> ping')
     this.emit('ping')
-    $.get('http://' + window._root + '/api/v1/ping', (resp, status) => {
+    $.get(`${HTTPS ? 'https' : 'http'}://${window._root}/api/v1/ping`, (resp, status) => {
       if (status === 200) {
         clearInterval(this.pingInterval)
         console.info('Server ready, opening socket…')

@@ -2,6 +2,8 @@ const $ = require('./lib/chibi')
 const { mk } = require('./utils')
 const tr = require('./lang')
 
+const HTTPS = window.location.protocol.match(/s:/)
+
 {
   const w = window.WiFi = {}
 
@@ -131,7 +133,7 @@ const tr = require('./lang')
     if (window._demo) {
       onScan(window._demo_aps, 200)
     } else {
-      $.get('http://' + window._root + '/cfg/wifi/scan', onScan)
+      $.get(`${HTTPS ? 'https' : 'http'}://${window._root}/cfg/wifi/scan`, onScan)
     }
   }
 
