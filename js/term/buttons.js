@@ -53,7 +53,7 @@ module.exports = function initButtons (input) {
         pushButton()
       }
     } else if (buttons.length > labels.length) {
-      for (let i = labels.length; i <= buttons.length; i++) {
+      for (let i = buttons.length; i > labels.length; i--) {
         popButton()
       }
     }
