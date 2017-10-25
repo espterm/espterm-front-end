@@ -60,7 +60,7 @@
 				<td>Set screen title to _t_ (this is a standard OSC command)</td>
 			</tr>
 			<tr>
-				<td>`\e]70;<i>u</i>\a`</td>
+				<td>`\e]27;1;<i>u</i>\a`</td>
 				<td>
 					Set background image to URL _u_ (including protocol)
 					that can be resolved by the user's browser. The image will be scaled
@@ -70,24 +70,31 @@
 				</td>
 			</tr>
 			<tr>
+				<td>`\e]27;2;<i>n</i>\a`</td>
+				<td>
+					Set number of visible buttons to _n_ (0-5). To hide/show the entire buttons bar,
+					use the dedicated hiding commands (see below)
+				</td>
+			</tr>
+			<tr>
 				<td>
 					<code>
-						\e]<i>8x</i>;<i>t</i>\a
+						\e]28;<i>x</i>;<i>t</i>\a
 					</code>
 				</td>
 				<td>
-					Set label for button 1-5 (code 81-85) to _t_ - e.g.`\e]81;Yes\a`
+					Set label for button _x_ (1-5) to _t_ - e.g.`\e]28;1;Yes\a`
 					sets the first button text to "Yes".
 				</td>
 			</tr>
 			<tr>
 				<td>
 					<code>
-						\e]<i>9x</i>;<i>m</i>\a
+						\e]29;<i>x</i>;<i>m</i>\a
 					</code>
 				</td>
 				<td>
-					Set message for button 1-5 (code 91-95) to _m_ - e.g.`\e]94;+\a`
+					Set message for button _x_ (1-5) to _m_ - e.g.`\e]29;3;+\a`
 					sets the 3rd button to send "+" when pressed. The message can be up to
 					10 bytes long.
 				</td>
