@@ -155,6 +155,11 @@
 	</div>
 
 	<div class="Row">
+		<label for="button_count"><?= tr('term.button_count') ?></label>
+		<input type="number" step=1 min=0 max=5 name="button_count" id="button_count" value="%h:button_count%" required>
+	</div>
+
+	<div class="Row">
 		<label><?= tr("term.buttons") ?></label>
 		<input class="tiny" type="text" name="btn1" id="btn1" value="%h:btn1%">
 		<input class="tiny" type="text" name="btn2" id="btn2" value="%h:btn2%">

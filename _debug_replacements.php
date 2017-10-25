@@ -32,6 +32,7 @@ return [
 	'bm3' => '',
 	'bm4' => '',
 	'bm5' => '05',
+	'button_count' => 5,
 	'labels_seq' => ESP_DEMO ? 'TESPTerm Web UI DemoOKCancelHelp' : 'TESPTerm local debugOKCancelHelp',
 	'want_all_fn' => '0',
 

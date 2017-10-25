@@ -80,6 +80,7 @@ return [
 	'term.debugbar' => 'Debug internal state',
 	'term.ascii_debug' => 'Display control codes',
 	'term.backdrop' => 'Background image URL',
+	'term.button_count' => 'Button count',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
