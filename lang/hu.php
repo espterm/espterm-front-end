@@ -42,7 +42,7 @@ return [
 		',
 	'term.explain_expert' => '
 		Ezek haladó beállítási opciók amiket általában nem kell megváltoztatni.
-		Csak akkor vááltoztass rajtha ha tudod mit csinálsz!',
+		Csak akkor változtass rajta ha tudod mit csinálsz!',
 
 	'term.example' => 'Alapértelmezet színek előnézete',
 
@@ -52,7 +52,7 @@ return [
 		16-255 számokat a normál színekhez és hexa (#FFFFFF) a True Color (24-bit) színekhez.
 		',
 
-	'term.fgbg_presets' => 'Defaults Presets',
+	'term.fgbg_presets' => 'Alapértelmezett beállítások',
 	'term.color_scheme' => 'Szín séma',
 	'term.reset_screen' => 'A képernyő olvasó alapállapotba állítása',
 	'term.term_title' => 'Fejléc szöveg',
@@ -63,10 +63,10 @@ return [
 	'term.cursor_shape' => 'Kurzor stílus',
 	'term.parser_tout_ms' => 'Olvasó időtúllépés',
 	'term.display_tout_ms' => 'Újrarajzolás késleltetése',
-	'term.display_cooldown_ms' => 'Ujrarajzolás cooldown',
-	'term.allow_decopt_12' => '\e?12h/l wngwdélyezés',
+	'term.display_cooldown_ms' => 'Újrarajzolás cooldown',
+	'term.allow_decopt_12' => '\e?12h/l engedélyezés',
 	'term.fn_alt_mode' => 'SS3 Fn gombok',
-	'term.show_config_links' => 'Navigáziós linkek mutatása',
+	'term.show_config_links' => 'Navigációs linkek mutatása',
 	'term.show_buttons' => 'Gombok mutatása',
 	'term.loopback' => 'Helyi visszajelzés (<span style="text-decoration:overline">SRM</span>)',
 	'term.crlf_mode' => 'Enter = CR+LF (LNM)',
@@ -117,7 +117,7 @@ return [
 	'net.sta_dhcp_enable' => 'Dinamikus IP cím használata',
 	'net.sta_addr_ip' => 'ESPTerm statikus IP címe',
 	'net.sta_addr_mask' => 'Hálózati maszk',
-	'net.sta_addr_gw' => 'Útválaztó IP címe',
+	'net.sta_addr_gw' => 'Útválasztó IP címe',
 
 	'net.ap' => 'DHCP Szerver (AP)',
 	'net.sta' => 'DHCP Kliens (Station)',
@@ -131,7 +131,7 @@ return [
 	'wifi.sta' => 'Kapcsolódás létező hálózathoz',
 
 	'wifi.enable' => 'Engedélyezve',
-	'wifi.tpw' => 'Adás teljezítmény',
+	'wifi.tpw' => 'Adás teljesítmény',
 	'wifi.ap_channel' => 'Csatorna',
 	'wifi.ap_ssid' => 'AP SSID',
 	'wifi.ap_password' => 'Jelszó',
@@ -149,42 +149,42 @@ return [
 	'wifi.scan_now' => 'Kattints a keresés indításához!',
 	'wifi.cant_scan_no_sta' => 'Kattints a kliens mód engedélyezéséhez és a keresés indításához!',
 	'wifi.select_ssid' => 'Elérhető hálózatok:',
-	'wifi.enter_passwd' => 'Jelszó a ":ssid:" hálózathoz',
+	'wifi.enter_passwd' => 'Jelszó a(z) ":ssid:" hálózathoz',
 	'wifi.sta_explain' => 'A hálózat kiválasztása után nyomdj meg az Alkamaz gombot a csatlakozáshoz.',
 
 	// Wifi connecting status page
 
 	'wificonn.status' => 'Státusz:',
 	'wificonn.back_to_config' => 'Vissza a  WiFi beállításhoz',
-	'wificonn.telemetry_lost' => 'Telemetria megszakadt; valami hiba történt, vagy az aszközöd elvesztette a kapcsolatot.',
+	'wificonn.telemetry_lost' => 'Telemetria megszakadt; valami hiba történt, vagy az eszközöd elvesztette a kapcsolatot.',
 	'wificonn.explain_android_sucks' => '
-		Ha okostelefonon kapcsolódsz az ESPTerm.hez, vagy amikor csatlakozol 
-		egy masik hálózatról, az eszközöd elveszítheti a kapcsolatot és 
+		Ha okostelefonon kapcsolódsz az ESPTerm-hez, vagy amikor csatlakozol 
+		egy másik hálózatról, az eszközöd elveszítheti a kapcsolatot és 
 		ez az indikátor nem fog működni. Kérlek várj egy keveset (~ 15 másodpercet), 
 		és ellenőrizd, hogy a kapcsolat helyrejött-e.',
 
 	'wificonn.explain_reset' => '
 		Az beépített AP engedélyezéséhez tarts lenyomva a BOOT gombot amíg a kék led 
-		kezd villogni. Tartsd addig lenyomva amíg a led el nem kezd gyorsan villogni 
-		a gyari alapállípot visszaállításához".',
+		villogni nem kezd. Tartsd addig lenyomva amíg a led el nem kezd gyorsan villogni 
+		a gyári alapállapot visszaállításához".',
 
 	'wificonn.disabled' =>"Station mode letiltva.",
-	'wificonn.idle' =>"Alapállapot, nincs csatlakozva ls nincs IP címe.",
+	'wificonn.idle' =>"Alapállapot, nincs csatlakozva és nincs IP címe.",
 	'wificonn.success' => "Csatlakozva! Kaptam IP címet",
-	'wificonn.working' => "csatlakozás a beállított AP-hez",
+	'wificonn.working' => "Csatlakozás a beállított AP-hez",
 	'wificonn.fail' => "Csatlakozás nem sikerült, ellenőrizd a beállítások és próbáld újra. A hibaok: ",
 
 	// Access restrictions form
 
 	'pwlock.title' => 'Hozzáférés korlátozása',
 	'pwlock.explain' => '
-		A web interfész náhany része vagy a teljes interfész jelszavas védelemmel látható el.
-		Hagyd a jelszó mezőr üresen ha nem akarod megváltoztatni.<br>
+		A web interfész néhany része vagy a teljes interfész jelszavas védelemmel látható el.
+		Hagyd a jelszó mezőt üresen ha nem akarod megváltoztatni.<br>
 		Az alapértelmezett jelszó "%def_access_pw%".
 	',
-	'pwlock.region' => 'Védet oldalak',
-	'pwlock.region.none' => 'Egyiksem, mindegyik hozzáférhető',
-	'pwlock.region.settings_noterm' => 'WiFi, Hálózat & Rendszer beállítások',
+	'pwlock.region' => 'Védett oldalak',
+	'pwlock.region.none' => 'Egyiksem, minden hozzáférhető',
+	'pwlock.region.settings_noterm' => 'WiFi, Hálózat és Rendszer beállítások',
 	'pwlock.region.settings' => 'Minden beállítás oldal',
 	'pwlock.region.menus' => 'Ez a teljes menű rész',
 	'pwlock.region.all' => 'Minden, még a terminál is',
@@ -198,12 +198,12 @@ return [
 	'adminpw.title' => 'Admin jelszó megváltoztatása',
 	'adminpw.explain' =>
 		'
-		The "admin password" is used to manipulate the stored default settings 
-		and to change access restrictions. This password is not saved as part 
-		of the main config, i.e. using save / restore does not affect this 
-		password. When the admin password is forgotten, the easiest way to 
-		re-gain access is to wipe and re-flash the chip.<br>
-		The default admin password is "%def_admin_pw%".
+		Az "admin jelszo" a tárolt alap beállítások módosításához és a hozzáférések 
+		változtatásához kell. Ez a jelszó nincs a többi beállítással egy helyre mentve,
+		tehát a mentés és visszaállítás műveletek nem befolyásolják.
+		Ha az admin jelszó elveszik akkor a legegyszerűbb módja a hozzáférés
+		visszaszerzésére a chip újraflashselésere.<br>
+		Az alap jelszó: "%def_admin_pw%".
 		',
 	'adminpw.new_admin_pw' => 'Új admin jelszó',
 	'adminpw.new_admin_pw2' => 'Jelszó ismét',
@@ -213,35 +213,35 @@ return [
 
 	'persist.title' => 'Mentés & Visszaállítás',
 	'persist.explain' => '
-		ESPTerm az összes beállítást Flash-be menti. Az active beállítások at lehet másolni
-		a "alapértelmezett" területre és később a lenti kék gombbal visszaállítható.
+		ESPTerm az összes beállítást Flash-be menti. Az aktív beállítások at lehet másolni
+		a "alapértelmezett" területre és az később a lenti kék gombbal visszaállítható.
 		',
 	'persist.confirm_restore' => 'Minden beállítást visszaállítasz az "alap" értékre?',
 	'persist.confirm_restore_hard' =>
 		'Visszaállítod a rendszer alap beállításait? Ez minden aktív ' .
 		'beállítást törölni fog és AP módban az alap SSID-vel for újraindulni.',
 	'persist.confirm_store_defaults' =>
-		'Add meg az admin jelszót a megerősítéshez az alapállapotba állításhoz.',
+		'Add meg az admin jelszót az alapállapotba állítás megerősítéshez.',
 	'persist.password' => 'Admin jelszó:',
 	'persist.restore_defaults' => 'Mentett beállítások visszaállítása',
 	'persist.write_defaults' => 'Aktív beállítások mentése alapértelmezetnek',
-	'persist.restore_hard' => 'Gyari alapbeíállítások betöltése',
+	'persist.restore_hard' => 'Gyári alapbeállítások betöltése',
 	'persist.restore_hard_explain' =>
-		'(Ez törli a Wifi beállítésokat, de nincs hatása az admin jelszóra.)',
+		'(Ez törli a Wifi beállításokat, de nincs hatása az admin jelszóra.)',
 
 	// UART settings form
 
 	'uart.title' => 'Soros port paraméterek',
 	'uart.explain' => '
-		Ez a beálltíás szabályozza a kommunikációs UART-ot. A hibakereső UART fix  
-        	115.200 baud-val, egy stop-bittel és paritás bit nélkül müködik.
+		Ez a beállítás szabályozza a kommunikációs UART-ot. A hibakereső UART fix  
+        	115.200 baud-val, egy stop-bittel és paritás bit nélkül működik.
 		',
 	'uart.baud' => 'Baud rate',
 	'uart.parity' => 'Parity',
 	'uart.parity.none' => 'Egyiksem',
 	'uart.parity.odd' => 'Páratlan',
 	'uart.parity.even' => 'Páros',
-	'uart.stop_bits' => 'Stop-bitej',
+	'uart.stop_bits' => 'Stop-bite',
 	'uart.stop_bits.one' => 'Egy',
 	'uart.stop_bits.one_and_half' => 'Másfél',
 	'uart.stop_bits.two' => 'Kettő',
@@ -255,11 +255,11 @@ return [
 		az energia felhasználás. Az interferencia esélye is megnő.
 		Ovatosan használd!.
 		',
-	'hwtuning.overclock' => 'Órajel emeláse 160MHz-re',
+	'hwtuning.overclock' => 'Órajel emelése 160MHz-re',
 
 	// Generic button / dialog labels
 
-	'apply' => 'Alkalmaz!',
+	'apply' => 'Alkalmaz',
 	'start' => 'Start',
 	'cancel' => 'Mégse',
 	'enabled' => 'Engedélyez',
@@ -267,6 +267,6 @@ return [
 	'yes' => 'Igen',
 	'no' => 'Nem',
 	'confirm' => 'OK',
-	'copy' => 'Másol',
+	'copy' => 'Másolás',
 	'form_errors' => 'Validációs hiba:',
 ];
