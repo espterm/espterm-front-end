@@ -44,6 +44,7 @@ module.exports = class WebGLRenderer extends EventEmitter {
     this.screenAttrs = []
     this.screenSelection = []
     this.cursor = {}
+    this.reverseVideo = false
     this.hasBlinkingCells = false
     this.statusScreen = null
 
@@ -209,8 +210,11 @@ precision mediump float;
 attribute vec2 position;
 uniform mat4 projection;
 uniform vec2 char_pos;
+uniform vec2 extend;
 void main() {
-  gl_Position = projection * vec4(char_pos + position, 0.0, 1.0);
+  vec2 scale = vec2(1.0 + abs(extend.x), 1.0 + abs(extend.y));
+  vec2 offset = min(vec2(0.0, 0.0), extend);
+  gl_Position = projection * vec4(char_pos + offset + scale * position, 0.0, 1.0);
 }
     `, `
 precision highp float;
@@ -248,6 +252,7 @@ void main() {
       uniforms: {
         projection: gl.getUniformLocation(bgShader, 'projection'),
         charPos: gl.getUniformLocation(bgShader, 'char_pos'),
+        extend: gl.getUniformLocation(bgShader, 'extend'),
         color: gl.getUniformLocation(bgShader, 'color')
       }
     }
@@ -333,7 +338,7 @@ void main() {
       }
 
       if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
-      if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
+      if (this.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
 
       if (attrs & ATTR_BLINK && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
@@ -351,6 +356,16 @@ void main() {
 
       gl.uniform2f(this.bgShader.uniforms.charPos, x, y)
       gl.uniform4f(this.bgShader.uniforms.color, ...this.getColor(bg))
+
+      let extendX = 0
+      let extendY = 0
+
+      if (x === 0) extendX = -1
+      if (x === width - 1) extendX = 1
+      if (y === 0) extendY = -1
+      if (y === height - 1) extendY = 1
+
+      gl.uniform2f(this.bgShader.uniforms.extend, extendX, extendY)
 
       this.drawSquare()
 
