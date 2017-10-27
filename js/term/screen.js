@@ -282,6 +282,7 @@ module.exports = class TermScreen extends EventEmitter {
       screenAttrs: this.screenAttrs,
       cursor: this.cursor,
       statusScreen: this.window.statusScreen,
+      reverseVideo: this.reverseVideo,
       hasBlinkingCells: !!this.blinkingCellCount
     })
   }

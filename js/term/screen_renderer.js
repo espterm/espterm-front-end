@@ -61,6 +61,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.screenAttrs = []
     this.screenSelection = []
     this.cursor = {}
+    this.reverseVideo = false
     this.hasBlinkingCells = false
     this.statusScreen = null
 
@@ -540,7 +541,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
       }
 
       if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
-      if (this.screen.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
+      if (this.reverseVideo) [fg, bg] = [bg, fg] // swap - reversed all screen
 
       if (attrs & ATTR_BLINK && !this.blinkStyleOn) {
         // blinking is enabled and blink style is off
