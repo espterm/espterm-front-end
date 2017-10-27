@@ -1,397 +1,497 @@
-const { mk } = require('../utils')
+const { getColor } = require('./themes')
+const {
+  ATTR_FG,
+  ATTR_BG,
+  ATTR_BOLD,
+  ATTR_UNDERLINE,
+  ATTR_BLINK,
+  ATTR_ITALIC,
+  ATTR_STRIKE,
+  ATTR_OVERLINE,
+  ATTR_FAINT,
+  ATTR_FRAKTUR
+} = require('./screen_attr_bits')
 
 module.exports = function attachDebugger (screen, connection) {
-  const debugCanvas = mk('canvas')
+  const debugCanvas = document.createElement('canvas')
+  debugCanvas.classList.add('debug-canvas')
   const ctx = debugCanvas.getContext('2d')
 
-  debugCanvas.classList.add('debug-canvas')
+  const toolbar = document.createElement('div')
+  toolbar.classList.add('debug-toolbar')
 
-  let mouseHoverCell = null
+  const tooltip = document.createElement('div')
+  tooltip.classList.add('debug-tooltip')
+  tooltip.classList.add('hidden')
+
+  let updateTooltip
   let updateToolbar
 
-  let onMouseMove = e => {
-    mouseHoverCell = screen.layout.screenToGrid(e.offsetX, e.offsetY)
-    startDrawing()
-    updateToolbar()
+  let selectedCell = null
+  let mousePosition = null
+  const onMouseMove = (e) => {
+    if (e.target !== screen.layout.canvas) {
+      selectedCell = null
+      return
+    }
+    selectedCell = screen.layout.screenToGrid(e.offsetX, e.offsetY)
+    mousePosition = [e.offsetX, e.offsetY]
+    updateTooltip()
   }
-  let onMouseOut = () => (mouseHoverCell = null)
+  const onMouseOut = (e) => {
+    selectedCell = null
+    tooltip.classList.add('hidden')
+  }
 
-  let addCanvas = function () {
-    if (!debugCanvas.parentNode) {
-      screen.layout.canvas.parentNode.appendChild(debugCanvas)
-      screen.layout.canvas.addEventListener('mousemove', onMouseMove)
-      screen.layout.canvas.addEventListener('mouseout', onMouseOut)
-    }
-  }
-  let removeCanvas = function () {
-    if (debugCanvas.parentNode) {
-      debugCanvas.parentNode.removeChild(debugCanvas)
-      screen.layout.canvas.removeEventListener('mousemove', onMouseMove)
-      screen.layout.canvas.removeEventListener('mouseout', onMouseOut)
-      onMouseOut()
-    }
-  }
-  let updateCanvasSize = function () {
+  const updateCanvasSize = function () {
     let { width, height, devicePixelRatio } = screen.layout.window
     let cellSize = screen.layout.getCellSize()
-    debugCanvas.width = width * cellSize.width * devicePixelRatio
-    debugCanvas.height = height * cellSize.height * devicePixelRatio
-    debugCanvas.style.width = `${width * cellSize.width}px`
-    debugCanvas.style.height = `${height * cellSize.height}px`
+    let padding = Math.round(screen.layout._padding)
+    debugCanvas.width = (width * cellSize.width + 2 * padding) * devicePixelRatio
+    debugCanvas.height = (height * cellSize.height + 2 * padding) * devicePixelRatio
+    debugCanvas.style.width = `${width * cellSize.width + 2 * screen.layout._padding}px`
+    debugCanvas.style.height = `${height * cellSize.height + 2 * screen.layout._padding}px`
   }
 
-  let drawInfo = mk('div')
-  drawInfo.classList.add('draw-info')
+  let startDrawLoop
+  let screenAttached = false
+  let eventNode
+  const setScreenAttached = function (attached) {
+    if (attached && !debugCanvas.parentNode) {
+      screen.layout.canvas.parentNode.appendChild(debugCanvas)
+      eventNode = debugCanvas.parentNode
+      eventNode.addEventListener('mousemove', onMouseMove)
+      eventNode.addEventListener('mouseout', onMouseOut)
+      screen.layout.on('size-update', updateCanvasSize)
+      updateCanvasSize()
+      screenAttached = true
+      startDrawLoop()
+    } else if (!attached && debugCanvas.parentNode) {
+      debugCanvas.parentNode.removeChild(debugCanvas)
+      eventNode.removeEventListener('mousemove', onMouseMove)
+      eventNode.removeEventListener('mouseout', onMouseOut)
+      screen.layout.removeListener('size-update', updateCanvasSize)
+      screenAttached = false
+    }
+  }
 
-  let startTime, endTime, lastReason
-  let cells = new Map()
-  let clippedRects = []
-  let updateFrames = []
+  const setToolbarAttached = function (attached) {
+    if (attached && !toolbar.parentNode) {
+      screen.layout.canvas.parentNode.appendChild(toolbar)
+      screen.layout.canvas.parentNode.appendChild(tooltip)
+      updateToolbar()
+    } else if (!attached && toolbar.parentNode) {
+      screen.layout.canvas.parentNode.removeChild(toolbar)
+      screen.layout.canvas.parentNode.removeChild(tooltip)
+    }
+  }
 
-  let startDrawing
+  screen.on('update-window:debug', enabled => {
+    setToolbarAttached(enabled)
+  })
+
+  screen.layout.on('update-window:debug', enabled => {
+    setScreenAttached(enabled)
+  })
+
+  let drawData = {
+    reason: '',
+    showUpdates: false,
+    startTime: 0,
+    endTime: 0,
+    clipped: [],
+    frames: [],
+    cells: new Map(),
+    scrollRegion: null
+  }
 
   screen._debug = screen.layout.renderer._debug = {
     drawStart (reason) {
-      lastReason = reason
-      startTime = Date.now()
-      clippedRects = []
+      drawData.reason = reason
+      drawData.startTime = window.performance.now()
     },
     drawEnd () {
-      endTime = Date.now()
-      drawInfo.textContent = `Draw: ${lastReason} (${(endTime - startTime)} ms), fancy gfx=${screen.layout.renderer.graphics}`
-      startDrawing()
+      drawData.endTime = window.performance.now()
     },
     setCell (cell, flags) {
-      cells.set(cell, [flags, Date.now()])
-    },
-    clipRect (...args) {
-      clippedRects.push(args)
+      drawData.cells.set(cell, [flags, window.performance.now()])
     },
     pushFrame (frame) {
-      frame.push(Date.now())
-      updateFrames.push(frame)
-      startDrawing()
+      drawData.frames.push([...frame, window.performance.now()])
     }
-  }
-
-  let clipPattern
-  {
-    let patternCanvas = document.createElement('canvas')
-    patternCanvas.width = patternCanvas.height = 12
-    let pctx = patternCanvas.getContext('2d')
-    pctx.lineWidth = 1
-    pctx.strokeStyle = '#00f'
-    pctx.beginPath()
-    pctx.moveTo(0, 0)
-    pctx.lineTo(0 - 4, 12)
-    pctx.moveTo(4, 0)
-    pctx.lineTo(4 - 4, 12)
-    pctx.moveTo(8, 0)
-    pctx.lineTo(8 - 4, 12)
-    pctx.moveTo(12, 0)
-    pctx.lineTo(12 - 4, 12)
-    pctx.moveTo(16, 0)
-    pctx.lineTo(16 - 4, 12)
-    pctx.stroke()
-    clipPattern = ctx.createPattern(patternCanvas, 'repeat')
   }
 
   let isDrawing = false
-  let lastDrawTime = 0
-  let t = 0
-
   let drawLoop = function () {
-    if (isDrawing) window.requestAnimationFrame(drawLoop)
+    if (screenAttached) window.requestAnimationFrame(drawLoop)
+    else isDrawing = false
 
-    let dt = (Date.now() - lastDrawTime) / 1000
-    lastDrawTime = Date.now()
-    t += dt
+    let now = window.performance.now()
 
-    let { devicePixelRatio, width, height } = screen.layout.window
-    let { width: cellWidth, height: cellHeight } = screen.layout.getCellSize()
-    let screenLength = width * height
-    let now = Date.now()
+    let { width, height, devicePixelRatio } = screen.layout.window
+    let padding = Math.round(screen.layout._padding)
+    let cellSize = screen.layout.getCellSize()
 
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
-    ctx.clearRect(0, 0, width * cellWidth, height * cellHeight)
+    ctx.clearRect(0, 0, width * cellSize.width + 2 * padding, height * cellSize.height + 2 * padding)
+    ctx.translate(padding, padding)
 
-    let activeCells = 0
-    for (let cell = 0; cell < screenLength; cell++) {
-      if (!cells.has(cell) || cells.get(cell)[0] === 0) continue
+    ctx.lineWidth = 2
+    ctx.lineJoin = 'round'
 
-      let [flags, timestamp] = cells.get(cell)
-      let elapsedTime = (now - timestamp) / 1000
+    if (drawData.showUpdates) {
+      const cells = drawData.cells
+      for (let cell = 0; cell < width * height; cell++) {
+        // cell does not exist or has no flags set
+        if (!cells.has(cell) || cells.get(cell)[0] === 0) continue
 
-      if (elapsedTime > 1) continue
+        const [flags, timestamp] = cells.get(cell)
+        let elapsedTime = (now - timestamp) / 1000
 
-      activeCells++
-      ctx.globalAlpha = 0.5 * Math.max(0, 1 - elapsedTime)
+        if (elapsedTime > 1) {
+          cells.delete(cell)
+          continue
+        }
 
-      let x = cell % width
-      let y = Math.floor(cell / width)
+        ctx.globalAlpha = 0.5 * Math.max(0, 1 - elapsedTime)
 
-      if (flags & 1) {
-        // redrawn
-        ctx.fillStyle = '#f0f'
+        let x = cell % width
+        let y = Math.floor(cell / width)
+
+        if (flags & 2) {
+          // updated
+          ctx.fillStyle = '#0f0'
+        } else if (flags & 1) {
+          // redrawn
+          ctx.fillStyle = '#f0f'
+        }
+
+        if (!(flags & 4)) {
+          // outside a clipped region
+          ctx.fillStyle = '#0ff'
+        }
+
+        ctx.fillRect(x * cellSize.width, y * cellSize.height, cellSize.width, cellSize.height)
+
+        if (flags & 8) {
+          // wide cell
+          ctx.strokeStyle = '#f00'
+          ctx.beginPath()
+          ctx.moveTo(x * cellSize.width, (y + 1) * cellSize.height)
+          ctx.lineTo((x + 1) * cellSize.width, (y + 1) * cellSize.height)
+          ctx.stroke()
+        }
       }
-      if (flags & 2) {
-        // updated
-        ctx.fillStyle = '#0f0'
-      }
 
-      ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
-
-      if (flags & 4) {
-        // wide cell
-        ctx.lineWidth = 2
-        ctx.strokeStyle = '#f00'
-        ctx.strokeRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
-      }
-    }
-
-    if (clippedRects.length) {
-      ctx.globalAlpha = 0.5
-      ctx.beginPath()
-
-      for (let rect of clippedRects) {
-        ctx.rect(...rect)
-      }
-
-      ctx.fillStyle = clipPattern
-      ctx.fill()
-    }
-
-    let didDrawUpdateFrames = false
-    if (updateFrames.length) {
       let framesToDelete = []
-      for (let frame of updateFrames) {
-        let time = frame[4]
-        let elapsed = Date.now() - time
-        if (elapsed > 1000) framesToDelete.push(frame)
+      for (let frame of drawData.frames) {
+        let timestamp = frame[4]
+        let elapsedTime = (now - timestamp) / 1000
+        if (elapsedTime > 1) framesToDelete.push(frame)
         else {
-          didDrawUpdateFrames = true
-          ctx.globalAlpha = 1 - elapsed / 1000
+          ctx.globalAlpha = 1 - elapsedTime
           ctx.strokeStyle = '#ff0'
-          ctx.lineWidth = 2
-          ctx.strokeRect(frame[0] * cellWidth, frame[1] * cellHeight, frame[2] * cellWidth, frame[3] * cellHeight)
+          ctx.strokeRect(frame[0] * cellSize.width, frame[1] * cellSize.height,
+            frame[2] * cellSize.width, frame[3] * cellSize.height)
         }
       }
       for (let frame of framesToDelete) {
-        updateFrames.splice(updateFrames.indexOf(frame), 1)
+        drawData.frames.splice(drawData.frames.indexOf(frame), 1)
       }
     }
 
-    if (mouseHoverCell) {
+    if (selectedCell !== null) {
+      let [x, y] = selectedCell
+
       ctx.save()
+      ctx.globalAlpha = 0.5
+      ctx.lineWidth = 1
+
+      // draw X line
+      ctx.beginPath()
+      ctx.moveTo(0, y * cellSize.height)
+      ctx.lineTo(x * cellSize.width, y * cellSize.height)
+      ctx.strokeStyle = '#f00'
+      ctx.setLineDash([cellSize.width])
+      ctx.stroke()
+
+      // draw Y line
+      ctx.beginPath()
+      ctx.moveTo(x * cellSize.width, 0)
+      ctx.lineTo(x * cellSize.width, y * cellSize.height)
+      ctx.strokeStyle = '#0f0'
+      ctx.setLineDash([cellSize.height])
+      ctx.stroke()
+
       ctx.globalAlpha = 1
-      ctx.lineWidth = 1 + 0.5 * Math.sin(t * 10)
+      ctx.lineWidth = 1 + 0.5 * Math.sin((now / 1000) * 10)
       ctx.strokeStyle = '#fff'
       ctx.lineJoin = 'round'
       ctx.setLineDash([2, 2])
-      ctx.lineDashOffset = t * 10
-      ctx.strokeRect(mouseHoverCell[0] * cellWidth, mouseHoverCell[1] * cellHeight, cellWidth, cellHeight)
+      ctx.lineDashOffset = (now / 1000) * 10
+      ctx.strokeRect(x * cellSize.width, y * cellSize.height, cellSize.width, cellSize.height)
       ctx.lineDashOffset += 2
       ctx.strokeStyle = '#000'
-      ctx.strokeRect(mouseHoverCell[0] * cellWidth, mouseHoverCell[1] * cellHeight, cellWidth, cellHeight)
+      ctx.strokeRect(x * cellSize.width, y * cellSize.height, cellSize.width, cellSize.height)
       ctx.restore()
     }
 
-    if (activeCells === 0 && !mouseHoverCell && !didDrawUpdateFrames) {
-      isDrawing = false
-      removeCanvas()
+    if (drawData.scrollRegion !== null) {
+      let [start, end] = drawData.scrollRegion
+
+      ctx.save()
+      ctx.globalAlpha = 1
+      ctx.strokeStyle = '#00f'
+      ctx.lineWidth = 2
+      ctx.setLineDash([2, 2])
+
+      ctx.beginPath()
+      ctx.moveTo(0, start * cellSize.height)
+      ctx.lineTo(width * cellSize.width, start * cellSize.height)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(0, (end + 1) * cellSize.height)
+      ctx.lineTo(width * cellSize.width, (end + 1) * cellSize.height)
+      ctx.stroke()
+
+      ctx.restore()
     }
   }
-
-  startDrawing = function () {
+  startDrawLoop = function () {
     if (isDrawing) return
-    addCanvas()
-    updateCanvasSize()
     isDrawing = true
-    lastDrawTime = Date.now()
     drawLoop()
   }
 
-  // debug toolbar
-  const toolbar = mk('div')
-  toolbar.classList.add('debug-toolbar')
-  let toolbarAttached = false
+  let pad2 = i => ('00' + i.toString()).substr(-2)
+  let formatColor = color => color < 256
+    ? color.toString()
+    : '#' + pad2(color >> 16) + pad2((color >> 8) & 0xFF) + pad2(color & 0xFF)
 
-  const heartbeat = mk('div')
-  heartbeat.classList.add('heartbeat')
-  heartbeat.textContent = '❤'
-  toolbar.appendChild(heartbeat)
-
-  const dataDisplay = mk('div')
-  dataDisplay.classList.add('data-display')
-  toolbar.appendChild(dataDisplay)
-
-  const internalDisplay = mk('div')
-  internalDisplay.classList.add('internal-display')
-  toolbar.appendChild(internalDisplay)
-
-  toolbar.appendChild(drawInfo)
-
-  const buttons = mk('div')
-  buttons.classList.add('toolbar-buttons')
-  toolbar.appendChild(buttons)
-
-  // heartbeat
-  connection.on('heartbeat', () => {
-    heartbeat.classList.remove('beat')
-    window.requestAnimationFrame(() => {
-      heartbeat.classList.add('beat')
-    })
-  })
-
-  {
-    const redraw = mk('button')
-    redraw.textContent = 'Redraw'
-    redraw.addEventListener('click', e => {
-      screen.layout.renderer.resetDrawn()
-      screen.layout.renderer.draw('debug-redraw')
-    })
-    buttons.appendChild(redraw)
-
-    const fancyGraphics = mk('button')
-    fancyGraphics.textContent = 'Toggle Fancy Graphics'
-    fancyGraphics.addEventListener('click', e => {
-      screen.layout.renderer.graphics = +!screen.layout.renderer.graphics
-      screen.layout.renderer.draw('set-graphics')
-    })
-    buttons.appendChild(fancyGraphics)
+  let makeSpan = (text, styles) => {
+    let span = document.createElement('span')
+    span.textContent = text
+    Object.assign(span.style, styles || {})
+    return span
+  }
+  let formatAttributes = (target, attrs) => {
+    if (attrs & ATTR_FG) target.appendChild(makeSpan('HasFG'))
+    if (attrs & ATTR_BG) target.appendChild(makeSpan('HasBG'))
+    if (attrs & ATTR_BOLD) target.appendChild(makeSpan('Bold', { fontWeight: 'bold' }))
+    if (attrs & ATTR_UNDERLINE) target.appendChild(makeSpan('Uline', { textDecoration: 'underline' }))
+    if (attrs & ATTR_BLINK) target.appendChild(makeSpan('Blink'))
+    if (attrs & ATTR_ITALIC) target.appendChild(makeSpan('Italic', { fontStyle: 'italic' }))
+    if (attrs & ATTR_STRIKE) target.appendChild(makeSpan('Strike', { textDecoration: 'line-through' }))
+    if (attrs & ATTR_OVERLINE) target.appendChild(makeSpan('Oline', { textDecoration: 'overline' }))
+    if (attrs & ATTR_FAINT) target.appendChild(makeSpan('Faint', { opacity: 0.5 }))
+    if (attrs & ATTR_FRAKTUR) target.appendChild(makeSpan('Fraktur'))
   }
 
-  const attachToolbar = function () {
-    screen.layout.canvas.parentNode.appendChild(toolbar)
-  }
-  const detachToolbar = function () {
-    toolbar.parentNode.removeChild(toolbar)
+  // tooltip
+  updateTooltip = function () {
+    tooltip.classList.remove('hidden')
+    tooltip.innerHTML = ''
+    let cell = selectedCell[1] * screen.window.width + selectedCell[0]
+    if (!screen.screen[cell]) return
+
+    let foreground = document.createElement('span')
+    foreground.textContent = formatColor(screen.screenFG[cell])
+    let preview = document.createElement('span')
+    preview.textContent = ' ●'
+    preview.style.color = getColor(screen.screenFG[cell], screen.layout.renderer.palette)
+    foreground.appendChild(preview)
+
+    let background = document.createElement('span')
+    background.textContent = formatColor(screen.screenBG[cell])
+    let bgPreview = document.createElement('span')
+    bgPreview.textContent = ' ●'
+    bgPreview.style.color = getColor(screen.screenBG[cell], screen.layout.renderer.palette)
+    background.appendChild(bgPreview)
+
+    let character = screen.screen[cell]
+    let codePoint = character.codePointAt(0)
+    let formattedCodePoint = codePoint.toString(16).length <= 4
+      ? `0000${codePoint.toString(16)}`.substr(-4)
+      : codePoint.toString(16)
+
+    let attributes = document.createElement('span')
+    attributes.classList.add('attributes')
+    formatAttributes(attributes, screen.screenAttrs[cell])
+
+    let data = {
+      Cell: `col ${selectedCell[0] + 1}, ln ${selectedCell[1] + 1} (${cell})`,
+      Foreground: foreground,
+      Background: background,
+      Character: `U+${formattedCodePoint}`,
+      Attributes: attributes
+    }
+
+    let table = document.createElement('table')
+
+    for (let name in data) {
+      let row = document.createElement('tr')
+      let label = document.createElement('td')
+      label.appendChild(new window.Text(name))
+      label.classList.add('label')
+
+      let value = document.createElement('td')
+      value.appendChild(typeof data[name] === 'string' ? new window.Text(data[name]) : data[name])
+      value.classList.add('value')
+
+      row.appendChild(label)
+      row.appendChild(value)
+      table.appendChild(row)
+    }
+
+    tooltip.appendChild(table)
+
+    let cellSize = screen.layout.getCellSize()
+    // add 3 to the position because for some reason the corner is off
+    let posX = (selectedCell[0] + 1) * cellSize.width + 3
+    let posY = (selectedCell[1] + 1) * cellSize.height + 3
+    tooltip.style.transform = `translate(${posX}px, ${posY}px)`
   }
 
-  screen.on('update-window:debug', debug => {
-    if (debug !== toolbarAttached) {
-      toolbarAttached = debug
-      if (debug) attachToolbar()
-      else {
-        detachToolbar()
-        removeCanvas()
+  let toolbarData = null
+  let toolbarNodes = {}
+  const initToolbar = function () {
+    if (toolbarData) return
+
+    let showUpdates = document.createElement('input')
+    showUpdates.type = 'checkbox'
+    showUpdates.addEventListener('change', e => {
+      drawData.showUpdates = showUpdates.checked
+    })
+
+    let fancyGraphics = document.createElement('input')
+    fancyGraphics.type = 'checkbox'
+    fancyGraphics.value = !!screen.layout.window.graphics
+    fancyGraphics.addEventListener('change', e => {
+      screen.layout.window.graphics = +fancyGraphics.checked
+    })
+
+    toolbarData = {
+      cursor: {
+        title: 'Cursor',
+        Position: '',
+        Style: '',
+        Visible: true,
+        Hanging: false
+      },
+      internal: {
+        Flags: '',
+        'Cursor Attributes': '',
+        'Code Page': '',
+        Heap: 0,
+        Clients: 0
+      },
+      drawing: {
+        title: 'Drawing',
+        'Last Update': '',
+        'Show Updates': showUpdates,
+        'Fancy Graphics': fancyGraphics,
+        'Redraw Screen': () => {
+          screen.layout.renderer.resetDrawn()
+          screen.layout.renderer.draw('debug-redraw')
+        }
       }
     }
-  })
 
-  const displayCellAttrs = attrs => {
-    let result = attrs.toString(16)
-    if (attrs & 1 || attrs & 2) {
-      result += ':has('
-      if (attrs & 1) result += 'fg'
-      if (attrs & 2) result += (attrs & 1 ? ',' : '') + 'bg'
-      result += ')'
-    }
-    let attributes = []
-    if (attrs & (1 << 2)) attributes.push('\\[bold]bold\\()')
-    if (attrs & (1 << 3)) attributes.push('\\[underline]underln\\()')
-    if (attrs & (1 << 4)) attributes.push('\\[invert]invert\\()')
-    if (attrs & (1 << 5)) attributes.push('blink')
-    if (attrs & (1 << 6)) attributes.push('\\[italic]italic\\()')
-    if (attrs & (1 << 7)) attributes.push('\\[strike]strike\\()')
-    if (attrs & (1 << 8)) attributes.push('\\[overline]overln\\()')
-    if (attrs & (1 << 9)) attributes.push('\\[faint]faint\\()')
-    if (attrs & (1 << 10)) attributes.push('fraktur')
-    if (attributes.length) result += ':' + attributes.join()
-    return result.trim()
-  }
+    for (let i in toolbarData) {
+      let group = toolbarData[i]
+      let table = document.createElement('table')
+      table.classList.add('toolbar-group')
 
-  const formatColor = color => color < 256 ? color : `#${`000000${(color - 256).toString(16)}`.substr(-6)}`
-  const getCellData = cell => {
-    if (cell < 0 || cell > screen.screen.length) return '(-)'
-    let cellAttrs = screen.layout.renderer.drawnScreenAttrs[cell] | 0
-    let cellFG = screen.layout.renderer.drawnScreenFG[cell] | 0
-    let cellBG = screen.layout.renderer.drawnScreenBG[cell] | 0
-    let fgText = formatColor(cellFG)
-    let bgText = formatColor(cellBG)
-    fgText += `\\[color=${screen.layout.renderer.getColor(cellFG).replace(/ /g, '')}]●\\[]`
-    bgText += `\\[color=${screen.layout.renderer.getColor(cellBG).replace(/ /g, '')}]●\\[]`
-    let cellCode = (screen.layout.renderer.drawnScreen[cell] || '').codePointAt(0) | 0
-    let hexcode = cellCode.toString(16).toUpperCase()
-    if (hexcode.length < 4) hexcode = `0000${hexcode}`.substr(-4)
-    hexcode = `U+${hexcode}`
-    let x = cell % screen.window.width
-    let y = Math.floor(cell / screen.window.width)
-    return `((${y},${x})=${cell}:\\[bold]${hexcode}\\[]:F${fgText}:B${bgText}:A(${displayCellAttrs(cellAttrs)}))`
-  }
+      toolbarNodes[i] = {}
 
-  const setFormattedText = (node, text) => {
-    node.innerHTML = ''
+      for (let key in group) {
+        let item = document.createElement('tr')
+        let name = document.createElement('td')
+        name.classList.add('name')
+        let value = document.createElement('td')
+        value.classList.add('value')
 
-    let match
-    let attrs = {}
+        toolbarNodes[i][key] = { name, value }
 
-    let pushSpan = content => {
-      let span = mk('span')
-      node.appendChild(span)
-      span.textContent = content
-      for (let key in attrs) span[key] = attrs[key]
-    }
-
-    while ((match = text.match(/\\\[(.*?)\]/))) {
-      if (match.index > 0) pushSpan(text.substr(0, match.index))
-
-      attrs = { style: '' }
-      let data = match[1].split(' ')
-      for (let attr of data) {
-        if (!attr) continue
-        let key, value
-        if (attr.indexOf('=') > -1) {
-          key = attr.substr(0, attr.indexOf('='))
-          value = attr.substr(attr.indexOf('=') + 1)
+        if (key === 'title') {
+          name.textContent = group[key]
+          name.classList.add('title')
         } else {
-          key = attr
-          value = true
+          name.textContent = key
+          if (group[key] instanceof Function) {
+            name.textContent = ''
+            let button = document.createElement('button')
+            name.classList.add('has-button')
+            name.appendChild(button)
+            button.textContent = key
+            button.addEventListener('click', e => group[key](e))
+          } else if (group[key] instanceof window.Node) value.appendChild(group[key])
+          else value.textContent = group[key]
         }
 
-        if (key === 'bold') attrs.style += 'font-weight:bold;'
-        if (key === 'italic') attrs.style += 'font-style:italic;'
-        if (key === 'underline') attrs.style += 'text-decoration:underline;'
-        if (key === 'invert') attrs.style += 'background:#000;filter:invert(1);'
-        if (key === 'strike') attrs.style += 'text-decoration:line-through;'
-        if (key === 'overline') attrs.style += 'text-decoration:overline;'
-        if (key === 'faint') attrs.style += 'opacity:0.5;'
-        else if (key === 'color') attrs.style += `color:${value};`
-        else attrs[key] = value
+        item.appendChild(name)
+        item.appendChild(value)
+        table.appendChild(item)
       }
 
-      text = text.substr(match.index + match[0].length)
+      toolbar.appendChild(table)
     }
 
-    if (text) pushSpan(text)
+    let heartbeat = toolbarNodes.heartbeat = document.createElement('div')
+    heartbeat.classList.add('heartbeat')
+    heartbeat.textContent = '❤'
+    toolbar.appendChild(heartbeat)
   }
 
-  let internalInfo = {}
-
-  updateToolbar = () => {
-    if (!toolbarAttached) return
-    let text = `C((${screen.cursor.y},${screen.cursor.x}),hang:${screen.cursor.hanging},vis:${screen.cursor.visible})`
-    if (mouseHoverCell) {
-      text += ' m' + getCellData(mouseHoverCell[1] * screen.window.width + mouseHoverCell[0])
+  connection.on('heartbeat', () => {
+    if (screenAttached && toolbarNodes.heartbeat) {
+      toolbarNodes.heartbeat.classList.remove('beat')
+      window.requestAnimationFrame(() => {
+        toolbarNodes.heartbeat.classList.add('beat')
+      })
     }
-    setFormattedText(dataDisplay, text)
+  })
 
-    if ('flags' in internalInfo) {
-      // we got ourselves some internal data
-      let text = ' '
-      text += ` flags:${internalInfo.flags.toString(2)}`
-      text += ` curAttrs:${internalInfo.cursorAttrs.toString(2)}`
-      text += ` Region:${internalInfo.regionStart}->${internalInfo.regionEnd}`
-      text += ` Charset:${internalInfo.charsetGx} (0:${internalInfo.charsetG0},1:${internalInfo.charsetG1})`
-      text += ` Heap:${internalInfo.freeHeap}`
-      text += ` Clients:${internalInfo.clientCount}`
-      setFormattedText(internalDisplay, text)
+  updateToolbar = function () {
+    initToolbar()
+
+    Object.assign(toolbarData.cursor, {
+      Position: `col ${screen.cursor.x + 1}, ln ${screen.cursor.y + 1}`,
+      Style: screen.cursor.style + (screen.cursor.blinking ? ', blink' : ''),
+      Visible: screen.cursor.visible,
+      Hanging: screen.cursor.hanging
+    })
+
+    let drawTime = Math.round((drawData.endTime - drawData.startTime) * 100) / 100
+    toolbarData.drawing['Last Update'] = `${drawData.reason} (${drawTime}ms)`
+    toolbarData.drawing['Fancy Graphics'].checked = !!screen.layout.window.graphics
+
+    for (let i in toolbarData) {
+      let group = toolbarData[i]
+      let nodes = toolbarNodes[i]
+      for (let key in group) {
+        if (key === 'title') continue
+        let value = nodes[key].value
+        if (!(group[key] instanceof window.Node) && !(group[key] instanceof Function)) {
+          value.textContent = group[key]
+        }
+      }
     }
   }
 
-  screen.on('draw', updateToolbar)
+  screen.on('update', updateToolbar)
   screen.on('internal', data => {
-    internalInfo = data
-    updateToolbar()
+    if (screenAttached && toolbarData) {
+      Object.assign(toolbarData.internal, {
+        Flags: data.flags.toString(2),
+        'Cursor Attributes': data.cursorAttrs.toString(2),
+        'Code Page': `${data.charsetGx} (${data.charsetG0}, ${data.charsetG1})`,
+        Heap: data.freeHeap,
+        Clients: data.clientCount
+      })
+      drawData.scrollRegion = [data.regionStart, data.regionEnd]
+      updateToolbar()
+    }
   })
 }

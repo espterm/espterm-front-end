@@ -247,6 +247,8 @@ module.exports = class ScreenLayout extends EventEmitter {
       this.renderer.resetDrawn()
 
       this.renderer.render('update-size', this.serializeRenderData())
+
+      this.emit('size-update')
     }
   }
 

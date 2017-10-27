@@ -549,5 +549,7 @@ module.exports = class TermScreen extends EventEmitter {
           console.warn('Unhandled update', update)
       }
     }
+
+    this.emit('update')
   }
 }
