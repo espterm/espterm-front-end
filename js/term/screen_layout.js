@@ -1,5 +1,6 @@
 const EventEmitter = require('events')
-const CanvasRenderer = require('./screen_renderer')
+const CanvasRenderer = require('./canvas_renderer')
+const WebGLRenderer = require('./webgl_renderer')
 
 /**
  * Manages terminal screen layout and sizing
@@ -9,7 +10,11 @@ module.exports = class ScreenLayout extends EventEmitter {
     super()
 
     this.canvas = document.createElement('canvas')
-    this.renderer = new CanvasRenderer(this.canvas)
+    try {
+      this.renderer = new WebGLRenderer(this.canvas)
+    } catch (err) {
+      this.renderer = new CanvasRenderer(this.canvas)
+    }
 
     this._window = {
       width: 0,
@@ -243,7 +248,7 @@ module.exports = class ScreenLayout extends EventEmitter {
       this.canvas.style.height = `${realHeight}px`
 
       // the screen has been cleared (by changing canvas width)
-      this.renderer.resetDrawn()
+      this.renderer.resetDrawn(this.canvas.width, this.canvas.height)
 
       this.renderer.render('update-size', this.serializeRenderData())
 
