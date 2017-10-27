@@ -251,8 +251,8 @@ module.exports = function attachDebugger (screen, connection) {
       ctx.stroke()
 
       ctx.beginPath()
-      ctx.moveTo(0, end * cellSize.height)
-      ctx.lineTo(width * cellSize.width, end * cellSize.height)
+      ctx.moveTo(0, (end + 1) * cellSize.height)
+      ctx.lineTo(width * cellSize.width, (end + 1) * cellSize.height)
       ctx.stroke()
 
       ctx.restore()
