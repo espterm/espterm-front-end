@@ -320,6 +320,7 @@ module.exports = function attachDebugger (screen, connection) {
     formatAttributes(attributes, screen.screenAttrs[cell])
 
     let data = {
+      Cell: `col ${selectedCell[0] + 1}, ln ${selectedCell[1] + 1} (${cell})`,
       Foreground: foreground,
       Background: background,
       Character: `U+${formattedCodePoint}`,
@@ -345,7 +346,11 @@ module.exports = function attachDebugger (screen, connection) {
 
     tooltip.appendChild(table)
 
-    tooltip.style.transform = `translate(${mousePosition.map(x => x + 'px').join(',')})`
+    let cellSize = screen.layout.getCellSize()
+    // add 3 to the position because for some reason the corner is off
+    let posX = (selectedCell[0] + 1) * cellSize.width + 3
+    let posY = (selectedCell[1] + 1) * cellSize.height + 3
+    tooltip.style.transform = `translate(${posX}px, ${posY}px)`
   }
 
   let toolbarData = null
@@ -452,7 +457,7 @@ module.exports = function attachDebugger (screen, connection) {
     initToolbar()
 
     Object.assign(toolbarData.cursor, {
-      Position: `col ${screen.cursor.x}, ln ${screen.cursor.y}`,
+      Position: `col ${screen.cursor.x + 1}, ln ${screen.cursor.y + 1}`,
       Style: screen.cursor.style + (screen.cursor.blinking ? ', blink' : ''),
       Visible: screen.cursor.visible,
       Hanging: screen.cursor.hanging
