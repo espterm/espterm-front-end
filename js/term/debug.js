@@ -431,7 +431,21 @@ module.exports = function attachDebugger (screen, connection) {
 
       toolbar.appendChild(table)
     }
+
+    let heartbeat = toolbarNodes.heartbeat = document.createElement('div')
+    heartbeat.classList.add('heartbeat')
+    heartbeat.textContent = '❤'
+    toolbar.appendChild(heartbeat)
   }
+
+  connection.on('heartbeat', () => {
+    if (screenAttached && toolbarNodes.heartbeat) {
+      toolbarNodes.heartbeat.classList.remove('beat')
+      window.requestAnimationFrame(() => {
+        toolbarNodes.heartbeat.classList.add('beat')
+      })
+    }
+  })
 
   updateToolbar = function () {
     initToolbar()
