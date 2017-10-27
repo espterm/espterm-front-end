@@ -366,9 +366,9 @@ module.exports = function attachDebugger (screen, connection) {
 
     let fancyGraphics = document.createElement('input')
     fancyGraphics.type = 'checkbox'
-    fancyGraphics.value = !!screen.layout.window.graphics
+    fancyGraphics.value = !!screen.layout.renderer.graphics
     fancyGraphics.addEventListener('change', e => {
-      screen.layout.window.graphics = +fancyGraphics.checked
+      screen.layout.renderer.graphics = +fancyGraphics.checked
     })
 
     toolbarData = {
@@ -465,7 +465,7 @@ module.exports = function attachDebugger (screen, connection) {
 
     let drawTime = Math.round((drawData.endTime - drawData.startTime) * 100) / 100
     toolbarData.drawing['Last Update'] = `${drawData.reason} (${drawTime}ms)`
-    toolbarData.drawing['Fancy Graphics'].checked = !!screen.layout.window.graphics
+    toolbarData.drawing['Fancy Graphics'].checked = !!screen.layout.renderer.graphics
 
     for (let i in toolbarData) {
       let group = toolbarData[i]

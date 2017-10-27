@@ -22,7 +22,6 @@ module.exports = class ScreenLayout extends EventEmitter {
       gridScaleY: 1.2,
       fitIntoWidth: 0,
       fitIntoHeight: 0,
-      graphics: 0,
       debug: false
     }
 
