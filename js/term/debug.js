@@ -383,6 +383,7 @@ module.exports = function attachDebugger (screen, connection) {
       },
       drawing: {
         title: 'Drawing',
+        'Last Update': '',
         'Show Updates': showUpdates,
         'Fancy Graphics': fancyGraphics,
         'Redraw Screen': () => {
@@ -457,6 +458,8 @@ module.exports = function attachDebugger (screen, connection) {
       Hanging: screen.cursor.hanging
     })
 
+    let drawTime = Math.round((drawData.endTime - drawData.startTime) * 100) / 100
+    toolbarData.drawing['Last Update'] = `${drawData.reason} (${drawTime}ms)`
     toolbarData.drawing['Fancy Graphics'].checked = !!screen.layout.window.graphics
 
     for (let i in toolbarData) {
