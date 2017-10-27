@@ -12,37 +12,46 @@ const {
   ATTR_FRAKTUR
 } = require('./screen_attr_bits')
 
+// debug toolbar, tooltip and screen
 module.exports = function attachDebugger (screen, connection) {
+  // debug screen overlay
   const debugCanvas = document.createElement('canvas')
   debugCanvas.classList.add('debug-canvas')
   const ctx = debugCanvas.getContext('2d')
 
+  // debug toolbar
   const toolbar = document.createElement('div')
   toolbar.classList.add('debug-toolbar')
 
+  // debug tooltip
   const tooltip = document.createElement('div')
   tooltip.classList.add('debug-tooltip')
   tooltip.classList.add('hidden')
 
+  // update functions, defined somewhere below
   let updateTooltip
   let updateToolbar
 
+  // tooltip cell
   let selectedCell = null
-  let mousePosition = null
+
+  // update tooltip cell when mouse moves
   const onMouseMove = (e) => {
     if (e.target !== screen.layout.canvas) {
       selectedCell = null
       return
     }
     selectedCell = screen.layout.screenToGrid(e.offsetX, e.offsetY)
-    mousePosition = [e.offsetX, e.offsetY]
     updateTooltip()
   }
+
+  // hide tooltip when mouse leaves
   const onMouseOut = (e) => {
     selectedCell = null
     tooltip.classList.add('hidden')
   }
 
+  // updates debug canvas size
   const updateCanvasSize = function () {
     let { width, height, devicePixelRatio } = screen.layout.window
     let cellSize = screen.layout.getCellSize()
@@ -53,9 +62,15 @@ module.exports = function attachDebugger (screen, connection) {
     debugCanvas.style.height = `${height * cellSize.height + 2 * screen.layout._padding}px`
   }
 
+  // defined somewhere below
   let startDrawLoop
+
   let screenAttached = false
+
+  // node to which events were bound (kept here for when they need to be removed)
   let eventNode
+
+  // attaches/detaches debug screen overlay to/from DOM
   const setScreenAttached = function (attached) {
     if (attached && !debugCanvas.parentNode) {
       screen.layout.canvas.parentNode.appendChild(debugCanvas)
@@ -75,6 +90,7 @@ module.exports = function attachDebugger (screen, connection) {
     }
   }
 
+  // attaches/detaches toolbar and tooltip to/from DOM
   const setToolbarAttached = function (attached) {
     if (attached && !toolbar.parentNode) {
       screen.layout.canvas.parentNode.appendChild(toolbar)
@@ -86,25 +102,40 @@ module.exports = function attachDebugger (screen, connection) {
     }
   }
 
+  // attach/detach toolbar when debug mode is enabled/disabled
   screen.on('update-window:debug', enabled => {
     setToolbarAttached(enabled)
   })
 
+  // ditto ^
   screen.layout.on('update-window:debug', enabled => {
     setScreenAttached(enabled)
   })
 
   let drawData = {
+    // last draw reason
     reason: '',
+
+    // when true, will show colored cell update overlays
     showUpdates: false,
+
+    // draw start time in milliseconds
     startTime: 0,
+
+    // end time
     endTime: 0,
-    clipped: [],
+
+    // partial update frames
     frames: [],
+
+    // cell data
     cells: new Map(),
+
+    // scroll region
     scrollRegion: null
   }
 
+  // debug interface
   screen._debug = screen.layout.renderer._debug = {
     drawStart (reason) {
       drawData.reason = reason
@@ -123,6 +154,7 @@ module.exports = function attachDebugger (screen, connection) {
 
   let isDrawing = false
   let drawLoop = function () {
+    // draw while the screen is attached
     if (screenAttached) window.requestAnimationFrame(drawLoop)
     else isDrawing = false
 
@@ -201,6 +233,7 @@ module.exports = function attachDebugger (screen, connection) {
     }
 
     if (selectedCell !== null) {
+      // draw a dashed outline around the selected cell
       let [x, y] = selectedCell
 
       ctx.save()
@@ -237,6 +270,7 @@ module.exports = function attachDebugger (screen, connection) {
     }
 
     if (drawData.scrollRegion !== null) {
+      // draw two lines marking the scroll region bounds
       let [start, end] = drawData.scrollRegion
 
       ctx.save()
@@ -258,6 +292,7 @@ module.exports = function attachDebugger (screen, connection) {
       ctx.restore()
     }
   }
+
   startDrawLoop = function () {
     if (isDrawing) return
     isDrawing = true
@@ -288,8 +323,8 @@ module.exports = function attachDebugger (screen, connection) {
     if (attrs & ATTR_FRAKTUR) target.appendChild(makeSpan('Fraktur'))
   }
 
-  // tooltip
   updateTooltip = function () {
+    // TODO: make this not destroy and recreate the same nodes every time
     tooltip.classList.remove('hidden')
     tooltip.innerHTML = ''
     let cell = selectedCell[1] * screen.window.width + selectedCell[0]
@@ -355,6 +390,8 @@ module.exports = function attachDebugger (screen, connection) {
 
   let toolbarData = null
   let toolbarNodes = {}
+
+  // construct the toolbar if it wasn't already
   const initToolbar = function () {
     if (toolbarData) return
 
