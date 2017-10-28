@@ -73,8 +73,10 @@ module.exports = class WebGLRenderer extends EventEmitter {
   }
 
   resetDrawn (width, height) {
-    this.gl.clearColor(0, 0, 0, 1)
-    this.gl.viewport(0, 0, width, height)
+    this.gl.clearColor(...this.getColor(this.defaultBG))
+    if (width && height) {
+      this.gl.viewport(0, 0, width, height)
+    }
     this.gl.enable(this.gl.BLEND)
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
   }
@@ -229,10 +231,16 @@ precision mediump float;
 attribute vec2 position;
 uniform mat4 projection;
 uniform vec2 char_pos;
+uniform bool clip;
 varying highp vec2 tex_coord;
 void main() {
-  gl_Position = projection * vec4(char_pos - vec2(1.0, 1.0) + 3.0 * position, 0.0, 1.0);
-  tex_coord = position;
+  if (clip) {
+    gl_Position = projection * vec4(char_pos + position, 0.0, 1.0);
+    tex_coord = position / 3.0 + vec2(1.0 / 3.0, 1.0 / 3.0);
+  } else {
+    gl_Position = projection * vec4(char_pos - vec2(1.0, 1.0) + 3.0 * position, 0.0, 1.0);
+    tex_coord = position;
+  }
 }
     `, `
 precision highp float;
@@ -266,7 +274,8 @@ void main() {
         projection: gl.getUniformLocation(charShader, 'projection'),
         charPos: gl.getUniformLocation(charShader, 'char_pos'),
         color: gl.getUniformLocation(charShader, 'color'),
-        texture: gl.getUniformLocation(charShader, 'texture')
+        texture: gl.getUniformLocation(charShader, 'texture'),
+        clip: gl.getUniformLocation(charShader, 'clip')
       }
     }
 
@@ -292,7 +301,32 @@ void main() {
   }
 
   draw (reason) {
-    const { gl, width, height, padding, devicePixelRatio } = this
+    const { gl, width, height, padding, devicePixelRatio, statusScreen } = this
+    let { screen, screenFG, screenBG, screenAttrs } = this
+
+    if (statusScreen) {
+      this.startDrawLoop()
+
+      screen = new Array(width * height).fill(' ')
+      screenFG = new Array(width * height).fill(this.defaultFG)
+      screenBG = new Array(width * height).fill(this.defaultBG)
+      screenAttrs = new Array(width * height).fill(ATTR_FG | ATTR_BG)
+
+      let text = statusScreen.title
+      for (let i = 0; i < Math.min(width * height, text.length); i++) {
+        screen[i] = text[i]
+      }
+      if (statusScreen.loading) {
+        let t = Date.now() / 1000
+
+        for (let i = width; i < Math.min(width * height, width + 8); i++) {
+          let offset = ((t * 12) - i) % 12
+          let value = Math.max(0.2, 1 - offset / 3) * 255
+          screenFG[i] = 256 + value + (value << 8) + (value << 16)
+          screen[i] = '*'
+        }
+      }
+    }
 
     if (this.debug && this._debug) this._debug.drawStart(reason)
 
@@ -323,11 +357,14 @@ void main() {
         this.cursor.y === y &&
         this.cursor.visible
 
-      let text = this.screen[cell]
-      let fg = this.screenFG[cell] | 0
-      let bg = this.screenBG[cell] | 0
-      let attrs = this.screenAttrs[cell] | 0
+      let text = screen[cell]
+      let fg = screenFG[cell] | 0
+      let bg = screenBG[cell] | 0
+      let attrs = screenAttrs[cell] | 0
       let inSelection = this.screenSelection[cell]
+
+      if (!(cell in screen)) continue
+      if (statusScreen) isCursor = false
 
       // let isDefaultBG = false
 
@@ -351,9 +388,6 @@ void main() {
         bg = -2
       }
 
-      // TODO: actual cursor
-      if (isCursor) [fg, bg] = [bg, fg]
-
       gl.uniform2f(this.bgShader.uniforms.charPos, x, y)
       gl.uniform4f(this.bgShader.uniforms.color, ...this.getColor(bg))
 
@@ -369,7 +403,7 @@ void main() {
 
       this.drawSquare()
 
-      if (text.trim()) {
+      if (text.trim() || isCursor) {
         let fontIndex = 0
         if (attrs & ATTR_BOLD) fontIndex |= 1
         if (attrs & ATTR_ITALIC) fontIndex |= 2
@@ -377,7 +411,7 @@ void main() {
         let type = font + text
 
         if (!textCells[type]) textCells[type] = []
-        textCells[type].push({ x, y, text, font, fg })
+        textCells[type].push({ x, y, text, font, fg, bg, isCursor })
       }
     }
 
@@ -391,16 +425,52 @@ void main() {
       gl.uniform1i(this.charShader.uniforms.texture, 0)
 
       for (let cell of textCells[key]) {
-        let { x, y, fg } = cell
+        let { x, y, fg, bg, isCursor } = cell
 
         gl.uniform2f(this.charShader.uniforms.charPos, x, y)
         gl.uniform4f(this.charShader.uniforms.color, ...this.getColor(fg))
 
         this.drawSquare()
+
+        if (isCursor) {
+          if (fg === bg) {
+            fg = 7
+            bg = 0
+          }
+
+          this.useShader(this.bgShader, projection)
+          gl.uniform2f(this.bgShader.uniforms.extend, 0, 0)
+          gl.uniform2f(this.bgShader.uniforms.charPos, x, y)
+          gl.uniform4f(this.bgShader.uniforms.color, ...this.getColor(fg))
+          this.drawSquare()
+
+          this.useShader(this.charShader, projection)
+          gl.uniform4f(this.charShader.uniforms.color, ...this.getColor(bg))
+          gl.uniform1i(this.charShader.uniforms.clip, true)
+          this.drawSquare()
+          gl.uniform1i(this.charShader.uniforms.clip, false)
+        }
       }
     }
 
     if (this.debug && this._debug) this._debug.drawEnd()
+  }
+
+  startDrawLoop () {
+    if (this._drawTimerThread) return
+    let threadID = Math.random().toString(36)
+    this._drawTimerThread = threadID
+    this.drawTimerLoop(threadID)
+  }
+
+  stopDrawLoop () {
+    this._drawTimerThread = null
+  }
+
+  drawTimerLoop (threadID) {
+    if (!threadID || threadID !== this._drawTimerThread) return
+    window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
+    this.draw('draw-loop')
   }
 
   static colorToRGBA (color) {
