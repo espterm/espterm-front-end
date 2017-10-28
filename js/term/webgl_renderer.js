@@ -15,6 +15,15 @@ const {
   ATTR_FRAKTUR
 } = require('./screen_attr_bits')
 
+// Some non-bold Fraktur symbols are outside the contiguous block
+const frakturExceptions = {
+  'C': '\u212d',
+  'H': '\u210c',
+  'I': '\u2111',
+  'R': '\u211c',
+  'Z': '\u2128'
+}
+
 module.exports = class WebGLRenderer extends EventEmitter {
   constructor (canvas) {
     super()
@@ -233,12 +242,15 @@ uniform mat4 projection;
 uniform vec2 char_pos;
 uniform bool clip;
 varying highp vec2 tex_coord;
+varying vec4 screen_pos;
 void main() {
   if (clip) {
     gl_Position = projection * vec4(char_pos + position, 0.0, 1.0);
+    screen_pos = vec4(position, 0.0, 1.0);
     tex_coord = position / 3.0 + vec2(1.0 / 3.0, 1.0 / 3.0);
   } else {
     gl_Position = projection * vec4(char_pos - vec2(1.0, 1.0) + 3.0 * position, 0.0, 1.0);
+    screen_pos = vec4(3.0 * position - vec2(1.0, 1.0), 0.0, 1.0);
     tex_coord = position;
   }
 }
@@ -246,9 +258,28 @@ void main() {
 precision highp float;
 uniform vec4 color;
 uniform sampler2D texture;
+uniform bool faint;
+uniform bool overline;
+uniform bool strike;
+uniform bool underline;
 varying highp vec2 tex_coord;
+varying vec4 screen_pos;
 void main() {
   gl_FragColor = texture2D(texture, tex_coord) * color;
+  if (screen_pos.x >= 0.0 && screen_pos.x <= 1.0) {
+    if (faint) {
+      gl_FragColor.a /= 2.0;
+    }
+    if (overline) {
+      if (screen_pos.y >= 0.0 && screen_pos.y <= 0.05) gl_FragColor = color;
+    }
+    if (strike) {
+      if (screen_pos.y >= 0.475 && screen_pos.y <= 0.525) gl_FragColor = color;
+    }
+    if (underline) {
+      if (screen_pos.y >= 0.95 && screen_pos.y <= 1.0) gl_FragColor = color;
+    }
+  }
 }
     `)
 
@@ -275,7 +306,11 @@ void main() {
         charPos: gl.getUniformLocation(charShader, 'char_pos'),
         color: gl.getUniformLocation(charShader, 'color'),
         texture: gl.getUniformLocation(charShader, 'texture'),
-        clip: gl.getUniformLocation(charShader, 'clip')
+        clip: gl.getUniformLocation(charShader, 'clip'),
+        faint: gl.getUniformLocation(charShader, 'faint'),
+        overline: gl.getUniformLocation(charShader, 'overline'),
+        strike: gl.getUniformLocation(charShader, 'strike'),
+        underline: gl.getUniformLocation(charShader, 'underline')
       }
     }
 
@@ -403,15 +438,16 @@ void main() {
 
       this.drawSquare()
 
-      if (text.trim() || isCursor) {
+      if (text.trim() || isCursor || attrs) {
         let fontIndex = 0
         if (attrs & ATTR_BOLD) fontIndex |= 1
         if (attrs & ATTR_ITALIC) fontIndex |= 2
         let font = this.fonts[fontIndex]
+        if (attrs & ATTR_FRAKTUR) text = WebGLRenderer.alphaToFraktur(text)
         let type = font + text
 
         if (!textCells[type]) textCells[type] = []
-        textCells[type].push({ x, y, text, font, fg, bg, isCursor })
+        textCells[type].push({ x, y, text, font, fg, bg, attrs, isCursor })
       }
     }
 
@@ -425,10 +461,15 @@ void main() {
       gl.uniform1i(this.charShader.uniforms.texture, 0)
 
       for (let cell of textCells[key]) {
-        let { x, y, fg, bg, isCursor } = cell
+        let { x, y, fg, bg, attrs, isCursor } = cell
 
         gl.uniform2f(this.charShader.uniforms.charPos, x, y)
         gl.uniform4f(this.charShader.uniforms.color, ...this.getColor(fg))
+
+        gl.uniform1i(this.charShader.uniforms.faint, (attrs & ATTR_FAINT) > 0)
+        gl.uniform1i(this.charShader.uniforms.overline, (attrs & ATTR_OVERLINE) > 0)
+        gl.uniform1i(this.charShader.uniforms.strike, (attrs & ATTR_STRIKE) > 0)
+        gl.uniform1i(this.charShader.uniforms.underline, (attrs & ATTR_UNDERLINE) > 0)
 
         this.drawSquare()
 
@@ -471,6 +512,20 @@ void main() {
     if (!threadID || threadID !== this._drawTimerThread) return
     window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
     this.draw('draw-loop')
+  }
+
+  /**
+   * Converts an alphabetic character to its fraktur variant.
+   * @param {string} character - the character
+   * @returns {string} the converted character
+   */
+  static alphaToFraktur (character) {
+    if (character >= 'a' && character <= 'z') {
+      character = String.fromCodePoint(0x1d51e - 0x61 + character.charCodeAt(0))
+    } else if (character >= 'A' && character <= 'Z') {
+      character = frakturExceptions[character] || String.fromCodePoint(0x1d504 - 0x41 + character.charCodeAt(0))
+    }
+    return character
   }
 
   static colorToRGBA (color) {
