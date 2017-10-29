@@ -56,19 +56,23 @@ module.exports = class WebGLRenderer extends EventEmitter {
     this.reverseVideo = false
     this.hasBlinkingCells = false
     this.statusScreen = null
+    this.backgroundImage = null
 
     this.blinkStyleOn = false
     this.blinkInterval = null
     this.cursorBlinkOn = false
     this.cursorBlinkInterval = null
 
+    this.redrawLoop = false
     this.resetDrawn(100, 100)
-
-    // start blink timers
-    this.resetBlink()
-    this.resetCursorBlink()
+    this.initTime = Date.now()
 
     this.init()
+
+    // start loops and timers
+    this.resetBlink()
+    this.resetCursorBlink()
+    this.startDrawLoop()
   }
 
   render (reason, data) {
@@ -82,7 +86,13 @@ module.exports = class WebGLRenderer extends EventEmitter {
   }
 
   resetDrawn (width, height) {
-    this.gl.clearColor(...this.getColor(this.defaultBG))
+    if (this.backgroundImage) {
+      this.gl.clearColor(0, 0, 0, 0)
+      this.canvas.style.backgroundColor = getColor(this.defaultBG, this.palette)
+    } else {
+      this.gl.clearColor(...this.getColor(this.defaultBG))
+      this.canvas.style.backgroundColor = null
+    }
     if (width && height) {
       this.gl.viewport(0, 0, width, height)
     }
@@ -283,6 +293,43 @@ void main() {
 }
     `)
 
+    let fboShader = this.compileShader(`
+precision mediump float;
+attribute vec2 position;
+uniform mat4 projection;
+varying highp vec2 tex_coord;
+void main() {
+  gl_Position = projection * vec4(position, 0.0, 1.0);
+  tex_coord = position;
+}
+    `, `
+precision highp float;
+uniform sampler2D texture;
+uniform vec2 pixel_scale;
+uniform float time;
+varying highp vec2 tex_coord;
+void main() {
+  gl_FragColor = texture2D(texture, tex_coord);
+  /* uncomment for CRT-ish effect
+  vec4 sum = vec4(0);
+
+  for (int i = -4; i <= 4; i++) {
+    for (int j = -4; j <= 4; j++) {
+      sum += texture2D(texture, tex_coord + vec2(j, i) * pixel_scale) * 0.07;
+    }
+  }
+  float factor = 0.05 + 0.02 * sin(time * 5.0);
+  if (mod(tex_coord.y / pixel_scale.y, 10.0) < 5.0) {
+    factor += 0.1;
+  }
+  float beam_y = (mod(-time, 9.0) - 1.5) / 6.0;
+  if (abs(tex_coord.y - beam_y) < 0.05) {
+    factor += 0.2 * cos((tex_coord.y - beam_y) / 0.05 * 1.57);
+  }
+  gl_FragColor = sum * sum * factor + texture2D(texture, tex_coord); */
+}
+    `)
+
     this.bgShader = {
       shader: bgShader,
       attributes: {
@@ -314,6 +361,19 @@ void main() {
       }
     }
 
+    this.fboShader = {
+      shader: fboShader,
+      attributes: {
+        position: gl.getAttribLocation(fboShader, 'position')
+      },
+      uniforms: {
+        projection: gl.getUniformLocation(fboShader, 'projection'),
+        pixelScale: gl.getUniformLocation(fboShader, 'pixel_scale'),
+        time: gl.getUniformLocation(fboShader, 'time'),
+        texture: gl.getUniformLocation(fboShader, 'texture')
+      }
+    }
+
     let buffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -333,14 +393,50 @@ void main() {
     this.drawSquare = () => {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
+
+    // frame buffers
+
+    let maxBuffers = gl.getParameter(gl.getExtension('WEBGL_draw_buffers').MAX_COLOR_ATTACHMENTS_WEBGL)
+    let createBuffer = i => {
+      let buffer = gl.createFramebuffer()
+      let texture = gl.createTexture()
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, buffer)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, texture, 0)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+      return { buffer, texture }
+    }
+
+    if (maxBuffers >= 2) {
+      this.buffers = {
+        drawing: createBuffer(0),
+        display: createBuffer(1)
+      }
+    } else {
+      let buffer = createBuffer(0)
+      this.buffers = { drawing: buffer, display: buffer }
+    }
   }
 
   draw (reason) {
     const { gl, width, height, padding, devicePixelRatio, statusScreen } = this
     let { screen, screenFG, screenBG, screenAttrs } = this
 
+    // ;[this.buffers.drawing, this.buffers.display] = [this.buffers.display, this.buffers.drawing]
+
+    let drawingBuffer = this.buffers.drawing
+    gl.bindFramebuffer(gl.FRAMEBUFFER, drawingBuffer.buffer)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, drawingBuffer.texture)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+
     if (statusScreen) {
-      this.startDrawLoop()
+      this.redrawLoop = true
 
       screen = new Array(width * height).fill(' ')
       screenFG = new Array(width * height).fill(this.defaultFG)
@@ -361,7 +457,7 @@ void main() {
           screen[i] = '*'
         }
       }
-    }
+    } else this.redrawLoop = false
 
     if (this.debug && this._debug) this._debug.drawStart(reason)
 
@@ -401,12 +497,12 @@ void main() {
       if (!(cell in screen)) continue
       if (statusScreen) isCursor = false
 
-      // let isDefaultBG = false
+      let isDefaultBG = false
 
       if (!(attrs & ATTR_FG)) fg = this.defaultFG
       if (!(attrs & ATTR_BG)) {
         bg = this.defaultBG
-        // isDefaultBG = true
+        isDefaultBG = true
       }
 
       if (attrs & ATTR_INVERSE) [fg, bg] = [bg, fg] // swap - reversed character colors
@@ -423,20 +519,22 @@ void main() {
         bg = -2
       }
 
-      gl.uniform2f(this.bgShader.uniforms.charPos, x, y)
-      gl.uniform4f(this.bgShader.uniforms.color, ...this.getColor(bg))
+      if (!this.backgroundImage || !isDefaultBG) {
+        gl.uniform2f(this.bgShader.uniforms.charPos, x, y)
+        gl.uniform4f(this.bgShader.uniforms.color, ...this.getColor(bg))
 
-      let extendX = 0
-      let extendY = 0
+        let extendX = 0
+        let extendY = 0
 
-      if (x === 0) extendX = -1
-      if (x === width - 1) extendX = 1
-      if (y === 0) extendY = -1
-      if (y === height - 1) extendY = 1
+        if (x === 0) extendX = -1
+        if (x === width - 1) extendX = 1
+        if (y === 0) extendY = -1
+        if (y === height - 1) extendY = 1
 
-      gl.uniform2f(this.bgShader.uniforms.extend, extendX, extendY)
+        gl.uniform2f(this.bgShader.uniforms.extend, extendX, extendY)
 
-      this.drawSquare()
+        this.drawSquare()
+      }
 
       if (text.trim() || isCursor || attrs) {
         let fontIndex = 0
@@ -452,13 +550,13 @@ void main() {
     }
 
     this.useShader(this.charShader, projection)
-    gl.activeTexture(gl.TEXTURE0)
+    gl.activeTexture(gl.TEXTURE1)
 
     for (let key in textCells) {
       let { font, text } = textCells[key][0]
       let texture = this.fontCache.getChar(font, text)
       gl.bindTexture(gl.TEXTURE_2D, texture)
-      gl.uniform1i(this.charShader.uniforms.texture, 0)
+      gl.uniform1i(this.charShader.uniforms.texture, 1)
 
       for (let cell of textCells[key]) {
         let { x, y, fg, bg, attrs, isCursor } = cell
@@ -494,7 +592,29 @@ void main() {
       }
     }
 
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    this.drawFrame()
+
     if (this.debug && this._debug) this._debug.drawEnd()
+  }
+
+  drawFrame () {
+    const { gl } = this
+    let drawingBuffer = this.buffers.drawing
+
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, drawingBuffer.texture)
+    this.useShader(this.fboShader, [
+      2, 0, 0, 0,
+      0, 2, 0, 0,
+      0, 0, 1, 0,
+      -1, -1, 0, 1
+    ])
+    gl.uniform2f(this.fboShader.uniforms.pixelScale, 1 / gl.drawingBufferWidth, 1 / gl.drawingBufferHeight)
+    gl.uniform1i(this.fboShader.uniforms.texture, 0)
+    gl.uniform1f(this.fboShader.uniforms.time, ((Date.now() - this.initTime) / 1000) % 86400)
+    this.drawSquare()
   }
 
   startDrawLoop () {
@@ -511,7 +631,10 @@ void main() {
   drawTimerLoop (threadID) {
     if (!threadID || threadID !== this._drawTimerThread) return
     window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
-    this.draw('draw-loop')
+    if (this.redrawLoop) this.draw('draw-loop')
+    // uncomment for an update every frame (GPU-intensive)
+    // (also, lots of errors. TODO: investigate)
+    // this.drawFrame()
   }
 
   /**

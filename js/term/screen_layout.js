@@ -13,6 +13,7 @@ module.exports = class ScreenLayout extends EventEmitter {
     try {
       this.renderer = new WebGLRenderer(this.canvas)
     } catch (err) {
+      console.error(err)
       this.renderer = new CanvasRenderer(this.canvas)
     }
 
