@@ -102,6 +102,19 @@
 			<tr>
 				<td>
 					<code>
+						\e]30;<i>x</i>;<i>c</i>\a
+					</code>
+				</td>
+				<td>
+					Set button _x_ (1-5) color to _c_ - e.g.`\e]30;2;#00FF00\a`
+					makes the 2nd button green. Supported are SGR colors 1-255
+					and TrueColor in the format `#RRGGBB`. Use 0 to
+					reset to the default color.
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<code>
 						\e]9;<i>t</i>\a
 					</code>
 				</td>
