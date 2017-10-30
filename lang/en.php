@@ -81,6 +81,9 @@ return [
 	'term.ascii_debug' => 'Display control codes',
 	'term.backdrop' => 'Background image URL',
 	'term.button_count' => 'Button count',
+	'term.button_colors' => 'Button colors',
+	'term.font_stack' => 'Font stack',
+	'term.font_size' => 'Font size',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',

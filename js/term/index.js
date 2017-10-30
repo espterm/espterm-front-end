@@ -49,7 +49,10 @@ module.exports = function (opts) {
 
   // buttons
   const buttons = initButtons(input)
-  screen.on('button-labels', labels => { buttons.labels = labels })
+  screen.on('buttons-update', update => {
+    buttons.labels = update.labels
+    buttons.colors = update.colors
+  })
   // TODO: don't access the renderer here
   buttons.palette = screen.layout.renderer.palette
   screen.layout.renderer.on('palette-update', palette => {

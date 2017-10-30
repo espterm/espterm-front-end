@@ -178,6 +178,15 @@
 	</div>
 
 	<div class="Row">
+		<label><?= tr("term.button_colors") ?></label>
+		<input class="tiny" type="text" name="bc1" id="bc1" value="%h:bc1%">
+		<input class="tiny" type="text" name="bc2" id="bc2" value="%h:bc2%">
+		<input class="tiny" type="text" name="bc3" id="bc3" value="%h:bc3%">
+		<input class="tiny" type="text" name="bc4" id="bc4" value="%h:bc4%">
+		<input class="tiny" type="text" name="bc5" id="bc5" value="%h:bc5%">
+	</div>
+
+	<div class="Row">
 		<label for="backdrop"><?= tr('term.backdrop') ?></label>
 		<input type="text" name="backdrop" id="backdrop" value="%h:backdrop%" required>
 	</div>
@@ -260,6 +269,17 @@
 
 	<div class="Row explain">
 		<?= tr('term.explain_expert') ?>
+	</div>
+
+	<div class="Row">
+		<label for="font_stack"><?= tr('term.font_stack') ?></label>
+		<input type="text" name="font_stack" id="font_stack" value="%h:font_stack%" required>
+	</div>
+
+	<div class="Row">
+		<label for="font_size"><?= tr('term.font_size') ?><span class="mq-phone">&nbsp;(px)</span></label>
+		<input type="number" step=1 min=0 name="font_size" id="font_size" value="%font_size%" required>
+		<span class="mq-no-phone">&nbsp;px</span>
 	</div>
 
 	<div class="Row">

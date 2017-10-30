@@ -1,6 +1,8 @@
 const EventEmitter = require('events')
 const CanvasRenderer = require('./screen_renderer')
 
+const DEFAULT_FONT = '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace'
+
 /**
  * Manages terminal screen layout and sizing
  */
@@ -15,7 +17,7 @@ module.exports = class ScreenLayout extends EventEmitter {
       width: 0,
       height: 0,
       devicePixelRatio: 1,
-      fontFamily: '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace',
+      fontFamily: DEFAULT_FONT,
       fontSize: 20,
       padding: 6,
       gridScaleX: 1.0,
@@ -115,7 +117,10 @@ module.exports = class ScreenLayout extends EventEmitter {
   getFont (modifiers = {}) {
     let fontStyle = modifiers.style || 'normal'
     let fontWeight = modifiers.weight || 'normal'
-    return `${fontStyle} normal ${fontWeight} ${this.window.fontSize}px ${this.window.fontFamily}`
+    let fontFamily = this.window.fontFamily || ''
+    if (fontFamily.length > 0) fontFamily += ','
+    fontFamily += DEFAULT_FONT
+    return `${fontStyle} normal ${fontWeight} ${this.window.fontSize}px ${fontFamily}`
   }
 
   /**

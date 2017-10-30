@@ -476,6 +476,11 @@ module.exports = class TermScreen extends EventEmitter {
           this.emit('opts-update')
           break
 
+        case 'static-opts':
+          this.layout.window.fontFamily = update.fontStack || null
+          this.layout.window.fontSize = update.fontSize
+          break
+
         case 'cursor':
           if (this.cursor.x !== update.x || this.cursor.y !== update.y || this.cursor.hanging !== update.hanging) {
             this.cursor.x = update.x
@@ -491,8 +496,8 @@ module.exports = class TermScreen extends EventEmitter {
           this.emit('title-update', this.title = update.title)
           break
 
-        case 'button-labels':
-          this.emit('button-labels', update.labels)
+        case 'buttons-update':
+          this.emit('buttons-update', update)
           break
 
         case 'backdrop':
