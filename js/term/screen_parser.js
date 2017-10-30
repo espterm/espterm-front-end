@@ -185,7 +185,7 @@ module.exports = class ScreenParser {
         updates.push({
           topic: 'static-opts',
           fontStack,
-          fontSize,
+          fontSize
         })
 
       } else if (topic === TOPIC_TITLE) {
@@ -369,8 +369,6 @@ module.exports = class ScreenParser {
         this.contentLoaded = true
       }
     }
-
-    console.log(updates);
 
     return updates
   }
