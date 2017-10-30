@@ -28,6 +28,7 @@ function du (str) {
 
 /* eslint-disable no-multi-spaces */
 const TOPIC_SCREEN_OPTS  = 'O'
+const TOPIC_STATIC_OPTS  = 'P'
 const TOPIC_CONTENT      = 'S'
 const TOPIC_TITLE        = 'T'
 const TOPIC_BUTTONS      = 'B'
@@ -85,6 +86,16 @@ module.exports = class ScreenParser {
       return text
     }
 
+    let collectColor = () => {
+      let c = du(strArray[ci++])
+      if (c & 0x10000) { // support for trueColor
+        c &= 0xFFF
+        c |= (du(strArray[ci++]) & 0xFFF) << 12
+        c += 256
+      }
+      return c
+    }
+
     const updates = []
 
     while (ci < strArray.length) {
@@ -94,8 +105,8 @@ module.exports = class ScreenParser {
         const height = du(strArray[ci++])
         const width = du(strArray[ci++])
         const theme = du(strArray[ci++])
-        const defFG = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
-        const defBG = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
+        const defFG = collectColor()
+        const defBG = collectColor()
 
         // process attributes
         const attributes = du(strArray[ci++])
@@ -153,6 +164,7 @@ module.exports = class ScreenParser {
           reverseVideo,
           debugEnabled
         })
+
       } else if (topic === TOPIC_CURSOR) {
         // cursor position
         const y = du(strArray[ci++])
@@ -165,28 +177,44 @@ module.exports = class ScreenParser {
           y,
           hanging
         })
+
+      } else if (topic === TOPIC_STATIC_OPTS) {
+        const fontStack = collectOneTerminatedString()
+        const fontSize = du(strArray[ci++])
+
+        updates.push({
+          topic: 'static-opts',
+          fontStack,
+          fontSize
+        })
+
       } else if (topic === TOPIC_TITLE) {
         updates.push({ topic: 'title', title: collectOneTerminatedString() })
+
       } else if (topic === TOPIC_BUTTONS) {
         const count = du(strArray[ci++])
 
         let labels = []
+        let colors = []
         for (let j = 0; j < count; j++) {
-          text = collectOneTerminatedString()
-          labels.push(text)
+          colors.push(collectColor())
+          labels.push(collectOneTerminatedString())
         }
 
         updates.push({
-          topic: 'button-labels',
-          labels
+          topic: 'buttons-update',
+          labels,
+          colors
         })
+
       } else if (topic === TOPIC_BACKDROP) {
         updates.push({ topic: 'backdrop', image: collectOneTerminatedString() })
+
       } else if (topic === TOPIC_BELL) {
         updates.push({ topic: 'bell' })
+
       } else if (topic === TOPIC_INTERNAL) {
         // debug info
-
         const flags = du(strArray[ci++])
         const cursorAttrs = du(strArray[ci++])
         const regionStart = du(strArray[ci++])
@@ -194,6 +222,10 @@ module.exports = class ScreenParser {
         const charsetGx = du(strArray[ci++])
         const charsetG0 = strArray[ci++]
         const charsetG1 = strArray[ci++]
+
+        let cursorFg = collectColor()
+        let cursorBg = collectColor()
+
         const freeHeap = du(strArray[ci++])
         const clientCount = du(strArray[ci++])
 
@@ -206,9 +238,12 @@ module.exports = class ScreenParser {
           charsetGx,
           charsetG0,
           charsetG1,
+          cursorFg,
+          cursorBg,
           freeHeap,
           clientCount
         })
+
       } else if (topic === TOPIC_CONTENT) {
         // set screen content
         const frameY = du(strArray[ci++])

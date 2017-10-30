@@ -1,5 +1,6 @@
 const { getColor } = require('./themes')
 const { qs } = require('../utils')
+const { rgb2hsl, hex2rgb, rgb2hex, hsl2rgb } = require('../lib/color_utils')
 
 module.exports = function initButtons (input) {
   let container = qs('#action-buttons')
@@ -68,8 +69,19 @@ module.exports = function initButtons (input) {
       if (!label) button.classList.add('inactive')
       else button.classList.remove('inactive')
 
-      if (Number.isFinite(color)) button.style.background = getColor(color, palette)
-      else button.style.background = null
+      // 0 or undefined can be used to disable custom color
+      if (Number.isFinite(color) && color !== 0) {
+        const clr = getColor(color, palette)
+        button.style.background = clr
+
+        // darken the color a bit for the 3D side
+        const hsl = rgb2hsl(...hex2rgb(clr))
+        const hex = rgb2hex(...hsl2rgb(hsl[0], hsl[1], hsl[2] * 0.7))
+        button.style.boxShadow = `0 3px 0 ${hex}`
+      } else {
+        button.style.background = null
+        button.style.boxShadow = null
+      }
     }
   }
 

@@ -139,7 +139,7 @@ exports.getColor = function (i, palette = []) {
   }
 
   // return error color
-  return Math.floor(Date.now() / 1000) % 2 === 0 ? '#f0f' : '#0f0'
+  return Math.floor(Date.now() / 1000) % 2 === 0 ? '#ff0ff' : '#00ff00'
 }
 
 exports.toHex = function (shade, themeN) {
