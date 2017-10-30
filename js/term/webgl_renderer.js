@@ -308,9 +308,64 @@ uniform sampler2D texture;
 uniform vec2 pixel_scale;
 uniform float time;
 varying highp vec2 tex_coord;
+float hue_to_rgb (float p, float q, float t) {
+  if (t < 0.0) t += 1.0;
+  if (t > 1.0) t -= 1.0;
+  if (t < 1.0 / 6.0) return p + (q - p) * 6.0 * t;
+  if (t < 0.5) return q;
+  if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+  return p;
+}
+vec4 hsl_to_rgb (vec4 hsl) {
+  vec4 rgb = vec4(0);
+  rgb.a = hsl.a;
+  hsl.x = mod(hsl.x, 1.0);
+  if (hsl.y == 0.0) {
+    rgb.r = hsl.z;
+    rgb.g = hsl.z;
+    rgb.b = hsl.z;
+  } else {
+    float q = hsl.z < 0.5 ? hsl.z * (1.0 + hsl.y) : hsl.z + hsl.y - hsl.z * hsl.y;
+    float p = 2.0 * hsl.z - q;
+    rgb.r = hue_to_rgb(p, q, hsl.x + 1.0 / 3.0);
+    rgb.g = hue_to_rgb(p, q, hsl.x);
+    rgb.b = hue_to_rgb(p, q, hsl.x - 1.0 / 3.0);
+  }
+  return rgb;
+}
+vec4 rgb_to_hsl (vec4 rgb) {
+  float max_rgb = max(rgb.r, max(rgb.g, rgb.b));
+  float min_rgb = min(rgb.r, min(rgb.g, rgb.b));
+  float lightness = (max_rgb + min_rgb) / 2.0;
+  float hue = 0.0, saturation = 0.0;
+  if (max_rgb != min_rgb) {
+    float vd = max_rgb - min_rgb;
+    saturation = lightness > 0.5 ? vd / (2.0 - max_rgb - min_rgb) : vd / (max_rgb + min_rgb);
+    if (max_rgb == rgb.r) hue = (rgb.g - rgb.b) / vd + (rgb.g < rgb.b ? 6.0 : 0.0);
+    else if (max_rgb == rgb.g) hue = (rgb.b - rgb.r) / vd + 2.0;
+    else if (max_rgb == rgb.b) hue = (rgb.r - rgb.g) / vd + 4.0;
+    hue /= 6.0;
+  }
+  return vec4(hue, saturation, lightness, rgb.a);
+}
+vec2 bulge (vec2 v) {
+  vec2 norm = v * 2.0 - 1.0;
+  float hypot = length(norm);
+  return ((norm * (hypot / 4.0 + 1.0) / 1.25) + 1.0) / 2.0;
+}
 void main() {
-  gl_FragColor = texture2D(texture, tex_coord);
-  /* uncomment for CRT-ish effect
+  // gl_FragColor = texture2D(texture, tex_coord);
+
+  // bulge, lines, bloom
+  vec4 sum = vec4(0);
+  for (int i = -2; i <= 2; i++) {
+    for (int j = -2; j <= 2; j++) {
+      sum += texture2D(texture, bulge(tex_coord + vec2(i, j) * pixel_scale)) * 0.07;
+    }
+  }
+  gl_FragColor = sum * sum + texture2D(texture, bulge(tex_coord)) * (0.5 * sin(bulge(tex_coord).y / pixel_scale.y) + 0.5);
+
+  /* CRT-ish effect (requires draw on every animation frame!)
   vec4 sum = vec4(0);
 
   for (int i = -4; i <= 4; i++) {
@@ -633,7 +688,7 @@ void main() {
     window.requestAnimationFrame(() => this.drawTimerLoop(threadID))
     if (this.redrawLoop) this.draw('draw-loop')
     // uncomment for an update every frame (GPU-intensive)
-    // (also, lots of errors. TODO: investigate)
+    // (also, lots of errors in Chrome. TODO: investigate)
     // this.drawFrame()
   }
 
