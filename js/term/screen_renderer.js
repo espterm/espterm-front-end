@@ -800,17 +800,22 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
             let cursorX = x
             let cursorY = y
+            let cursorWidth = cellWidth // JS doesn't allow same-name assignment
 
             if (this.cursor.hanging) {
               // draw hanging cursor in the margin
               cursorX += 1
             }
 
-            let screenX = cursorX * cellWidth + this.padding
+            // double-width lines
+            if (this.screenLines[cursorY]) cursorWidth *= 2
+
+            let screenX = cursorX * cursorWidth + this.padding
             let screenY = cursorY * cellHeight + this.padding
+
             if (this.cursor.style === 'block') {
               // block
-              ctx.rect(screenX, screenY, cellWidth, cellHeight)
+              ctx.rect(screenX, screenY, cursorWidth, cellHeight)
             } else if (this.cursor.style === 'bar') {
               // vertical bar
               let barWidth = 2
@@ -818,7 +823,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
             } else if (this.cursor.style === 'line') {
               // underline
               let lineHeight = 2
-              ctx.rect(screenX, screenY + charSize.height, cellWidth, lineHeight)
+              ctx.rect(screenX, screenY + charSize.height, cursorWidth, lineHeight)
             }
             ctx.clip()
 
