@@ -276,10 +276,8 @@ class ScrollingTerminal {
     data += encodeAsCodePoint(25)
     data += encodeAsCodePoint(80)
     data += encodeAsCodePoint(this.theme)
-    data += encodeAsCodePoint(this.defaultFG & 0xFFFF)
-    data += encodeAsCodePoint(this.defaultFG >> 16)
-    data += encodeAsCodePoint(this.defaultBG & 0xFFFF)
-    data += encodeAsCodePoint(this.defaultBG >> 16)
+    data += this.encodeColor(this.defaultFG)
+    data += this.encodeColor(this.defaultBG)
     let attributes = +this.cursor.visible
     attributes |= (3 << 5) * +this.trackMouse // track mouse controls both
     attributes |= 3 << 7 // buttons/links always visible
@@ -290,7 +288,7 @@ class ScrollingTerminal {
   getButtons () {
     let data = 'B'
     data += encodeAsCodePoint(this.buttonLabels.length)
-    data += this.buttonLabels.map(x => x + '\x01').join('')
+    data += this.buttonLabels.map(x => `\x01${x}\x01`).join('')
     return data
   }
   getTitle () {
