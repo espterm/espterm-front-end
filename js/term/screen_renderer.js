@@ -60,6 +60,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.screenBG = []
     this.screenAttrs = []
     this.screenSelection = []
+    this.screenLines = []
     this.cursor = {}
     this.reverseVideo = false
     this.hasBlinkingCells = false
@@ -96,6 +97,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     this.drawnScreenFG = []
     this.drawnScreenBG = []
     this.drawnScreenAttrs = []
+    this.drawnScreenLines = []
     this.drawnCursor = [-1, -1, '', false]
   }
 
@@ -209,6 +211,9 @@ module.exports = class CanvasRenderer extends EventEmitter {
   drawBackground ({ x, y, cellWidth, cellHeight, bg, isDefaultBG }) {
     const { ctx, width, height, padding } = this
 
+    // is a double-width/double-height line
+    if (this.screenLines[y]) cellWidth *= 2
+
     ctx.fillStyle = this.getColor(bg)
     let screenX = x * cellWidth + padding
     let screenY = y * cellHeight + padding
@@ -275,6 +280,34 @@ module.exports = class CanvasRenderer extends EventEmitter {
 
     let screenX = x * cellWidth + padding
     let screenY = y * cellHeight + padding
+
+    if (this.screenLines[y]) {
+      // is a double-width/double-height line
+      cellWidth *= 2
+      ctx.save()
+      ctx.translate(screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
+      ctx.scale(2, 1)
+      if (this.screenLines[y] & 0b10) {
+        // top half
+        ctx.scale(1, 2)
+        ctx.translate(0, cellHeight / 4)
+
+      } else if (this.screenLines[y] & 0b100) {
+        // bottom half
+        ctx.scale(1, 2)
+        ctx.translate(0, -cellHeight / 4)
+      }
+      ctx.translate((-screenX - 1.5 * cellWidth) / 2, -screenY - 0.5 * cellHeight)
+
+      if (this.screenLines[y] & 0b110) {
+        // characters overflow -- needs clipping
+        // TODO: clipping is really expensive
+        ctx.beginPath()
+        if (this.screenLines[y] & 0b10) ctx.rect(screenX, screenY, cellWidth, cellHeight / 2)
+        else ctx.rect(screenX, screenY + cellHeight / 2, cellWidth, cellHeight / 2)
+        ctx.clip()
+      }
+    }
 
     let codePoint = text.codePointAt(0)
     if (codePoint >= 0x2580 && codePoint <= 0x259F) {
@@ -450,6 +483,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
       ctx.stroke()
     }
 
+    if (this.screenLines[y]) ctx.restore()
+
     ctx.globalAlpha = 1
   }
 
@@ -558,6 +593,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
         fg !== this.drawnScreenFG[cell] || // foreground updated, and this cell has text
         bg !== this.drawnScreenBG[cell] || // background updated
         attrs !== this.drawnScreenAttrs[cell] || // attributes updated
+        this.screenLines[y] !== this.drawnScreenLines[y] || // line updated
         // TODO: fix artifacts or keep this hack:
         isCursor || wasCursor || // cursor blink/position updated
         (isCursor && this.cursor.style !== this.drawnCursor[2]) || // cursor style updated
@@ -569,6 +605,9 @@ module.exports = class CanvasRenderer extends EventEmitter {
       fontGroups.get(font).push({ cell, x, y, text, fg, bg, attrs, isCursor, inSelection, isDefaultBG })
       updateMap.set(cell, didUpdate)
     }
+
+    // set drawn screen lines
+    this.drawnScreenLines = this.screenLines.slice()
 
     let debugFilledUpdates = []
 
@@ -679,8 +718,6 @@ module.exports = class CanvasRenderer extends EventEmitter {
         }
         i++
       }
-
-      console.log(regions)
 
       ctx.save()
       ctx.beginPath()
