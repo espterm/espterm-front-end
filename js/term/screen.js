@@ -90,6 +90,7 @@ module.exports = class TermScreen extends EventEmitter {
     this.screenFG = []
     this.screenBG = []
     this.screenAttrs = []
+    this.screenLines = []
 
     let selecting = false
 
@@ -266,6 +267,7 @@ module.exports = class TermScreen extends EventEmitter {
     this.screen.screenFG = new Array(width * height).fill(0)
     this.screen.screenBG = new Array(width * height).fill(0)
     this.screen.screenAttrs = new Array(width * height).fill(0)
+    this.screen.screenLines = new Array(height).fill(0)
   }
 
   updateLayout () {
@@ -288,6 +290,7 @@ module.exports = class TermScreen extends EventEmitter {
       screenBG: this.screenBG,
       screenSelection: selection,
       screenAttrs: this.screenAttrs,
+      screenLines: this.screenLines,
       cursor: this.cursor,
       statusScreen: this.window.statusScreen,
       reverseVideo: this.reverseVideo,
