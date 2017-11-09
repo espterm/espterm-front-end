@@ -203,6 +203,11 @@ module.exports = function attachDebugger (screen, connection) {
           ctx.fillStyle = '#0ff'
         }
 
+        if (flags & 16) {
+          // was filled to speed up rendering
+          ctx.globalAlpha /= 2
+        }
+
         ctx.fillRect(x * cellSize.width, y * cellSize.height, cellSize.width, cellSize.height)
 
         if (flags & 8) {

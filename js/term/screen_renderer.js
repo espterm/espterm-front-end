@@ -570,6 +570,25 @@ module.exports = class CanvasRenderer extends EventEmitter {
       updateMap.set(cell, didUpdate)
     }
 
+    let debugFilledUpdates = []
+
+    if (this.graphics >= 1) {
+      // fancy graphics gets really slow when there's a lot of masks
+      // so here's an algorithm that fills in holes in the update map
+
+      for (let cell of updateMap.keys()) {
+        if (updateMap.get(cell)) continue
+        let previous = updateMap.get(cell - 1) || false
+        let next = updateMap.get(cell + 1) || false
+
+        if (previous && next) {
+          // set cell to true of horizontally adjacent updated
+          updateMap.set(cell, true)
+          if (this.debug && this._debug) debugFilledUpdates.push(cell)
+        }
+      }
+    }
+
     // Map of (cell index) -> boolean, whether or not a cell should be redrawn
     const redrawMap = new Map()
     const maskedCells = new Map()
@@ -621,11 +640,56 @@ module.exports = class CanvasRenderer extends EventEmitter {
       // TODO: include padding in border cells
       const padding = this.padding
 
-      let clipRegion = (regionStart, y, endX) => {
+      let regions = []
+
+      for (let y = 0; y < height; y++) {
+        let regionStart = null
+        for (let x = 0; x < width; x++) {
+          let cell = y * width + x
+          let masked = maskedCells.get(cell)
+          if (masked && regionStart === null) regionStart = x
+          if (!masked && regionStart !== null) {
+            regions.push([regionStart, y, x, y + 1])
+            regionStart = null
+          }
+        }
+        if (regionStart !== null) {
+          regions.push([regionStart, y, width, y + 1])
+        }
+      }
+
+      // join regions if possible (O(n^2-1), sorry)
+      let i = 0
+      while (i < regions.length) {
+        let region = regions[i]
+        let j = 0
+        while (j < regions.length) {
+          let other = regions[j]
+          if (other === region) {
+            j++
+            continue
+          }
+          if (other[0] === region[0] && other[2] === region[2] && other[3] === region[1]) {
+            region[1] = other[1]
+            regions.splice(j, 1)
+            if (i > j) i--
+            j--
+          }
+          j++
+        }
+        i++
+      }
+
+      console.log(regions)
+
+      ctx.save()
+      ctx.beginPath()
+      for (let region of regions) {
+        let [regionStart, y, endX, endY] = region
         let rectX = padding + regionStart * cellWidth
         let rectY = padding + y * cellHeight
         let rectWidth = (endX - regionStart) * cellWidth
-        let rectHeight = cellHeight
+        let rectHeight = (endY - y) * cellHeight
 
         // compensate for padding
         if (regionStart === 0) {
@@ -640,24 +704,6 @@ module.exports = class CanvasRenderer extends EventEmitter {
         if (y === height - 1) rectHeight += padding
 
         ctx.rect(rectX, rectY, rectWidth, rectHeight)
-      }
-
-      ctx.save()
-      ctx.beginPath()
-      for (let y = 0; y < height; y++) {
-        let regionStart = null
-        for (let x = 0; x < width; x++) {
-          let cell = y * width + x
-          let masked = maskedCells.get(cell)
-          if (masked && regionStart === null) regionStart = x
-          if (!masked && regionStart !== null) {
-            clipRegion(regionStart, y, x)
-            regionStart = null
-          }
-        }
-        if (regionStart !== null) {
-          clipRegion(regionStart, y, width)
-        }
       }
       ctx.clip()
     }
@@ -676,6 +722,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
             flags |= (+updateMap.get(cell)) << 1
             flags |= (+maskedCells.get(cell)) << 2
             flags |= (+isTextWide(text)) << 3
+            flags |= (+debugFilledUpdates.includes(cell)) << 4
             this._debug.setCell(cell, flags)
           }
         }
