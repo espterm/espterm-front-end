@@ -149,6 +149,11 @@ module.exports = class TermScreen extends EventEmitter {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
+
+      if (this.mouseMode.clicks) {
+        this.emit('mousedown', ...this.layout.screenToGrid(...touchPosition), 1)
+        e.preventDefault()
+      }
     })
 
     this.layout.on('touchmove', e => {
@@ -161,6 +166,9 @@ module.exports = class TermScreen extends EventEmitter {
       } else if (selecting) {
         e.preventDefault()
         selectMove(...touchPosition)
+      } else if (this.mouseMode.movement && !selecting) {
+        this.emit('mousemove', ...this.layout.screenToGrid(...touchPosition))
+        e.preventDefault()
       }
 
       touchDidMove = true
@@ -183,6 +191,9 @@ module.exports = class TermScreen extends EventEmitter {
         )
 
         this.emit('show-touch-select-menu', selectionPos[0], selectionPos[1])
+      } else if (this.mouseMode.clicks) {
+        this.emit('mouseup', ...this.layout.screenToGrid(...touchPosition), 1)
+        e.preventDefault()
       }
 
       if (!touchDidMove && !this.mouseMode.clicks) {
@@ -190,7 +201,7 @@ module.exports = class TermScreen extends EventEmitter {
           x: touchPosition[0],
           y: touchPosition[1]
         }))
-      }
+      } else if (!touchDidMove) this.resetSelection()
 
       touchPosition = null
     })
@@ -199,10 +210,7 @@ module.exports = class TermScreen extends EventEmitter {
       if (this.selection.start[0] !== this.selection.end[0] ||
         this.selection.start[1] !== this.selection.end[1]) {
         // selection is not empty
-        // reset selection
-        this.selection.start = this.selection.end = [0, 0]
-        this.emit('hide-touch-select-menu')
-        this.renderScreen('select-reset')
+        this.resetSelection()
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
@@ -285,6 +293,12 @@ module.exports = class TermScreen extends EventEmitter {
       reverseVideo: this.reverseVideo,
       hasBlinkingCells: !!this.blinkingCellCount
     })
+  }
+
+  resetSelection () {
+    this.selection.start = this.selection.end = [0, 0]
+    this.emit('hide-touch-select-menu')
+    this.renderScreen('select-reset')
   }
 
   /**
