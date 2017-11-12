@@ -93,11 +93,11 @@ module.exports = class TermScreen extends EventEmitter {
     this.screenLines = []
 
     // For testing TODO remove
-    this.screenLines[0] = 0b001
-    this.screenLines[1] = 0b010
-    this.screenLines[2] = 0b100
-    this.screenLines[3] = 0b011
-    this.screenLines[4] = 0b101
+    //   this.screenLines[0] = 0b001
+    //   this.screenLines[1] = 0b010
+    //   this.screenLines[2] = 0b100
+    //   this.screenLines[3] = 0b011
+    //   this.screenLines[4] = 0b101
 
     let selecting = false
 
@@ -498,6 +498,11 @@ module.exports = class TermScreen extends EventEmitter {
           this.showLinks = update.showConfigLinks
           this.showButtons = update.showButtons
           this.emit('opts-update')
+          break
+
+        case 'double-lines':
+          this.screenLines = update.lines
+          this.renderScreen('double-lines')
           break
 
         case 'static-opts':
