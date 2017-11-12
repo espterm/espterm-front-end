@@ -27,15 +27,17 @@ function du (str) {
 }
 
 /* eslint-disable no-multi-spaces */
-const TOPIC_SCREEN_OPTS  = 'O'
-const TOPIC_STATIC_OPTS  = 'P'
-const TOPIC_CONTENT      = 'S'
-const TOPIC_TITLE        = 'T'
-const TOPIC_BUTTONS      = 'B'
-const TOPIC_CURSOR       = 'C'
-const TOPIC_INTERNAL     = 'D'
-const TOPIC_BELL         = '!'
-const TOPIC_BACKDROP     = 'W'
+//                                mnemonic
+const TOPIC_SCREEN_OPTS  = 'O' // O-ptions
+const TOPIC_STATIC_OPTS  = 'P' // P-arams
+const TOPIC_CONTENT      = 'S' // S-creen
+const TOPIC_TITLE        = 'T' // T-itle
+const TOPIC_BUTTONS      = 'B' // B-uttons
+const TOPIC_CURSOR       = 'C' // C-ursor
+const TOPIC_INTERNAL     = 'D' // D-ebug
+const TOPIC_BELL         = '!' // !!!
+const TOPIC_BACKDROP     = 'W' // W-allpaper
+const TOPIC_DOUBLE_LINES = 'H' // H-uge
 
 const OPT_CURSOR_VISIBLE   = (1 << 0)
 const OPT_DEBUGBAR         = (1 << 1)
@@ -187,6 +189,16 @@ module.exports = class ScreenParser {
           fontStack,
           fontSize
         })
+
+      } else if (topic === TOPIC_DOUBLE_LINES) {
+        let lines = []
+        const count = du(strArray[ci++])
+        for (let i = 0; i < count; i++) {
+          // format: INDEX<<3 | (dbl-h-bot : dbl-h-top : dbl-w)
+          let n = du(strArray[ci++])
+          lines[n >> 3] = n & 0b111
+        }
+        updates.push({ topic: 'double-lines', lines: lines })
 
       } else if (topic === TOPIC_TITLE) {
         updates.push({ topic: 'title', title: collectOneTerminatedString() })

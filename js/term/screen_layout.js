@@ -135,8 +135,9 @@ module.exports = class ScreenLayout extends EventEmitter {
 
     x = x / this._windowScale - this._padding
     y = y / this._windowScale - this._padding
-    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
     y = Math.floor(y / cellSize.height)
+    if (this.renderer.drawnScreenLines[y]) x /= 2 // double size
+    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
     x = Math.max(0, Math.min(this.window.width - 1, x))
     y = Math.max(0, Math.min(this.window.height - 1, y))
 
@@ -152,6 +153,8 @@ module.exports = class ScreenLayout extends EventEmitter {
    */
   gridToScreen (x, y, withScale = false) {
     let cellSize = this.getCellSize()
+
+    if (this.renderer.drawnScreenLines[y]) x *= 2 // double size
 
     return [x * cellSize.width, y * cellSize.height].map(v => this._padding + (withScale ? v * this._windowScale : v))
   }

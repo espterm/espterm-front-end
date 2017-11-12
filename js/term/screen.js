@@ -90,6 +90,14 @@ module.exports = class TermScreen extends EventEmitter {
     this.screenFG = []
     this.screenBG = []
     this.screenAttrs = []
+    this.screenLines = []
+
+    // For testing TODO remove
+    //   this.screenLines[0] = 0b001
+    //   this.screenLines[1] = 0b010
+    //   this.screenLines[2] = 0b100
+    //   this.screenLines[3] = 0b011
+    //   this.screenLines[4] = 0b101
 
     let selecting = false
 
@@ -266,6 +274,7 @@ module.exports = class TermScreen extends EventEmitter {
     this.screen.screenFG = new Array(width * height).fill(0)
     this.screen.screenBG = new Array(width * height).fill(0)
     this.screen.screenAttrs = new Array(width * height).fill(0)
+    this.screen.screenLines = new Array(height).fill(0)
   }
 
   updateLayout () {
@@ -288,6 +297,7 @@ module.exports = class TermScreen extends EventEmitter {
       screenBG: this.screenBG,
       screenSelection: selection,
       screenAttrs: this.screenAttrs,
+      screenLines: this.screenLines,
       cursor: this.cursor,
       statusScreen: this.window.statusScreen,
       reverseVideo: this.reverseVideo,
@@ -488,6 +498,11 @@ module.exports = class TermScreen extends EventEmitter {
           this.showLinks = update.showConfigLinks
           this.showButtons = update.showButtons
           this.emit('opts-update')
+          break
+
+        case 'double-lines':
+          this.screenLines = update.lines
+          this.renderScreen('double-lines')
           break
 
         case 'static-opts':
