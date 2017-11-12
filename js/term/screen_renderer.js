@@ -296,13 +296,12 @@ module.exports = class CanvasRenderer extends EventEmitter {
         // top half
         ctx.scale(1, 2)
         ctx.translate(0, cellHeight / 4)
-
       } else if (dblHeightBot) {
         // bottom half
         ctx.scale(1, 2)
         ctx.translate(0, -cellHeight / 4)
       }
-      ctx.translate((-screenX - 1.5 * cellWidth) / 2, -screenY - 0.5 * cellHeight)
+      ctx.translate((-screenX - (dblWidth ? 1.5 : 0.5) * cellWidth) / (dblWidth ? 2 : 1), -screenY - 0.5 * cellHeight)
 
       if (dblHeightBot || dblHeightTop) {
         // characters overflow -- needs clipping
@@ -657,7 +656,10 @@ module.exports = class CanvasRenderer extends EventEmitter {
           // update this cell if:
           // - the adjacent cell updated (For now, this'll always be true because characters can be slightly larger than they say they are)
           // - the adjacent cell updated and this cell or the adjacent cell is wide
-          if (updateMap.get(adjacentCell) && (this.graphics < 2 || isWideCell || isTextWide(this.screen[adjacentCell]))) {
+          // - this or the adjacent cell is not double-sized
+          if (updateMap.get(adjacentCell) &&
+              (this.graphics < 2 || isWideCell || isTextWide(this.screen[adjacentCell])) &&
+              (!this.screenLines[Math.floor(cell / this.width)] && !this.screenLines[Math.floor(adjacentCell / this.width)])) {
             adjacentDidUpdate = true
 
             if (this.getAdjacentCells(cell, 1).includes(adjacentCell)) {
@@ -813,7 +815,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
             }
 
             // double-width lines
-            if (this.screenLines[cursorY]) cursorWidth *= 2
+            if (this.screenLines[cursorY] & 0b001) cursorWidth *= 2
 
             let screenX = cursorX * cursorWidth + this.padding
             let screenY = cursorY * cellHeight + this.padding
