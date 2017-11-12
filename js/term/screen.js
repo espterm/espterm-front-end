@@ -92,6 +92,13 @@ module.exports = class TermScreen extends EventEmitter {
     this.screenAttrs = []
     this.screenLines = []
 
+    // For testing TODO remove
+    this.screenLines[0] = 0b001
+    this.screenLines[1] = 0b010
+    this.screenLines[2] = 0b100
+    this.screenLines[3] = 0b011
+    this.screenLines[4] = 0b101
+
     let selecting = false
 
     let selectStart = (x, y) => {

@@ -212,7 +212,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
     const { ctx, width, height, padding } = this
 
     // is a double-width/double-height line
-    if (this.screenLines[y]) cellWidth *= 2
+    if (this.screenLines[y] & 0b001) cellWidth *= 2
 
     ctx.fillStyle = this.getColor(bg)
     let screenX = x * cellWidth + padding
@@ -281,29 +281,34 @@ module.exports = class CanvasRenderer extends EventEmitter {
     let screenX = x * cellWidth + padding
     let screenY = y * cellHeight + padding
 
+    const dblWidth = this.screenLines[y] & 0b001
+    const dblHeightTop = this.screenLines[y] & 0b010
+    const dblHeightBot = this.screenLines[y] & 0b100
+
     if (this.screenLines[y]) {
       // is a double-width/double-height line
-      cellWidth *= 2
+      if (dblWidth) cellWidth *= 2
+
       ctx.save()
       ctx.translate(screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
-      ctx.scale(2, 1)
-      if (this.screenLines[y] & 0b10) {
+      if (dblWidth) ctx.scale(2, 1)
+      if (dblHeightTop) {
         // top half
         ctx.scale(1, 2)
         ctx.translate(0, cellHeight / 4)
 
-      } else if (this.screenLines[y] & 0b100) {
+      } else if (dblHeightBot) {
         // bottom half
         ctx.scale(1, 2)
         ctx.translate(0, -cellHeight / 4)
       }
       ctx.translate((-screenX - 1.5 * cellWidth) / 2, -screenY - 0.5 * cellHeight)
 
-      if (this.screenLines[y] & 0b110) {
+      if (dblHeightBot || dblHeightTop) {
         // characters overflow -- needs clipping
         // TODO: clipping is really expensive
         ctx.beginPath()
-        if (this.screenLines[y] & 0b10) ctx.rect(screenX, screenY, cellWidth, cellHeight / 2)
+        if (dblHeightTop) ctx.rect(screenX, screenY, cellWidth, cellHeight / 2)
         else ctx.rect(screenX, screenY + cellHeight / 2, cellWidth, cellHeight / 2)
         ctx.clip()
       }
