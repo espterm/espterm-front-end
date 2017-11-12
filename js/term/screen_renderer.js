@@ -290,7 +290,7 @@ module.exports = class CanvasRenderer extends EventEmitter {
       if (dblWidth) cellWidth *= 2
 
       ctx.save()
-      ctx.translate(screenX + 0.5 * cellWidth, screenY + 0.5 * cellHeight)
+      ctx.translate(padding, screenY + 0.5 * cellHeight)
       if (dblWidth) ctx.scale(2, 1)
       if (dblHeightTop) {
         // top half
@@ -301,7 +301,8 @@ module.exports = class CanvasRenderer extends EventEmitter {
         ctx.scale(1, 2)
         ctx.translate(0, -cellHeight / 4)
       }
-      ctx.translate((-screenX - (dblWidth ? 1.5 : 0.5) * cellWidth) / (dblWidth ? 2 : 1), -screenY - 0.5 * cellHeight)
+      ctx.translate(-padding, -screenY - 0.5 * cellHeight)
+      if (dblWidth) ctx.translate(-cellWidth / 4, 0)
 
       if (dblHeightBot || dblHeightTop) {
         // characters overflow -- needs clipping
