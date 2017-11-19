@@ -9,9 +9,7 @@ function selectedTheme () {
 
 exports.init = function () {
   $('#theme').on('change', showColor)
-
-  $('#default_fg').on('input', showColor)
-  $('#default_bg').on('input', showColor)
+  $('#default_fg,#default_bg').on('input', showColor)
 
   let opts = {
     padding: 10,
@@ -27,6 +25,9 @@ exports.init = function () {
 
   ColorTriangle.initInput(qs('#default_fg'), opts)
   ColorTriangle.initInput(qs('#default_bg'), opts)
+  for (let i = 1; i <= 5; i++) {
+    ColorTriangle.initInput(qs(`#bc${i}`), opts)
+  }
 
   $('.colorprev.bg span').on('click', function () {
     const bg = this.dataset.bg

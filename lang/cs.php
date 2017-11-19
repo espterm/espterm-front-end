@@ -81,6 +81,10 @@ return [
 	'term.debugbar' => 'Rozšířené ladění',
 	'term.ascii_debug' => 'Ladění vstupních dat',
 	'term.backdrop' => 'URL obrázku na pozadí',
+	'term.button_count' => 'Počet tlačítek',
+	'term.button_colors' => 'Barvy tlačítek',
+	'term.font_stack' => 'Font',
+	'term.font_size' => 'Velikost písma',
 
 	'cursor.block_blink' => 'Blok, blikající',
     'cursor.block_steady' => 'Blok, stálý',

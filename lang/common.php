@@ -16,4 +16,6 @@ return [
 	'menu.restore_hard' => '',
 	'menu.reset_screen' => '',
 	'menu.index' => '',
+	'menu.ini_export' => '',
+	'menu.ini_import' => '',
 ];

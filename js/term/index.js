@@ -1,3 +1,4 @@
+const $ = require('../lib/chibi')
 const { qs, mk } = require('../utils')
 const localize = require('../lang')
 const Notify = require('../notif')
@@ -6,7 +7,7 @@ const TermConnection = require('./connection')
 const TermInput = require('./input')
 const TermUpload = require('./upload')
 const initSoftKeyboard = require('./soft_keyboard')
-const attachDebugScreen = require('./debug_screen')
+const attachDebugger = require('./debug')
 const initButtons = require('./buttons')
 
 /** Init the terminal sub-module - called from HTML */
@@ -15,16 +16,78 @@ module.exports = function (opts) {
   const conn = new TermConnection(screen)
   const input = TermInput(conn, screen)
   const termUpload = TermUpload(conn, input, screen)
-  screen.input = input
-  screen.conn = conn
   input.termUpload = termUpload
 
-  const buttons = initButtons(input)
-  screen.on('button-labels', labels => {
-    // TODO: don't use pointers for this
-    buttons.labels.splice(0, buttons.labels.length, ...labels)
-    buttons.update()
+  // forward screen input events
+  screen.on('mousedown', (...args) => input.onMouseDown(...args))
+  screen.on('mousemove', (...args) => input.onMouseMove(...args))
+  screen.on('mouseup', (...args) => input.onMouseUp(...args))
+  screen.on('mousewheel', (...args) => input.onMouseWheel(...args))
+  screen.on('input-alts', (...args) => input.setAlts(...args))
+  screen.on('mouse-mode', (...args) => input.setMouseMode(...args))
+
+  // touch selection menu (the Copy button)
+  $.ready(() => {
+    const touchSelectMenu = qs('#touch-select-menu')
+    screen.on('show-touch-select-menu', (x, y) => {
+      let rect = touchSelectMenu.getBoundingClientRect()
+      x -= rect.width / 2
+      y -= rect.height / 2
+
+      touchSelectMenu.classList.add('open')
+      touchSelectMenu.style.transform = `translate(${x}px,${y}px)`
+    })
+    screen.on('hide-touch-select-menu', () => touchSelectMenu.classList.remove('open'))
+
+    const copyButton = qs('#touch-select-copy-btn')
+    if (copyButton) {
+      copyButton.addEventListener('click', () => {
+        screen.copySelectionToClipboard()
+      })
+    }
   })
+
+  // buttons
+  const buttons = initButtons(input)
+  screen.on('buttons-update', update => {
+    buttons.labels = update.labels
+    buttons.colors = update.colors
+  })
+  // TODO: don't access the renderer here
+  buttons.palette = screen.layout.renderer.palette
+  screen.layout.renderer.on('palette-update', palette => {
+    buttons.palette = palette
+  })
+
+  screen.on('full-load', () => {
+    let scr = qs('#screen')
+    let errmsg = qs('#load-failed')
+    if (scr) scr.classList.remove('failed')
+    if (errmsg) errmsg.parentNode.removeChild(errmsg)
+  })
+
+  let setLinkVisibility = visible => {
+    let buttons = [...document.querySelectorAll('.x-term-conf-btn')]
+    if (visible) buttons.forEach(x => x.classList.remove('hidden'))
+    else buttons.forEach(x => x.classList.add('hidden'))
+  }
+  let setButtonVisibility = visible => {
+    if (visible) qs('#action-buttons').classList.remove('hidden')
+    else qs('#action-buttons').classList.add('hidden')
+  }
+
+  screen.on('opts-update', () => {
+    setLinkVisibility(screen.showLinks)
+    setButtonVisibility(screen.showButtons)
+  })
+
+  screen.on('title-update', text => {
+    qs('#screen-title').textContent = text
+    if (!text) text = 'Terminal'
+    qs('title').textContent = `${text} :: ESPTerm`
+  })
+
+  // connection status
 
   let showSplashTimeout = null
   let showSplash = (obj, delay = 250) => {
@@ -42,7 +105,7 @@ module.exports = function (opts) {
     // console.log('*connect')
     showSplash({ title: localize('term_conn.waiting_content'), loading: true })
   })
-  conn.on('load', () => {
+  screen.on('load', () => {
     // console.log('*load')
     clearTimeout(showSplashTimeout)
     if (screen.window.statusScreen) screen.window.statusScreen = null
@@ -75,37 +138,39 @@ module.exports = function (opts) {
     return false
   }
 
-  qs('#screen').appendChild(screen.canvas)
+  qs('#screen').appendChild(screen.layout.canvas)
 
   initSoftKeyboard(screen, input)
-  if (attachDebugScreen) attachDebugScreen(screen)
+  if (attachDebugger) attachDebugger(screen, conn)
+
+  // fullscreen mode
 
   let fullscreenIcon = {} // dummy
   let isFullscreen = false
   let properFullscreen = false
   let fitScreen = false
-  let screenPadding = screen.window.padding
+  let screenPadding = screen.layout.window.padding
   let fitScreenIfNeeded = function fitScreenIfNeeded () {
     if (isFullscreen) {
       fullscreenIcon.className = 'icn-resize-small'
       if (properFullscreen) {
-        screen.window.fitIntoWidth = window.screen.width
-        screen.window.fitIntoHeight = window.screen.height
-        screen.window.padding = 0
+        screen.layout.window.fitIntoWidth = window.screen.width
+        screen.layout.window.fitIntoHeight = window.screen.height
+        screen.layout.window.padding = 0
       } else {
-        screen.window.fitIntoWidth = window.innerWidth
+        screen.layout.window.fitIntoWidth = window.innerWidth
         if (qs('#term-nav').classList.contains('hidden')) {
-          screen.window.fitIntoHeight = window.innerHeight
+          screen.layout.window.fitIntoHeight = window.innerHeight
         } else {
-          screen.window.fitIntoHeight = window.innerHeight - 24
+          screen.layout.window.fitIntoHeight = window.innerHeight - 24
         }
-        screen.window.padding = 0
+        screen.layout.window.padding = 0
       }
     } else {
       fullscreenIcon.className = 'icn-resize-full'
-      screen.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
-      screen.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
-      screen.window.padding = screenPadding
+      screen.layout.window.fitIntoWidth = fitScreen ? window.innerWidth - 4 : 0
+      screen.layout.window.fitIntoHeight = fitScreen ? window.innerHeight : 0
+      screen.layout.window.padding = screenPadding
     }
   }
   fitScreenIfNeeded()
@@ -159,11 +224,11 @@ module.exports = function (opts) {
 
     isFullscreen = true
     fitScreenIfNeeded()
-    screen.updateSize()
+    screen.layout.updateSize()
 
     if (properFullscreen) {
-      if (screen.canvas.requestFullscreen) screen.canvas.requestFullscreen()
-      else screen.canvas.webkitRequestFullscreen()
+      if (screen.layout.canvas.requestFullscreen) screen.layout.canvas.requestFullscreen()
+      else screen.layout.canvas.webkitRequestFullscreen()
     } else {
       document.body.classList.add('pseudo-fullscreen')
     }
@@ -178,6 +243,7 @@ module.exports = function (opts) {
 
   // for debugging
   window.termScreen = screen
+  window.buttons = buttons
   window.conn = conn
   window.input = input
   window.termUpl = termUpload

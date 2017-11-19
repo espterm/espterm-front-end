@@ -1,6 +1,3 @@
-const $ = require('../lib/chibi')
-const { qs } = require('../utils')
-
 const {
   ATTR_FG,
   ATTR_BG,
@@ -21,21 +18,26 @@ const SEQ_SET_FG = 5
 const SEQ_SET_BG = 6
 const SEQ_SET_ATTR_0 = 7
 
+// decode a number encoded as a unicode code point
 function du (str) {
+  if (!str) return NaN
   let num = str.codePointAt(0)
   if (num > 0xDFFF) num -= 0x800
   return num - 1
 }
 
 /* eslint-disable no-multi-spaces */
-const TOPIC_SCREEN_OPTS  = 'O'
-const TOPIC_CONTENT      = 'S'
-const TOPIC_TITLE        = 'T'
-const TOPIC_BUTTONS      = 'B'
-const TOPIC_CURSOR       = 'C'
-const TOPIC_INTERNAL     = 'D'
-const TOPIC_BELL         = '!'
-const TOPIC_BACKDROP     = 'W'
+//                                mnemonic
+const TOPIC_SCREEN_OPTS  = 'O' // O-ptions
+const TOPIC_STATIC_OPTS  = 'P' // P-arams
+const TOPIC_CONTENT      = 'S' // S-creen
+const TOPIC_TITLE        = 'T' // T-itle
+const TOPIC_BUTTONS      = 'B' // B-uttons
+const TOPIC_CURSOR       = 'C' // C-ursor
+const TOPIC_INTERNAL     = 'D' // D-ebug
+const TOPIC_BELL         = '!' // !!!
+const TOPIC_BACKDROP     = 'W' // W-allpaper
+const TOPIC_DOUBLE_LINES = 'H' // H-uge
 
 const OPT_CURSOR_VISIBLE   = (1 << 0)
 const OPT_DEBUGBAR         = (1 << 1)
@@ -53,37 +55,24 @@ const OPT_REVERSE_VIDEO    = (1 << 14)
 
 /* eslint-enable no-multi-spaces */
 
+/**
+ * A parser for screen update messages
+ */
 module.exports = class ScreenParser {
-  constructor (screen) {
-    this.screen = screen
-
-    // true if TermScreen#load was called at least once
+  constructor () {
+    // true if full content was loaded
     this.contentLoaded = false
   }
 
-  /**
-   * Hide the warning message about failed data load
-   */
-  hideLoadFailedMsg () {
-    if (!this.contentLoaded) {
-      let scr = qs('#screen')
-      let errmsg = qs('#load-failed')
-      if (scr) scr.classList.remove('failed')
-      if (errmsg) errmsg.parentNode.removeChild(errmsg)
-      this.contentLoaded = true
-    }
-  }
-
-  loadUpdate (str) {
+  parseUpdate (str) {
     // console.log(`update ${str}`)
+
     // current index
     let ci = 0
     let strArray = Array.from ? Array.from(str) : str.split('')
 
     let text
-    let resized = false
     const topics = du(strArray[ci++])
-    // this.screen.cursor.hanging = !!(attributes & (1 << 1))
 
     let collectOneTerminatedString = () => {
       // TODO optimize this
@@ -99,35 +88,40 @@ module.exports = class ScreenParser {
       return text
     }
 
+    let collectColor = () => {
+      let c = du(strArray[ci++])
+      if (c & 0x10000) { // support for trueColor
+        c &= 0xFFF
+        c |= (du(strArray[ci++]) & 0xFFF) << 12
+        c += 256
+      }
+      return c
+    }
+
+    const updates = []
+
     while (ci < strArray.length) {
       const topic = strArray[ci++]
 
       if (topic === TOPIC_SCREEN_OPTS) {
-        const newHeight = du(strArray[ci++])
-        const newWidth = du(strArray[ci++])
+        const height = du(strArray[ci++])
+        const width = du(strArray[ci++])
         const theme = du(strArray[ci++])
-        const defFg = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
-        const defBg = (du(strArray[ci++]) & 0xFFFF) | ((du(strArray[ci++]) & 0xFFFF) << 16)
-        const attributes = du(strArray[ci++])
-
-        // theming
-        this.screen.renderer.loadTheme(theme)
-        this.screen.renderer.setDefaultColors(defFg, defBg)
-
-        // apply size
-        resized = (this.screen.window.height !== newHeight) || (this.screen.window.width !== newWidth)
-        this.screen.window.height = newHeight
-        this.screen.window.width = newWidth
+        const defFG = collectColor()
+        const defBG = collectColor()
 
         // process attributes
-        this.screen.cursor.visible = !!(attributes & OPT_CURSOR_VISIBLE)
+        const attributes = du(strArray[ci++])
 
-        this.screen.input.setAlts(
+        const cursorVisible = !!(attributes & OPT_CURSOR_VISIBLE)
+
+        // HACK: input alts are formatted as arguments for Input#setAlts
+        const inputAlts = [
           !!(attributes & OPT_CURSORS_ALT_MODE),
           !!(attributes & OPT_NUMPAD_ALT_MODE),
           !!(attributes & OPT_FN_ALT_MODE),
           !!(attributes & OPT_CRLF_MODE)
-        )
+        ]
 
         const trackMouseClicks = !!(attributes & OPT_CLICK_TRACKING)
         const trackMouseMovement = !!(attributes & OPT_MOVE_TRACKING)
@@ -139,88 +133,100 @@ module.exports = class ScreenParser {
         // if it's not zero, decrement such that the two most significant bits
         // are the type and the least significant bit is the blink state
         if (cursorShape > 0) cursorShape--
-        const cursorStyle = cursorShape >> 1
+        let cursorStyle = cursorShape >> 1
         const cursorBlinking = !(cursorShape & 1)
-        if (cursorStyle === 0) this.screen.cursor.style = 'block'
-        else if (cursorStyle === 1) this.screen.cursor.style = 'line'
-        else if (cursorStyle === 2) this.screen.cursor.style = 'bar'
-        if (this.screen.cursor.blinking !== cursorBlinking) {
-          this.screen.cursor.blinking = cursorBlinking
-          this.screen.renderer.resetCursorBlink()
-        }
-
-        this.screen.input.setMouseMode(trackMouseClicks, trackMouseMovement)
-        this.screen.selection.selectable = !trackMouseClicks && !trackMouseMovement
-        $(this.screen.canvas).toggleClass('selectable', this.screen.selection.selectable)
-        this.screen.mouseMode = {
-          clicks: trackMouseClicks,
-          movement: trackMouseMovement
-        }
+        if (cursorStyle === 0) cursorStyle = 'block'
+        else if (cursorStyle === 1) cursorStyle = 'line'
+        else cursorStyle = 'bar'
 
         const showButtons = !!(attributes & OPT_SHOW_BUTTONS)
         const showConfigLinks = !!(attributes & OPT_SHOW_CONFIG_LINKS)
 
-        $('.x-term-conf-btn').toggleClass('hidden', !showConfigLinks)
-        $('#action-buttons').toggleClass('hidden', !showButtons)
+        const bracketedPaste = !!(attributes & OPT_BRACKETED_PASTE)
+        const reverseVideo = !!(attributes & OPT_REVERSE_VIDEO)
 
-        this.screen.bracketedPaste = !!(attributes & OPT_BRACKETED_PASTE)
-        this.screen.reverseVideo = !!(attributes & OPT_REVERSE_VIDEO)
+        const debugEnabled = !!(attributes & OPT_DEBUGBAR)
 
-        const debugbar = !!(attributes & OPT_DEBUGBAR)
-        // TODO do something with debugbar
+        updates.push({
+          topic: 'screen-opts',
+          width,
+          height,
+          theme,
+          defFG,
+          defBG,
+          cursorVisible,
+          cursorBlinking,
+          cursorStyle,
+          inputAlts,
+          trackMouseClicks,
+          trackMouseMovement,
+          showButtons,
+          showConfigLinks,
+          bracketedPaste,
+          reverseVideo,
+          debugEnabled
+        })
 
       } else if (topic === TOPIC_CURSOR) {
-
         // cursor position
-        const cursorY = du(strArray[ci++])
-        const cursorX = du(strArray[ci++])
-        const hanging = du(strArray[ci++])
+        const y = du(strArray[ci++])
+        const x = du(strArray[ci++])
+        const hanging = !!du(strArray[ci++])
 
-        const cursorMoved = (
-          hanging !== this.screen.cursor.hanging ||
-          cursorX !== this.screen.cursor.x ||
-          cursorY !== this.screen.cursor.y)
+        updates.push({
+          topic: 'cursor',
+          x,
+          y,
+          hanging
+        })
 
-        this.screen.cursor.x = cursorX
-        this.screen.cursor.y = cursorY
+      } else if (topic === TOPIC_STATIC_OPTS) {
+        const fontStack = collectOneTerminatedString()
+        const fontSize = du(strArray[ci++])
 
-        this.screen.cursor.hanging = !!hanging
+        updates.push({
+          topic: 'static-opts',
+          fontStack,
+          fontSize
+        })
 
-        if (cursorMoved) {
-          this.screen.renderer.resetCursorBlink()
-          this.screen.emit('cursor-moved')
+      } else if (topic === TOPIC_DOUBLE_LINES) {
+        let lines = []
+        const count = du(strArray[ci++])
+        for (let i = 0; i < count; i++) {
+          // format: INDEX<<3 | (dbl-h-bot : dbl-h-top : dbl-w)
+          let n = du(strArray[ci++])
+          lines[n >> 3] = n & 0b111
         }
+        updates.push({ topic: 'double-lines', lines: lines })
 
-        this.screen.renderer.scheduleDraw('cursor-moved')
       } else if (topic === TOPIC_TITLE) {
-
-        text = collectOneTerminatedString()
-        qs('#screen-title').textContent = text
-        if (text.length === 0) text = 'Terminal'
-        qs('title').textContent = `${text} :: ESPTerm`
+        updates.push({ topic: 'title', title: collectOneTerminatedString() })
 
       } else if (topic === TOPIC_BUTTONS) {
         const count = du(strArray[ci++])
 
         let labels = []
+        let colors = []
         for (let j = 0; j < count; j++) {
-          text = collectOneTerminatedString()
-          labels.push(text)
+          colors.push(collectColor())
+          labels.push(collectOneTerminatedString())
         }
 
-        this.screen.emit('button-labels', labels)
-      } else if (topic === TOPIC_BACKDROP) {
+        updates.push({
+          topic: 'buttons-update',
+          labels,
+          colors
+        })
 
-        text = collectOneTerminatedString()
-        this.screen.backgroundImage = text
+      } else if (topic === TOPIC_BACKDROP) {
+        updates.push({ topic: 'backdrop', image: collectOneTerminatedString() })
 
       } else if (topic === TOPIC_BELL) {
-
-        this.screen.beep()
+        updates.push({ topic: 'bell' })
 
       } else if (topic === TOPIC_INTERNAL) {
         // debug info
-
         const flags = du(strArray[ci++])
         const cursorAttrs = du(strArray[ci++])
         const regionStart = du(strArray[ci++])
@@ -228,10 +234,15 @@ module.exports = class ScreenParser {
         const charsetGx = du(strArray[ci++])
         const charsetG0 = strArray[ci++]
         const charsetG1 = strArray[ci++]
+
+        let cursorFg = collectColor()
+        let cursorBg = collectColor()
+
         const freeHeap = du(strArray[ci++])
         const clientCount = du(strArray[ci++])
 
-        this.screen.emit('internal', {
+        updates.push({
+          topic: 'internal',
           flags,
           cursorAttrs,
           regionStart,
@@ -239,20 +250,18 @@ module.exports = class ScreenParser {
           charsetGx,
           charsetG0,
           charsetG1,
+          cursorFg,
+          cursorBg,
           freeHeap,
           clientCount
         })
+
       } else if (topic === TOPIC_CONTENT) {
         // set screen content
-
         const frameY = du(strArray[ci++])
         const frameX = du(strArray[ci++])
         const frameHeight = du(strArray[ci++])
         const frameWidth = du(strArray[ci++])
-
-        if (this.screen._debug && this.screen.window.debug) {
-          this.screen._debug.pushFrame([frameX, frameY, frameWidth, frameHeight])
-        }
 
         // content
         let fg = 7
@@ -261,59 +270,39 @@ module.exports = class ScreenParser {
         let cell = 0 // cell index
         let lastChar = ' '
         let frameLength = frameWidth * frameHeight
-        let screenLength = this.screen.window.width * this.screen.window.height
-
-        if (resized) {
-          this.screen.updateSize()
-          this.screen.blinkingCellCount = 0
-          this.screen.screen = new Array(screenLength).fill(' ')
-          this.screen.screenFG = new Array(screenLength).fill(' ')
-          this.screen.screenBG = new Array(screenLength).fill(' ')
-          this.screen.screenAttrs = new Array(screenLength).fill(0)
-        }
 
         const MASK_LINE_ATTR = ATTR_UNDERLINE | ATTR_OVERLINE | ATTR_STRIKE
         const MASK_BLINK = ATTR_BLINK
 
+        const cells = []
+
         let pushCell = () => {
-          // Remove blink attribute if it wouldn't have any effect
-          let myAttrs = attrs
           let hasFG = attrs & ATTR_FG
           let hasBG = attrs & ATTR_BG
           let cellFG = fg
           let cellBG = bg
+          let cellAttrs = attrs
 
           // use 0,0 if no fg/bg. this is to match back-end implementation
           // and allow leaving out fg/bg setting for cells with none
           if (!hasFG) cellFG = 0
           if (!hasBG) cellBG = 0
 
-          if ((myAttrs & MASK_BLINK) !== 0 &&
-            ((lastChar === ' ' && ((myAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
+          // Remove blink attribute if it wouldn't have any effect
+          if ((cellAttrs & MASK_BLINK) &&
+            ((lastChar === ' ' && ((cellAttrs & MASK_LINE_ATTR) === 0)) || // no line styles
               (fg === bg && hasFG && hasBG) // invisible text
             )
           ) {
-            myAttrs ^= MASK_BLINK
+            cellAttrs ^= MASK_BLINK
           }
-          // update blinking cells counter if blink state changed
-          if ((this.screen.screenAttrs[cell] & MASK_BLINK) !== (myAttrs & MASK_BLINK)) {
-            if (myAttrs & MASK_BLINK) this.screen.blinkingCellCount++
-            else this.screen.blinkingCellCount--
-          }
-
-          let cellXInFrame = cell % frameWidth
-          let cellYInFrame = Math.floor(cell / frameWidth)
-          let index = (frameY + cellYInFrame) * this.screen.window.width + frameX + cellXInFrame
 
           // 8 dark system colors turn bright when bold
-          if ((myAttrs & ATTR_BOLD) && !(myAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
+          if ((cellAttrs & ATTR_BOLD) && !(cellAttrs & ATTR_FAINT) && hasFG && cellFG < 8) {
             cellFG += 8
           }
 
-          this.screen.screen[index] = lastChar
-          this.screen.screenFG[index] = cellFG
-          this.screen.screenBG[index] = cellBG
-          this.screen.screenAttrs[index] = myAttrs
+          cells.push([lastChar, cellFG, cellBG, cellAttrs])
         }
 
         while (ci < strArray.length && cell < frameLength) {
@@ -377,38 +366,51 @@ module.exports = class ScreenParser {
           }
         }
 
-        if (this.screen.window.debug) console.log(`Blinky cells: ${this.screen.blinkingCellCount}`)
-
-        this.screen.renderer.scheduleDraw('load', 16)
-        this.screen.conn.emit('load')
-
+        updates.push({
+          topic: 'content',
+          frameX,
+          frameY,
+          frameWidth,
+          frameHeight,
+          cells
+        })
       }
 
-      if ((topics & 0x3B) !== 0) this.hideLoadFailedMsg()
+      if (topics & 0x3B && !this.contentLoaded) {
+        updates.push({ topic: 'full-load-complete' })
+        this.contentLoaded = true
+      }
     }
+
+    return updates
   }
 
   /**
-   * Loads a message from the server, and optionally a theme.
-   * @param {string} str - the message
+   * Parses a message from the server
+   * @param {string} message - the message
    */
-  load (str) {
-    const content = str.substr(1)
+  parse (message) {
+    const content = message.substr(1)
+    const updates = []
 
     // This is a good place for debugging the message
-    // console.log(str)
+    // console.log(message)
 
-    switch (str[0]) {
+    switch (message[0]) {
       case 'U':
-        this.loadUpdate(content)
+        updates.push(...this.parseUpdate(content))
         break
 
       case 'G':
-        this.screen.showNotification(content)
-        break
+        return [{
+          topic: 'notification',
+          content
+        }]
 
       default:
-        console.warn(`Bad data message type; ignoring.\n${JSON.stringify(str)}`)
+        console.warn(`Bad data message type; ignoring.\n${JSON.stringify(message)}`)
     }
+
+    return updates
   }
 }

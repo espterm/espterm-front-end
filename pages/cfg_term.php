@@ -134,24 +134,29 @@
 
 	<div class="Row">
 		<div class="SubRow">
-			<label for="term_width"><?= tr('term.term_width') ?></label>
-			<input type="number" step=1 min=1 max=255 name="term_width" id="term_width" value="%term_width%" required>
+			<label for="width"><?= tr('term.term_width') ?></label>
+			<input type="number" step=1 min=1 max=255 name="width" id="width" value="%width%" required>
 		</div>
 		<div class="SubRow">
-			<label for="term_height"><?= tr('term.term_height') ?></label>
-			<input type="number" step=1 min=1 max=255 name="term_height" id="term_height" value="%term_height%" required>
+			<label for="height"><?= tr('term.term_height') ?></label>
+			<input type="number" step=1 min=1 max=255 name="height" id="height" value="%height%" required>
 		</div>
 	</div>
 
 	<div class="Row">
-		<label for="term_title"><?= tr('term.term_title') ?></label>
-		<input type="text" name="term_title" id="term_title" value="%h:term_title%" required>
+		<label for="title"><?= tr('term.term_title') ?></label>
+		<input type="text" name="title" id="title" value="%h:title%" required>
 	</div>
 
 	<div class="Row checkbox" >
 		<label><?= tr('term.show_buttons') ?></label><!--
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="show_buttons" name="show_buttons" value="%show_buttons%">
+	</div>
+
+	<div class="Row">
+		<label for="button_count"><?= tr('term.button_count') ?></label>
+		<input type="number" step=1 min=0 max=5 name="button_count" id="button_count" value="%h:button_count%" required>
 	</div>
 
 	<div class="Row">
@@ -170,6 +175,15 @@
 		<input class="tiny" type="text" name="bm3" id="bm3" value="%h:bm3%">
 		<input class="tiny" type="text" name="bm4" id="bm4" value="%h:bm4%">
 		<input class="tiny" type="text" name="bm5" id="bm5" value="%h:bm5%">
+	</div>
+
+	<div class="Row">
+		<label><?= tr("term.button_colors") ?></label>
+		<input class="tiny" type="text" name="bc1" id="bc1" value="%h:bc1%">
+		<input class="tiny" type="text" name="bc2" id="bc2" value="%h:bc2%">
+		<input class="tiny" type="text" name="bc3" id="bc3" value="%h:bc3%">
+		<input class="tiny" type="text" name="bc4" id="bc4" value="%h:bc4%">
+		<input class="tiny" type="text" name="bc5" id="bc5" value="%h:bc5%">
 	</div>
 
 	<div class="Row">
@@ -203,8 +217,8 @@
 	</div>
 
 	<div class="Row">
-		<label for="uart_baud"><?= tr('uart.baud') ?><span class="mq-phone">&nbsp;(bps)</span></label>
-		<select name="uart_baud" id="uart_baud" class="short">
+		<label for="uart_baudrate"><?= tr('uart.baud') ?><span class="mq-phone">&nbsp;(bps)</span></label>
+		<select name="uart_baudrate" id="uart_baudrate" class="short">
 			<?php
 			foreach([
 				300, 600, 1200, 2400, 4800, 9600, 19200, 38400,
@@ -255,6 +269,17 @@
 
 	<div class="Row explain">
 		<?= tr('term.explain_expert') ?>
+	</div>
+
+	<div class="Row">
+		<label for="font_stack"><?= tr('term.font_stack') ?></label>
+		<input type="text" name="font_stack" id="font_stack" value="%h:font_stack%" required>
+	</div>
+
+	<div class="Row">
+		<label for="font_size"><?= tr('term.font_size') ?><span class="mq-phone">&nbsp;(px)</span></label>
+		<input type="number" step=1 min=0 name="font_size" id="font_size" value="%font_size%" required>
+		<span class="mq-no-phone">&nbsp;px</span>
 	</div>
 
 	<div class="Row">
@@ -320,7 +345,7 @@
   $.ready(function () {
     $('#cursor_shape').val('%cursor_shape%');
     $('#theme').val('%theme%');
-    $('#uart_baud').val('%uart_baud%');
+    $('#uart_baudrate').val('%uart_baudrate%');
     $('#uart_parity').val('%uart_parity%');
     $('#uart_stopbits').val('%uart_stopbits%');
 

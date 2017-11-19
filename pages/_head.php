@@ -33,5 +33,6 @@ if (strpos($_GET['BODYCLASS'], 'cfg') !== false) {
 </div>
 
 <div class="Box message hidden"></div>
+<div class="Box errmessage hidden"></div>
 
 <?php endif; ?>

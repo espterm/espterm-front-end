@@ -10,7 +10,7 @@ let devtool = 'source-map'
 
 if (process.env.ESP_PROD) {
   // ignore demo
-  plugins.push(new webpack.IgnorePlugin(/\.\/demo(?:\.js)?$/))
+  plugins.push(new webpack.IgnorePlugin(/(term|\.)\/demo(?:\.js)?$/))
 
   // no source maps
   devtool = ''

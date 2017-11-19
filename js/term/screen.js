@@ -1,19 +1,19 @@
 const EventEmitter = require('events')
-const $ = require('../lib/chibi')
-const { mk, qs } = require('../utils')
+const { mk } = require('../utils')
 const notify = require('../notif')
 const ScreenParser = require('./screen_parser')
-const ScreenRenderer = require('./screen_renderer')
+const ScreenLayout = require('./screen_layout')
+const { ATTR_BLINK } = require('./screen_attr_bits')
 
+/**
+ * A terminal screen.
+ */
 module.exports = class TermScreen extends EventEmitter {
   constructor () {
     super()
 
-    this.canvas = mk('canvas')
-    this.ctx = this.canvas.getContext('2d')
-
-    this.parser = new ScreenParser(this)
-    this.renderer = new ScreenRenderer(this)
+    this.parser = new ScreenParser()
+    this.layout = new ScreenLayout()
 
     // debug screen handle
     this._debug = null
@@ -24,21 +24,28 @@ module.exports = class TermScreen extends EventEmitter {
       console.warn('No AudioContext!')
     }
 
-    // dummy. Handle for Input
-    this.input = new Proxy({}, {
-      get () {
-        return () => console.warn('TermScreen#input not set!')
+    this._window = {
+      width: 0,
+      height: 0,
+      // two bits. LSB: debug enabled by user, MSB: debug enabled by server
+      debug: 0,
+      statusScreen: null
+    }
+
+    // make writing to window update size and draw
+    this.window = new Proxy(this._window, {
+      set (target, key, value) {
+        if (target[key] !== value) {
+          target[key] = value
+          self.updateLayout()
+          self.renderScreen(`window:${key}=${value}`)
+          self.emit(`update-window:${key}`, value)
+        }
+        return true
       }
     })
-    // dummy. Handle for Conn
-    this.conn = new Proxy({}, {
-      get () {
-        return () => console.warn('TermScreen#conn not set!')
-      },
-      set (a, b) {
-        return () => console.warn('TermScreen#conn not set!')
-      }
-    })
+
+    this.on('update-window:debug', debug => { this.layout.window.debug = !!debug })
 
     this.cursor = {
       x: 0,
@@ -49,69 +56,31 @@ module.exports = class TermScreen extends EventEmitter {
       style: 'block'
     }
 
-    this._window = {
-      width: 0,
-      height: 0,
-      devicePixelRatio: 1,
-      fontFamily: '"DejaVu Sans Mono", "Liberation Mono", "Inconsolata", "Menlo", monospace',
-      fontSize: 20,
-      padding: 6,
-      gridScaleX: 1.0,
-      gridScaleY: 1.2,
-      fitIntoWidth: 0,
-      fitIntoHeight: 0,
-      debug: false,
-      graphics: 0,
-      statusScreen: null
-    }
-
-    // scaling caused by fitIntoWidth/fitIntoHeight
-    this._windowScale = 1
-
-    // actual padding, as it may be disabled by fullscreen mode etc.
-    this._padding = 0
-
-    // properties of this.window that require updating size and redrawing
-    this.windowState = {
-      width: 0,
-      height: 0,
-      devicePixelRatio: 0,
-      padding: 0,
-      gridScaleX: 0,
-      gridScaleY: 0,
-      fontFamily: '',
-      fontSize: 0,
-      fitIntoWidth: 0,
-      fitIntoHeight: 0
-    }
+    const self = this
 
     // current selection
     this.selection = {
       // when false, this will prevent selection in favor of mouse events,
       // though alt can be held to override it
-      selectable: true,
+      selectable: null,
 
       // selection start and end (x, y) tuples
       start: [0, 0],
-      end: [0, 0]
+      end: [0, 0],
+
+      setSelectable (value) {
+        if (value !== this.selectable) {
+          this.selectable = self.layout.selectable = value
+        }
+      }
     }
 
     // mouse features
     this.mouseMode = { clicks: false, movement: false }
 
-    // make writing to window update size and draw
-    const self = this
-    this.window = new Proxy(this._window, {
-      set (target, key, value, receiver) {
-        if (target[key] !== value) {
-          target[key] = value
-          self.scheduleSizeUpdate()
-          self.renderer.scheduleDraw(`window:${key}=${value}`)
-          self.emit(`update-window:${key}`, value)
-        }
-        return true
-      }
-    })
+    this.showLinks = false
+    this.showButtons = false
+    this.title = ''
 
     this.bracketedPaste = false
     this.blinkingCellCount = 0
@@ -121,38 +90,46 @@ module.exports = class TermScreen extends EventEmitter {
     this.screenFG = []
     this.screenBG = []
     this.screenAttrs = []
+    this.screenLines = []
+
+    // For testing TODO remove
+    //   this.screenLines[0] = 0b001
+    //   this.screenLines[1] = 0b010
+    //   this.screenLines[2] = 0b100
+    //   this.screenLines[3] = 0b011
+    //   this.screenLines[4] = 0b101
 
     let selecting = false
 
     let selectStart = (x, y) => {
       if (selecting) return
       selecting = true
-      this.selection.start = this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-start')
+      this.selection.start = this.selection.end = this.layout.screenToGrid(x, y, true)
+      this.renderScreen('select-start')
     }
 
     let selectMove = (x, y) => {
       if (!selecting) return
-      this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-move')
+      this.selection.end = this.layout.screenToGrid(x, y, true)
+      this.renderScreen('select-move')
     }
 
     let selectEnd = (x, y) => {
       if (!selecting) return
       selecting = false
-      this.selection.end = this.screenToGrid(x, y, true)
-      this.renderer.scheduleDraw('select-end')
+      this.selection.end = this.layout.screenToGrid(x, y, true)
+      this.renderScreen('select-end')
       Object.assign(this.selection, this.getNormalizedSelection())
     }
 
     // bind event listeners
 
-    this.canvas.addEventListener('mousedown', e => {
+    this.layout.on('mousedown', e => {
+      this.emit('hide-touch-select-menu')
       if ((this.selection.selectable || e.altKey) && e.button === 0) {
         selectStart(e.offsetX, e.offsetY)
       } else {
-        this.input.onMouseDown(...this.screenToGrid(e.offsetX, e.offsetY),
-          e.button + 1)
+        this.emit('mousedown', ...this.layout.screenToGrid(e.offsetX, e.offsetY), e.button + 1)
       }
     })
 
@@ -172,17 +149,22 @@ module.exports = class TermScreen extends EventEmitter {
     let touchDidMove = false
 
     let getTouchPositionOffset = touch => {
-      let rect = this.canvas.getBoundingClientRect()
+      let rect = this.layout.canvas.getBoundingClientRect()
       return [touch.clientX - rect.left, touch.clientY - rect.top]
     }
 
-    this.canvas.addEventListener('touchstart', e => {
+    this.layout.on('touchstart', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
       touchDidMove = false
       touchDownTime = Date.now()
-    }, { passive: true })
 
-    this.canvas.addEventListener('touchmove', e => {
+      if (this.mouseMode.clicks) {
+        this.emit('mousedown', ...this.layout.screenToGrid(...touchPosition), 1)
+        e.preventDefault()
+      }
+    })
+
+    this.layout.on('touchmove', e => {
       touchPosition = getTouchPositionOffset(e.touches[0])
 
       if (!selecting && touchDidMove === false) {
@@ -192,12 +174,15 @@ module.exports = class TermScreen extends EventEmitter {
       } else if (selecting) {
         e.preventDefault()
         selectMove(...touchPosition)
+      } else if (this.mouseMode.movement && !selecting) {
+        this.emit('mousemove', ...this.layout.screenToGrid(...touchPosition))
+        e.preventDefault()
       }
 
       touchDidMove = true
     })
 
-    this.canvas.addEventListener('touchend', e => {
+    this.layout.on('touchend', e => {
       if (e.touches[0]) {
         touchPosition = getTouchPositionOffset(e.touches[0])
       }
@@ -207,19 +192,16 @@ module.exports = class TermScreen extends EventEmitter {
         selectEnd(...touchPosition)
 
         // selection ended; show touch select menu
-        let touchSelectMenu = qs('#touch-select-menu')
-        touchSelectMenu.classList.add('open')
-        let rect = touchSelectMenu.getBoundingClientRect()
-
         // use middle position for x and one line above for y
-        let selectionPos = this.gridToScreen(
+        let selectionPos = this.layout.gridToScreen(
           (this.selection.start[0] + this.selection.end[0]) / 2,
           this.selection.start[1] - 1
         )
-        selectionPos[0] -= rect.width / 2
-        selectionPos[1] -= rect.height / 2
-        touchSelectMenu.style.transform = `translate(${selectionPos[0]}px, ${
-          selectionPos[1]}px)`
+
+        this.emit('show-touch-select-menu', selectionPos[0], selectionPos[1])
+      } else if (this.mouseMode.clicks) {
+        this.emit('mouseup', ...this.layout.screenToGrid(...touchPosition), 1)
+        e.preventDefault()
       }
 
       if (!touchDidMove && !this.mouseMode.clicks) {
@@ -227,7 +209,7 @@ module.exports = class TermScreen extends EventEmitter {
           x: touchPosition[0],
           y: touchPosition[1]
         }))
-      }
+      } else if (!touchDidMove) this.resetSelection()
 
       touchPosition = null
     })
@@ -236,49 +218,37 @@ module.exports = class TermScreen extends EventEmitter {
       if (this.selection.start[0] !== this.selection.end[0] ||
         this.selection.start[1] !== this.selection.end[1]) {
         // selection is not empty
-        // reset selection
-        this.selection.start = this.selection.end = [0, 0]
-        qs('#touch-select-menu').classList.remove('open')
-        this.renderer.scheduleDraw('select-reset')
+        this.resetSelection()
       } else {
         e.preventDefault()
         this.emit('open-soft-keyboard')
       }
     })
 
-    $.ready(() => {
-      let copyButton = qs('#touch-select-copy-btn')
-      if (copyButton) {
-        copyButton.addEventListener('click', () => {
-          this.copySelectionToClipboard()
-        })
+    this.layout.on('mousemove', e => {
+      if (!selecting) {
+        this.emit('mousemove', ...this.layout.screenToGrid(e.offsetX, e.offsetY))
       }
     })
 
-    this.canvas.addEventListener('mousemove', e => {
+    this.layout.on('mouseup', e => {
       if (!selecting) {
-        this.input.onMouseMove(...this.screenToGrid(e.offsetX, e.offsetY))
-      }
-    })
-
-    this.canvas.addEventListener('mouseup', e => {
-      if (!selecting) {
-        this.input.onMouseUp(...this.screenToGrid(e.offsetX, e.offsetY),
+        this.emit('mouseup', ...this.layout.screenToGrid(e.offsetX, e.offsetY),
           e.button + 1)
       }
     })
 
     let aggregateWheelDelta = 0
-    this.canvas.addEventListener('wheel', e => {
+    this.layout.on('wheel', e => {
       if (this.mouseMode.clicks) {
         if (Math.abs(e.wheelDeltaY) === 120) {
           // mouse wheel scrolling
-          this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
+          this.emit('mousewheel', ...this.layout.screenToGrid(e.offsetX, e.offsetY), e.deltaY > 0 ? 1 : -1)
         } else {
           // smooth scrolling
           aggregateWheelDelta -= e.wheelDeltaY
           if (Math.abs(aggregateWheelDelta) >= 40) {
-            this.input.onMouseWheel(...this.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
+            this.emit('mousewheel', ...this.layout.screenToGrid(e.offsetX, e.offsetY), aggregateWheelDelta > 0 ? 1 : -1)
             aggregateWheelDelta = 0
           }
         }
@@ -288,7 +258,7 @@ module.exports = class TermScreen extends EventEmitter {
       }
     })
 
-    this.canvas.addEventListener('contextmenu', e => {
+    this.layout.on('contextmenu', e => {
       if (this.mouseMode.clicks) {
         // prevent mouse keys getting stuck
         e.preventDefault()
@@ -297,169 +267,48 @@ module.exports = class TermScreen extends EventEmitter {
     })
   }
 
-  /**
-   * Schedule a size update in the next millisecond
-   */
-  scheduleSizeUpdate () {
-    clearTimeout(this._scheduledSizeUpdate)
-    this._scheduledSizeUpdate = setTimeout(() => this.updateSize(), 1)
+  resetScreen () {
+    const { width, height } = this.window
+    this.blinkingCellCount = 0
+    this.screen.screen = new Array(width * height).fill(' ')
+    this.screen.screenFG = new Array(width * height).fill(0)
+    this.screen.screenBG = new Array(width * height).fill(0)
+    this.screen.screenAttrs = new Array(width * height).fill(0)
+    this.screen.screenLines = new Array(height).fill(0)
   }
 
-  get backgroundImage () {
-    return this.canvas.style.backgroundImage
+  updateLayout () {
+    this.layout.window.width = this.window.width
+    this.layout.window.height = this.window.height
   }
 
-  set backgroundImage (value) {
-    this.canvas.style.backgroundImage = value ? `url(${value})` : ''
-    if (this.renderer.backgroundImage !== !!value) {
-      this.renderer.backgroundImage = !!value
-      this.renderer.resetDrawn()
-      this.renderer.scheduleDraw('background-image')
-    }
-  }
+  renderScreen (reason) {
+    let selection = []
 
-  /**
-   * Returns a CSS font string with this TermScreen's font settings and the
-   * font modifiers.
-   * @param {Object} modifiers
-   * @param {string} [modifiers.style] - the font style
-   * @param {string} [modifiers.weight] - the font weight
-   * @returns {string} a CSS font string
-   */
-  getFont (modifiers = {}) {
-    let fontStyle = modifiers.style || 'normal'
-    let fontWeight = modifiers.weight || 'normal'
-    return `${fontStyle} normal ${fontWeight} ${this.window.fontSize}px ${this.window.fontFamily}`
-  }
-
-  /**
-   * Converts screen coordinates to grid coordinates.
-   * @param {number} x - x in pixels
-   * @param {number} y - y in pixels
-   * @param {boolean} rounded - whether to round the coord, used for select highlighting
-   * @returns {number[]} a tuple of (x, y) in cells
-   */
-  screenToGrid (x, y, rounded = false) {
-    let cellSize = this.getCellSize()
-
-    x = x / this._windowScale - this._padding
-    y = y / this._windowScale - this._padding
-    x = Math.floor((x + (rounded ? cellSize.width / 2 : 0)) / cellSize.width)
-    y = Math.floor(y / cellSize.height)
-    x = Math.max(0, Math.min(this.window.width - 1, x))
-    y = Math.max(0, Math.min(this.window.height - 1, y))
-
-    return [x, y]
-  }
-
-  /**
-   * Converts grid coordinates to screen coordinates.
-   * @param {number} x - x in cells
-   * @param {number} y - y in cells
-   * @param {boolean} [withScale] - when true, will apply window scale
-   * @returns {number[]} a tuple of (x, y) in pixels
-   */
-  gridToScreen (x, y, withScale = false) {
-    let cellSize = this.getCellSize()
-
-    return [x * cellSize.width, y * cellSize.height].map(v => this._padding + (withScale ? v * this._windowScale : v))
-  }
-
-  /**
-   * The character size, used for calculating the cell size. The space character
-   * is used for measuring.
-   * @returns {Object} the character size with `width` and `height` in pixels
-   */
-  getCharSize () {
-    this.ctx.font = this.getFont()
-
-    return {
-      width: Math.floor(this.ctx.measureText(' ').width),
-      height: this.window.fontSize
-    }
-  }
-
-  /**
-   * The cell size, which is the character size multiplied by the grid scale.
-   * @returns {Object} the cell size with `width` and `height` in pixels
-   */
-  getCellSize () {
-    let charSize = this.getCharSize()
-
-    return {
-      width: Math.ceil(charSize.width * this.window.gridScaleX),
-      height: Math.ceil(charSize.height * this.window.gridScaleY)
-    }
-  }
-
-  /**
-   * Updates the canvas size if it changed
-   */
-  updateSize () {
-    // see below (this is just updating it)
-    this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
-
-    let didChange = false
-    for (let key in this.windowState) {
-      if (this.windowState.hasOwnProperty(key) && this.windowState[key] !== this.window[key]) {
-        didChange = true
-        this.windowState[key] = this.window[key]
-      }
+    for (let cell = 0; cell < this.screen.length; cell++) {
+      selection.push(this.isInSelection(cell % this.window.width, Math.floor(cell / this.window.width)))
     }
 
-    if (didChange) {
-      const {
-        width,
-        height,
-        fitIntoWidth,
-        fitIntoHeight,
-        padding
-      } = this.window
-      const cellSize = this.getCellSize()
+    this.layout.render(reason, {
+      width: this.window.width,
+      height: this.window.height,
+      screen: this.screen,
+      screenFG: this.screenFG,
+      screenBG: this.screenBG,
+      screenSelection: selection,
+      screenAttrs: this.screenAttrs,
+      screenLines: this.screenLines,
+      cursor: this.cursor,
+      statusScreen: this.window.statusScreen,
+      reverseVideo: this.reverseVideo,
+      hasBlinkingCells: !!this.blinkingCellCount
+    })
+  }
 
-      // real height of the canvas element in pixels
-      let realWidth = width * cellSize.width
-      let realHeight = height * cellSize.height
-      let originalWidth = realWidth
-
-      if (fitIntoWidth && fitIntoHeight) {
-        let terminalAspect = realWidth / realHeight
-        let fitAspect = fitIntoWidth / fitIntoHeight
-
-        if (terminalAspect < fitAspect) {
-          // align heights
-          realHeight = fitIntoHeight - 2 * padding
-          realWidth = realHeight * terminalAspect
-        } else {
-          // align widths
-          realWidth = fitIntoWidth - 2 * padding
-          realHeight = realWidth / terminalAspect
-        }
-      }
-
-      // store new window scale
-      this._windowScale = realWidth / originalWidth
-
-      realWidth += 2 * padding
-      realHeight += 2 * padding
-
-      // store padding
-      this._padding = padding * (originalWidth / realWidth)
-
-      // the DPR must be rounded to a very nice value to prevent gaps between cells
-      let devicePixelRatio = this._window.devicePixelRatio = Math.ceil(this._windowScale * (window.devicePixelRatio || 1))
-
-      this.canvas.width = (width * cellSize.width + 2 * Math.round(this._padding)) * devicePixelRatio
-      this.canvas.style.width = `${realWidth}px`
-      this.canvas.height = (height * cellSize.height + 2 * Math.round(this._padding)) * devicePixelRatio
-      this.canvas.style.height = `${realHeight}px`
-
-      // the screen has been cleared (by changing canvas width)
-      this.renderer.resetDrawn()
-
-      // draw immediately; the canvas shouldn't flash
-      this.renderer.draw('update-size')
-    }
+  resetSelection () {
+    this.selection.start = this.selection.end = [0, 0]
+    this.emit('hide-touch-select-menu')
+    this.renderScreen('select-reset')
   }
 
   /**
@@ -618,6 +467,124 @@ module.exports = class TermScreen extends EventEmitter {
   }
 
   load (...args) {
-    this.parser.load(...args)
+    const updates = this.parser.parse(...args)
+
+    for (let update of updates) {
+      switch (update.topic) {
+        case 'screen-opts':
+          if (update.width !== this.window.width || update.height !== this.window.height) {
+            this.window.width = update.width
+            this.window.height = update.height
+            this.resetScreen()
+          }
+          this.layout.renderer.loadTheme(update.theme)
+          this.layout.renderer.setDefaultColors(update.defFG, update.defBG)
+          this.cursor.visible = update.cursorVisible
+          this.emit('input-alts', ...update.inputAlts)
+          this.mouseMode.clicks = update.trackMouseClicks
+          this.mouseMode.movement = update.trackMouseMovement
+          this.emit('mouse-mode', update.trackMouseClicks, update.trackMouseMovement)
+          this.selection.setSelectable(!update.trackMouseClicks && !update.trackMouseMovement)
+          if (this.cursor.blinking !== update.cursorBlinking) {
+            this.cursor.blinking = update.cursorBlinking
+            this.layout.renderer.resetCursorBlink()
+          }
+          this.cursor.style = update.cursorStyle
+          this.bracketedPaste = update.bracketedPaste
+          this.reverseVideo = update.reverseVideo
+          this.window.debug &= 0b01
+          this.window.debug |= (+update.debugEnabled << 1)
+
+          this.showLinks = update.showConfigLinks
+          this.showButtons = update.showButtons
+          this.emit('opts-update')
+          break
+
+        case 'double-lines':
+          this.screenLines = update.lines
+          this.renderScreen('double-lines')
+          break
+
+        case 'static-opts':
+          this.layout.window.fontFamily = update.fontStack || null
+          this.layout.window.fontSize = update.fontSize
+          break
+
+        case 'cursor':
+          if (this.cursor.x !== update.x || this.cursor.y !== update.y || this.cursor.hanging !== update.hanging) {
+            this.cursor.x = update.x
+            this.cursor.y = update.y
+            this.cursor.hanging = update.hanging
+            this.layout.renderer.resetCursorBlink()
+            this.emit('cursor-moved')
+            this.renderScreen('cursor-moved')
+          }
+          break
+
+        case 'title':
+          this.emit('title-update', this.title = update.title)
+          break
+
+        case 'buttons-update':
+          this.emit('buttons-update', update)
+          break
+
+        case 'backdrop':
+          this.backgroundImage = update.image
+          break
+
+        case 'bell':
+          this.beep()
+          break
+
+        case 'internal':
+          this.emit('internal', update)
+          break
+
+        case 'content':
+          const { frameX, frameY, frameWidth, frameHeight, cells } = update
+
+          if (this._debug && this.window.debug) {
+            this._debug.pushFrame([frameX, frameY, frameWidth, frameHeight])
+          }
+
+          for (let cell = 0; cell < cells.length; cell++) {
+            let data = cells[cell]
+
+            let cellXInFrame = cell % frameWidth
+            let cellYInFrame = Math.floor(cell / frameWidth)
+            let index = (frameY + cellYInFrame) * this.window.width + frameX + cellXInFrame
+
+            if ((this.screenAttrs[index] & ATTR_BLINK) !== (data[3] & ATTR_BLINK)) {
+              if (data[3] & ATTR_BLINK) this.blinkingCellCount++
+              else this.blinkingCellCount--
+            }
+
+            this.screen[index] = data[0]
+            this.screenFG[index] = data[1]
+            this.screenBG[index] = data[2]
+            this.screenAttrs[index] = data[3]
+          }
+
+          if (this.window.debug) console.log(`Blinking cells: ${this.blinkingCellCount}`)
+
+          this.renderScreen('load')
+          this.emit('load')
+          break
+
+        case 'full-load-complete':
+          this.emit('full-load')
+          break
+
+        case 'notification':
+          this.showNotification(update.content)
+          break
+
+        default:
+          console.warn('Unhandled update', update)
+      }
+    }
+
+    this.emit('update')
   }
 }

@@ -18,7 +18,7 @@ module.exports = function (screen, input) {
   let updateInputPosition = function () {
     if (!keyboardOpen) return
 
-    let [x, y] = screen.gridToScreen(screen.cursor.x, screen.cursor.y, true)
+    let [x, y] = screen.layout.gridToScreen(screen.cursor.x, screen.cursor.y, true)
     keyInput.style.transform = `translate(${x}px, ${y}px)`
   }
 

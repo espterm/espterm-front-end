@@ -44,7 +44,7 @@
 	</div>
 </div>
 
-<h1 id="screen-title"><!-- JS, title --></h1>
+<h1 id="screen-title">ESPTerm</h1>
 <a href="#" id="term-fit-screen" class="mq-tablet-max"><i id="resize-button-icon" class="icn-resize-small"></i></a>
 
 <div id="term-wrap">
@@ -59,7 +59,7 @@
 		<div class="screen-margin bottom"></div>
 	</div>
 
-	<div id="action-buttons"><!-- JS, buttons --></div>
+	<div id="action-buttons" class="hidden"><!-- JS, buttons --></div>
 </div>
 
 <nav id="term-nav">

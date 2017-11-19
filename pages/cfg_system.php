@@ -27,6 +27,29 @@
 	</div>
 </div>
 
+<!-- Backup -->
+<div class="Box str mobcol">
+	<h2 tabindex=0><?= tr('backup.title') ?></h2>
+
+	<div class="Row explain nomargintop">
+		<?= tr('backup.explain') ?>
+	</div>
+
+	<div class="Row buttons2">
+		<a class="button"
+		   href="<?= e(url('ini_export')) ?>">
+			<?= tr('backup.export') ?>
+		</a>
+	</div>
+
+	<div class="Row buttons2">
+		<form method="POST" action="<?= e(url('ini_import')) ?>" enctype='multipart/form-data'>
+			<span class="filewrap"><input accept=".ini,text/plain" type="file" name="file"></span><!--
+			--><input type="submit" value="<?= tr('backup.import') ?>">
+		</form>
+	</div>
+</div>
+
 <!-- Overclock -->
 <form class="Box str mobcol" action="<?= e(url('system_set')) ?>" method="GET" id="form-hw">
 	<h2 tabindex=0><?= tr('hwtuning.title') ?></h2>

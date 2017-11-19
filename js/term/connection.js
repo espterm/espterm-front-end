@@ -5,6 +5,7 @@ try { demo = require('./demo') } catch (err) {}
 
 const RECONN_DELAY = 2000
 const HEARTBEAT_TIME = 3000
+const HTTPS = window.location.protocol.match(/s:/)
 
 /** Handle connections */
 module.exports = class TermConnection extends EventEmitter {
@@ -19,9 +20,10 @@ module.exports = class TermConnection extends EventEmitter {
     this.autoXoffTimeout = null
     this.reconnTimeout = null
     this.forceClosing = false
+    this.queue = []
 
     try {
-      this.blobReader = new FileReader()
+      this.blobReader = new window.FileReader()
       this.blobReader.onload = (evt) => {
         this.onDecodedWSMessage(this.blobReader.result)
       }
@@ -82,7 +84,6 @@ module.exports = class TermConnection extends EventEmitter {
   onDecodedWSMessage (str) {
     switch (str.charAt(0)) {
       case '.':
-        console.log(str)
         // heartbeat, no-op message
         break
 
@@ -91,12 +92,14 @@ module.exports = class TermConnection extends EventEmitter {
         this.xoff = true
         this.autoXoffTimeout = setTimeout(() => {
           this.xoff = false
+          this.flushQueue()
         }, 250)
         break
 
       case '+':
         // console.log('xon');
         this.xoff = false
+        this.flushQueue()
         clearTimeout(this.autoXoffTimeout)
         break
 
@@ -143,8 +146,8 @@ module.exports = class TermConnection extends EventEmitter {
       return true // Simulate success
     }
     if (this.xoff) {
-      // TODO queue
-      console.log("Can't send, flood control.")
+      console.log("Can't send, flood control. Queueing")
+      this.queue.push(message)
       return false
     }
 
@@ -158,6 +161,12 @@ module.exports = class TermConnection extends EventEmitter {
     }
     this.ws.send(message)
     return true
+  }
+
+  flushQueue () {
+    console.log('Flushing input queue')
+    for (let message of this.queue) this.send(message)
+    this.queue = []
   }
 
   /** Safely close the socket */
@@ -184,7 +193,7 @@ module.exports = class TermConnection extends EventEmitter {
 
     this.closeSocket()
 
-    this.ws = new window.WebSocket('ws://' + window._root + '/term/update.ws')
+    this.ws = new window.WebSocket(`${HTTPS ? 'wss' : 'ws'}://${window._root}/term/update.ws`)
     this.ws.addEventListener('open', (...args) => this.onWSOpen(...args))
     this.ws.addEventListener('close', (...args) => this.onWSClose(...args))
     this.ws.addEventListener('message', (...args) => this.onWSMessage(...args))
@@ -195,6 +204,7 @@ module.exports = class TermConnection extends EventEmitter {
   }
 
   heartbeat () {
+    this.emit('heartbeat')
     clearTimeout(this.heartbeatTimeout)
     this.heartbeatTimeout = setTimeout(() => this.onHeartbeatFail(), HEARTBEAT_TIME)
   }
@@ -202,7 +212,7 @@ module.exports = class TermConnection extends EventEmitter {
   sendPing () {
     console.log('> ping')
     this.emit('ping')
-    $.get('http://' + window._root + '/api/v1/ping', (resp, status) => {
+    $.get(`${HTTPS ? 'https' : 'http'}://${window._root}/api/v1/ping`, (resp, status) => {
       if (status === 200) {
         clearInterval(this.pingInterval)
         console.info('Server ready, opening socket…')

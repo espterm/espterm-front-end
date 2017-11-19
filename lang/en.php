@@ -80,6 +80,10 @@ return [
 	'term.debugbar' => 'Debug internal state',
 	'term.ascii_debug' => 'Display control codes',
 	'term.backdrop' => 'Background image URL',
+	'term.button_count' => 'Button count',
+	'term.button_colors' => 'Button colors',
+	'term.font_stack' => 'Font stack',
+	'term.font_size' => 'Font size',
 
 	'cursor.block_blink' => 'Block, blinking',
     'cursor.block_steady' => 'Block, steady',
@@ -228,6 +232,11 @@ return [
 	'persist.restore_hard' => 'Reset active settings to factory defaults',
 	'persist.restore_hard_explain' =>
 		'(This clears the WiFi config! Does not affect saved defaults or admin password.)',
+
+	'backup.title' => 'Back-up Config File',
+	'backup.explain' => 'All config except the admin password can be backed up and restored using an INI file.',
+	'backup.export' => 'Export to file',
+	'backup.import' => 'Import!',
 
 	// UART settings form
 
