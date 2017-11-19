@@ -235,6 +235,11 @@ return [
 	'persist.restore_hard_explain' =>
 		'(Tímto vymažete nastavení WiFi! Záloha a systémové heslo zůstanou beze změny.)',
 
+	'backup.title' => 'Záloha do souboru',
+	'backup.explain' => 'Všechna nastavení kromě systémového hesla je možné uložit do a obnovit z INI souboru.',
+	'backup.export' => 'Zálohovat do souboru',
+	'backup.import' => 'Nahrát soubor!',
+
 	// UART settings form
 
 	'uart.title' => 'Sériový port',
