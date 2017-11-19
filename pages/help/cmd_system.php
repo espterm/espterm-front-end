@@ -8,6 +8,8 @@
 			Those changes are not retained after restart.
 		</p>
 
+		<h3>Single-byte commands &amp; queries</h3>
+
 		<table class="ansiref w100">
 			<thead><tr><th>Code</th><th>Meaning</th></tr></thead>
 			<tbody>
@@ -29,23 +31,20 @@
 				</td>
 			</tr>
 			<tr>
-				<td>`\ec`</td>
-				<td>
-					Clear screen, reset attributes and cursor. This command also restores the default
-					screen size, title, button labels and messages and the background URL.
-				</td>
-			</tr>
-			<tr>
-				<td>`\e[8;<i>r</i>;<i>c</i>t`</td>
-				<td>Set screen size to _r_ rows and _c_ columns (this is a command borrowed from Xterm)</td>
-			</tr>
-			<tr>
 				<td>`\e[5n`</td>
 				<td>
 					Query device status, ESPTerm replies with `\e[0n` "device is OK".
 					Can be used to check if the terminal has booted up and is ready to receive commands.
 				</td>
 			</tr>
+			</tbody>
+		</table>
+
+		<h3>Setting parameters</h3>
+
+		<table class="ansiref w100">
+			<thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+			<tbody>
 			<tr>
 				<td>`\e[<i>n</i> q`</td>
 				<td>
@@ -77,22 +76,18 @@
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e]28;<i>x</i>;<i>t</i>\a
-					</code>
-				</td>
+				<td><code>
+					\e]28;<i>x</i>;<i>t</i>\a
+				</code></td>
 				<td>
 					Set label for button _x_ (1-5) to _t_ - e.g.`\e]28;1;Yes\a`
 					sets the first button text to "Yes".
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e]29;<i>x</i>;<i>m</i>\a
-					</code>
-				</td>
+				<td><code>
+					\e]29;<i>x</i>;<i>m</i>\a
+				</code></td>
 				<td>
 					Set message for button _x_ (1-5) to _m_ - e.g.`\e]29;3;+\a`
 					sets the 3rd button to send "+" when pressed. The message can be up to
@@ -100,11 +95,9 @@
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e]30;<i>x</i>;<i>c</i>\a
-					</code>
-				</td>
+				<td><code>
+					\e]30;<i>x</i>;<i>c</i>\a
+				</code></td>
 				<td>
 					Set button _x_ (1-5) color to _c_ - e.g.`\e]30;2;#00FF00\a`
 					makes the 2nd button green. Supported are SGR colors 1-255
@@ -113,58 +106,28 @@
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e]9;<i>t</i>\a
-					</code>
-				</td>
-				<td>
-					Show a notification with text _t_. This will be either a desktop notification
-					or a pop-up balloon.
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<code>
-						\e[?<i>n</i>s \\
-						\e[?<i>n</i>r
-					</code>
-				</td>
-				<td>
-					Save (`s`) and restore (`r`) any option set using `CSI ? <i>n</i> h`.
-					This is used by some applications to back up the original state before
-					making changes.
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<code>
-						\e[?800h \\
-						\e[?800l
-					</code>
-				</td>
+				<td><code>
+					\e[?800h \\
+					\e[?800l
+				</code></td>
 				<td>
 					Show (`h`) or hide (`l`) the action buttons (the blue buttons under the screen).
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e[?801h \\
-						\e[?801l
-					</code>
-				</td>
+				<td><code>
+					\e[?801h \\
+					\e[?801l
+				</code></td>
 				<td>
 					Show (`h`) or hide (`l`) menu/help links under the screen.
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e[?2004h \\
-						\e[?2004l
-					</code>
-				</td>
+				<td><code>
+					\e[?2004h \\
+					\e[?2004l
+				</code></td>
 				<td>
 					Enable (`h`) or disable (`l`) Bracketed Paste mode.
 					This mode makes any text sent using the Upload Tool be preceded by `\e[200\~`
@@ -173,28 +136,41 @@
 				</td>
 			</tr>
 			<tr>
-				<td>
-					<code>
-						\e[?1049h \\
-						\e[?1049l
-					</code>
-				</td>
-				<td>
-					Switch to (`h`) or from (`l`) an alternate screen.
-					ESPTerm can't implement this fully, so the original screen content is not saved,
-					but it will remember the cursor, screen size, terminal title, button labels and messages.
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<code>
-						\e[12h \\
-						\e[12l
-					</code>
-				</td>
+				<td><code>
+					\e[12h \\
+					\e[12l
+				</code></td>
 				<td>
 					Enable (`h`) or disable (`l`) Send-Receive Mode (SRM).
 					SRM is the opposite of Local Echo, meaning `\e[12h` disables and `\e[12l` enables Local Echo.
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+		<h3>Other</h3>
+
+		<table class="ansiref w100">
+			<thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+			<tbody>
+			<tr>
+				<td><code>
+					\e]9;<i>t</i>\a
+				</code></td>
+				<td>
+					Show a notification with text _t_. This will be either a desktop notification
+					or a pop-up balloon.
+				</td>
+			</tr>
+			<tr>
+				<td><code>
+					\e[?<i>n</i>s \\
+					\e[?<i>n</i>r
+				</code></td>
+				<td>
+					Save (`s`) and restore (`r`) any option set using `CSI ? <i>n</i> h`.
+					This is used by some applications to back up the original state before
+					making changes.
 				</td>
 			</tr>
 			</tbody>
