@@ -8,7 +8,7 @@
 
 	<div class="Row buttons2">
 		<a class="button icn-restore"
-		   onclick="return confirm('<?= tr('persist.confirm_restore') ?>');"
+		   onclick="return confirm('<?= e(tr('persist.confirm_restore')) ?>');"
 		   href="<?= e(url('restore_defaults')) ?>">
 			<?= tr('persist.restore_defaults') ?>
 		</a>
@@ -19,7 +19,7 @@
 	</div>
 
 	<div class="Row buttons2">
-		<a onclick="return confirm('<?= tr('persist.confirm_restore_hard') ?>');"
+		<a onclick="return confirm('<?= e(tr('persist.confirm_restore_hard')) ?>');"
 		   href="<?= e(url('restore_hard')) ?>">
 			<?= tr('persist.restore_hard') ?>
 		</a><br>
