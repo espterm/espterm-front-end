@@ -23,7 +23,7 @@ return [
 	'term_nav.paste' => 'Beillesztés',
 	'term_nav.upload' => 'Feltöltés',
 	'term_nav.keybd' => 'Billentyűzet',
-	'term_nav.paste_prompt' => 'Szöveg beillesztése és küldés:',
+	'term_nav.paste_prompt' => 'Szöveg beillesztése és küldése:',
 
 	'term_conn.connecting' => 'Csatlakozás',
 	'term_conn.waiting_content' => 'Várakozás a csatlakozásra',
@@ -80,6 +80,10 @@ return [
 	'term.debugbar' => 'Belső állapot hibakeresés',
 	'term.ascii_debug' => 'Kontroll kódok mutatása',
 	'term.backdrop' => 'Háttérkép URL.je',
+	'term.button_count' => 'Gomb szám',
+	'term.button_colors' => 'Gomb színek',
+	'term.font_stack' => 'Betű típus',
+	'term.font_size' => 'Betű méret',
 
 	'cursor.block_blink' => 'Blokk, villog',
 	'cursor.block_steady' => 'Blokk, fix',
@@ -229,6 +233,12 @@ return [
 	'persist.restore_hard_explain' =>
 		'(Ez törli a Wifi beállításokat, de nincs hatása az admin jelszóra.)',
 
+	'backup.title' => 'Configurációs fájl biztonsági másolat készítés',
+	'backup.explain' => 'Minden beállítás menthető és visszaállítható az admin jelszó kivételévelAll config except the admin password can be backed up and restored using  egy .INI fájllal.',
+	'backup.export' => 'Fáljbe exportálás',
+	'backup.import' => 'Importálás!',
+
+
 	// UART settings form
 
 	'uart.title' => 'Soros port paraméterek',
@@ -241,7 +251,7 @@ return [
 	'uart.parity.none' => 'Egyiksem',
 	'uart.parity.odd' => 'Páratlan',
 	'uart.parity.even' => 'Páros',
-	'uart.stop_bits' => 'Stop-bite',
+	'uart.stop_bits' => 'Stop-bit',
 	'uart.stop_bits.one' => 'Egy',
 	'uart.stop_bits.one_and_half' => 'Másfél',
 	'uart.stop_bits.two' => 'Kettő',
@@ -262,8 +272,8 @@ return [
 	'apply' => 'Alkalmaz',
 	'start' => 'Start',
 	'cancel' => 'Mégse',
-	'enabled' => 'Engedélyez',
-	'disabled' => 'Letilt',
+	'enabled' => 'Engedélyezve',
+	'disabled' => 'Letiltva',
 	'yes' => 'Igen',
 	'no' => 'Nem',
 	'confirm' => 'OK',
