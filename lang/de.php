@@ -80,6 +80,10 @@ return [
 	'term.debugbar' => 'Debug-Leiste anzeigen',
 	'term.ascii_debug' => 'Kontrollcodes anzeigen',
 	'term.backdrop' => 'Hintergrundbild-URL',
+	'term.button_count' => 'Tastenanzahl',
+	'term.button_colors' => 'Tastenfarben',
+	'term.font_stack' => 'Schriftstapel',
+	'term.font_size' => 'Schriftgröße',
 
 	'cursor.block_blink' => 'Block, blinkend',
 		'cursor.block_steady' => 'Block, ruhig',
@@ -180,7 +184,7 @@ return [
 	'pwlock.title' => 'Zugriffsbeschränkungen',
 	'pwlock.explain' => '
 		Manche, oder alle Teile des Web-Interface können mit einem Passwort geschützt werden.
-		Lass die Passwortfelder leer wenn du es sie verändern möchtest.<br>
+		Lass die Passwortfelder leer wenn du es nicht verändern möchtest.<br>
 		Das voreingestellte Passwort ist "%def_access_pw%".',
 	'pwlock.region' => 'Geschützte Seiten',
 	'pwlock.region.none' => 'Keine, alles offen',
@@ -229,6 +233,11 @@ return [
 		(Dies löscht die WLAN-Konfiguration! Beeinflusst die gespeicherten Voreinstellungen
 		oder das Systempasswort nicht.)',
 
+	'backup.title' => 'Konfigurationsdatei sichern',
+	'backup.explain' => 'Die ganze Konfiguration außer dem Systempasswort können mit einer INI-Datei gesichert und wiederhergestellt werden.',
+	'backup.export' => 'Datei exportieren',
+	'backup.import' => 'Importieren!',
+
 	// UART settings form
 
 	'uart.title' => 'Serieller Port Parameter',
@@ -250,11 +259,12 @@ return [
 
 	'hwtuning.title' => 'Hardware-Tuning',
 	'hwtuning.explain' => '
-		ESP8266 kann übertaktet werden von 80&nbsp;MHz auf 160&nbsp;MHz.
+		Der ESP8266 kann von 80&nbsp;MHz auf 160&nbsp;MHz übertaktet werden.
 		Alles wird etwas schneller sein, aber mit höherem Stromverbrauch,
-		und eventuell auch mit höherer Interferenz. Mit Sorgfalt benutzen.
+		und eventuell auch mit mehr Interferenz.
+		Mit Sorgfalt benutzen.
 		',
-	'hwtuning.overclock' => 'Übertakten',
+	'hwtuning.overclock' => 'Auf 160MHz übertakten',
 
 	// Generic button / dialog labels
 
