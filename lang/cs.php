@@ -265,6 +265,16 @@ return [
 		obrazovky a stránky se budou načítat rychleji. Nevýhodou je vyšší spotřeba a citlivost k~rušení.
 		',
 	'hwtuning.overclock' => 'Přetaktovat na 160~MHz',
+	
+	'gpio2_config' => 'Funkce GPIO2',
+	'gpio4_config' => 'Funkce GPIO4',
+	'gpio5_config' => 'Funkce GPIO5',
+	'gpio_config.off' => 'Vypnuto',
+	'gpio_config.off_2' => 'Debug UART Tx',
+	'gpio_config.out_initial0' => 'Výstup (výchozí stav 0)',
+	'gpio_config.out_initial1' => 'Výstup (výchozí stav 1)',
+	'gpio_config.in_pull' => 'Vstup (s pull-upem)',
+	'gpio_config.in_nopull' => 'Vstup (plovoucí)',
 
 	// Generic button / dialog labels
 

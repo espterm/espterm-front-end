@@ -87,6 +87,10 @@ return [
 
 	'sta_mac' => '5c:cf:7f:02:74:51',
 	'ap_mac' => '5e:cf:7f:02:74:51',
+	
+	'gpio2_conf' => '0',
+	'gpio4_conf' => '1',
+	'gpio5_conf' => '1',
 
 	'width' => '80',
 	'height' => '25',

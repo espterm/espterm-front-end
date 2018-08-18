@@ -267,6 +267,16 @@ return [
 		',
 	'hwtuning.overclock' => 'Órajel emelése 160MHz-re',
 
+	'gpio2_config' => 'GPIO2 function', // TODO translate
+	'gpio4_config' => 'GPIO4 function',
+	'gpio5_config' => 'GPIO5 function',
+	'gpio_config.off' => 'Disabled',
+	'gpio_config.off_2' => 'Debug UART Tx',
+	'gpio_config.out_initial0' => 'Output (initial 0)',
+	'gpio_config.out_initial1' => 'Output (initial 1)',
+	'gpio_config.in_pull' => 'Input (pull-up)',
+	'gpio_config.in_nopull' => 'Input (floating)',
+
 	// Generic button / dialog labels
 
 	'apply' => 'Alkalmaz',
