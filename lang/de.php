@@ -266,13 +266,13 @@ return [
 		',
 	'hwtuning.overclock' => 'Auf 160MHz übertakten',
 
-	'gpio2_config' => 'GPIO2 function', // TODO translate
-	'gpio4_config' => 'GPIO4 function',
-	'gpio5_config' => 'GPIO5 function',
-	'gpio_config.off' => 'Disabled',
-	'gpio_config.off_2' => 'Debug UART Tx',
-	'gpio_config.out_initial0' => 'Output (initial 0)',
-	'gpio_config.out_initial1' => 'Output (initial 1)',
+	'gpio2_config' => 'GPIO2 Funktion',
+	'gpio4_config' => 'GPIO4 Funktion',
+	'gpio5_config' => 'GPIO5 Funktion',
+	'gpio_config.off' => 'Deaktiviert',
+	'gpio_config.off_2' => 'UART Tx Debuggen',
+	'gpio_config.out_initial0' => 'Output (Anfangslevel 0)',
+	'gpio_config.out_initial1' => 'Output (Anfangslevel 1)',
 	'gpio_config.in_pull' => 'Input (pull-up)',
 	'gpio_config.in_nopull' => 'Input (floating)',
 

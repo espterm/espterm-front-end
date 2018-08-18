@@ -18,6 +18,7 @@
 <?php require __DIR__ . "/help/cmd_screen.php"; ?>
 <?php require __DIR__ . "/help/cmd_d2d.php"; ?>
 <?php require __DIR__ . "/help/cmd_system.php"; ?>
+<?php require __DIR__ . "/help/iocontrol.php"; ?>
 
 <script>
 	function hpfold(yes) {
