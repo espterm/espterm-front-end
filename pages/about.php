@@ -10,8 +10,8 @@
 	</p>
 
 	<p>
-		<a href="http://measure.feld.cvut.cz/" target="blank">Katedra měření, FEL ČVUT</a><br>
-		Department of Measurement, FEE CTU
+		Vyvinuto na <a href="http://measure.feld.cvut.cz/" target="blank">Katedře měření, FEL ČVUT</a><br>
+		Developed at the Department of Measurement, FEE CTU in Prague
 	</p>
 </div>
 
