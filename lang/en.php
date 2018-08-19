@@ -10,6 +10,7 @@ return [
 	'menu.cfg_system' => 'System Settings',
 	'menu.cfg_wifi_conn' => 'Connecting to Network',
 	'menu.settings' => 'Settings',
+	'menu.cfg_gpio' => 'GPIO Control',
 
 	// Terminal page
 
@@ -266,15 +267,19 @@ return [
 		',
 	'hwtuning.overclock' => 'Overclock to 160MHz',
 
-	'gpio2_config' => 'GPIO2 function',
-	'gpio4_config' => 'GPIO4 function',
-	'gpio5_config' => 'GPIO5 function',
+	'gpiox_config' => 'GPIO:x function',
+	'gpiox_level' => 'GPIO:x level',
+	'gpio_config.title_config' => 'Pin Config',
+	'gpio_config.title_control' => 'Pin State',
 	'gpio_config.off' => 'Disabled',
 	'gpio_config.off_2' => 'Debug UART Tx',
 	'gpio_config.out_initial0' => 'Output (initial 0)',
 	'gpio_config.out_initial1' => 'Output (initial 1)',
 	'gpio_config.in_pull' => 'Input (pull-up)',
 	'gpio_config.in_nopull' => 'Input (floating)',
+	'gpio_config.explain' =>
+		'Click state indicators to toggle output levels. 
+		 See the help page for information about the GPIO access HTTP API.',
 
 	// Generic button / dialog labels
 

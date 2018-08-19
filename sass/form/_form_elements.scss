@@ -18,7 +18,7 @@ input.tiny, select.tiny {
 	background-color: $c-form-field-bg;
 	color: $c-form-field-fg;
 	padding: 4px 6px;
-	line-height: 1em;
+	//line-height: 1em;
 	//outline: 0 none !important;
 	//-moz-outline: 0 none !important;
 	font-weight: normal;
@@ -28,22 +28,25 @@ input.tiny, select.tiny {
 	}
 }
 
+$checkbox-h: 27px;
+
+.Row.checkbox .box, .gpio-indicator {
+	overflow: hidden;
+	width: $checkbox-h;
+	height: $checkbox-h;
+	border: 1px solid #808080;
+	border-radius: 3px;
+	background: $c-form-field-bg;
+	display: inline-block;
+	position: relative;
+	cursor: pointer;
+	color: $c-form-highlight-a;
+}
+
 .Row.checkbox {
-	$h: 27px;
-	line-height: $h;
+	line-height: $checkbox-h;
 
 	.box {
-		overflow: hidden;
-		width: $h;
-		height: $h;
-		border: 1px solid #808080;
-		border-radius: 3px;
-		background: $c-form-field-bg;
-		display: inline-block;
-		position: relative;
-		cursor: pointer;
-		color: $c-form-highlight-a;
-
 		&::before {
 			font-family: "fontello";
 			position: absolute;
@@ -64,6 +67,30 @@ input.tiny, select.tiny {
 		}
 	}
 }
+
+.gpio-indicator {
+	margin-left: .5rem;
+	margin-right: .5rem;
+	vertical-align: middle;
+
+	&.mq-phone {
+		margin-left: 0;
+	}
+
+	&::before {
+		position: absolute;
+		left: 1px; top: 1px; right: 1px; bottom: 1px;
+		display: none;
+		background: $c-form-highlight-a;
+		border-radius: 3px;
+		content: "";
+	}
+
+	&.active::before {
+		display: block;
+	}
+}
+
 
 .Row.range {
 	.display {

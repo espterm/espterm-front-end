@@ -10,6 +10,7 @@ return [
 	'menu.cfg_system' => 'Nastavení systému',
 	'menu.cfg_wifi_conn' => 'Připojování',
 	'menu.settings' => 'Nastavení',
+	'menu.cfg_gpio' => 'Ovládání GPIO',
 
 	// Terminal page
 
@@ -265,16 +266,18 @@ return [
 		obrazovky a stránky se budou načítat rychleji. Nevýhodou je vyšší spotřeba a citlivost k~rušení.
 		',
 	'hwtuning.overclock' => 'Přetaktovat na 160~MHz',
-	
-	'gpio2_config' => 'Funkce GPIO2',
-	'gpio4_config' => 'Funkce GPIO4',
-	'gpio5_config' => 'Funkce GPIO5',
+
+	'gpiox_config' => 'Funkce GPIO:x',
+	'gpiox_level' => 'Stav GPIO:x',
 	'gpio_config.off' => 'Vypnuto',
 	'gpio_config.off_2' => 'Debug UART Tx',
 	'gpio_config.out_initial0' => 'Výstup (výchozí stav 0)',
 	'gpio_config.out_initial1' => 'Výstup (výchozí stav 1)',
-	'gpio_config.in_pull' => 'Vstup (s pull-upem)',
+	'gpio_config.in_pull' => 'Vstup (pull-up)',
 	'gpio_config.in_nopull' => 'Vstup (plovoucí)',
+	'gpio_config.explain' =>
+		'Klikněte na indikátory k přepnutí stavu pinu. 
+		 HTTP API pro ovládání pinů viz nápověda.',
 
 	// Generic button / dialog labels
 

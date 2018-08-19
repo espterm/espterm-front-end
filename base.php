@@ -97,7 +97,7 @@ function je($s)
 }
 
 
-function tr($key)
+function tr($key, $subs=[])
 {
 	global $_messages, $_messages_fallback, $_messages_common;
 
@@ -118,6 +118,10 @@ function tr($key)
 	// allow tildes in translation
 	$str = preg_replace('/(?<=[^ \\\\])~(?=[^ ])/', '&nbsp;', $str);
 	$str = str_replace('\~', '~', $str);
+
+	if ($subs) {
+		$str = str_replace(array_keys($subs), array_values($subs), $str);
+	}
 	return $str;
 }
 

@@ -63,39 +63,6 @@
 		--><span class="box" tabindex=0 role=checkbox></span>
 		<input type="hidden" id="overclock" name="overclock" value="%overclock%">
 	</div>
-	
-	<div class="Row">
-		<label for="gpio2_conf"><?= tr("gpio2_config") ?></label>
-		<select name="gpio2_conf" id="gpio2_conf">
-			<option value="0"><?= tr("gpio_config.off_2") ?></option>
-			<option value="1"><?= tr("gpio_config.out_initial0") ?></option>
-			<option value="2"><?= tr("gpio_config.out_initial1") ?></option>
-			<option value="3"><?= tr("gpio_config.in_pull") ?></option>
-			<option value="4"><?= tr("gpio_config.in_nopull") ?></option>
-		</select>
-	</div>
-	
-	<div class="Row">
-		<label for="gpio4_conf"><?= tr("gpio4_config") ?></label>
-		<select name="gpio4_conf" id="gpio4_conf">
-			<option value="0"><?= tr("gpio_config.off") ?></option>
-			<option value="1"><?= tr("gpio_config.out_initial0") ?></option>
-			<option value="2"><?= tr("gpio_config.out_initial1") ?></option>
-			<option value="3"><?= tr("gpio_config.in_pull") ?></option>
-			<option value="4"><?= tr("gpio_config.in_nopull") ?></option>
-		</select>
-	</div>
-	
-	<div class="Row">
-		<label for="gpio5_conf"><?= tr("gpio5_config") ?></label>
-		<select name="gpio5_conf" id="gpio5_conf">
-			<option value="0"><?= tr("gpio_config.off") ?></option>
-			<option value="1"><?= tr("gpio_config.out_initial0") ?></option>
-			<option value="2"><?= tr("gpio_config.out_initial1") ?></option>
-			<option value="3"><?= tr("gpio_config.in_pull") ?></option>
-			<option value="4"><?= tr("gpio_config.in_nopull") ?></option>
-		</select>
-	</div>
 
 	<div class="Row buttons">
 		<a class="button icn-ok" href="#" onclick="qs('#form-hw').submit()"><?= tr('apply') ?></a>
@@ -187,7 +154,4 @@ $NOFILL = 'readonly onfocus="this.removeAttribute(\'readonly\')" style="cursor:t
 	}
 
 	$('#pwlock').val(%pwlock%);
-	$('#gpio2_conf').val(%gpio2_conf%);
-	$('#gpio4_conf').val(%gpio4_conf%);
-	$('#gpio5_conf').val(%gpio5_conf%);
 </script>

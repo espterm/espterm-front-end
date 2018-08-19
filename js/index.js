@@ -4,6 +4,7 @@ require('./notif')
 require('./appcommon')
 try { require('./term/demo') } catch (err) {}
 require('./wifi')
+require('./gpio_control')
 
 const $ = require('./lib/chibi')
 const { qs } = require('./utils')

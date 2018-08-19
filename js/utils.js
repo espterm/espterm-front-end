@@ -21,7 +21,7 @@ exports.qsa = function qsa (s) {
 exports.cr = function cr (hdl) {
   return function (e) {
     if (e.which === 10 || e.which === 13 || e.which === 32) {
-      hdl()
+      hdl.call(this, e)
     }
   }
 }

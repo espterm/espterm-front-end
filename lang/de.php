@@ -10,6 +10,7 @@ return [
 	'menu.cfg_system' => 'Systemeinstellungen',
 	'menu.cfg_wifi_conn' => 'Verbinden mit dem Netzwerk',
 	'menu.settings' => 'Einstellungen',
+	'menu.cfg_gpio' => 'Steuerung von GPIO',
 
 	// Terminal page
 
@@ -266,15 +267,19 @@ return [
 		',
 	'hwtuning.overclock' => 'Auf 160MHz übertakten',
 
-	'gpio2_config' => 'GPIO2 Funktion',
-	'gpio4_config' => 'GPIO4 Funktion',
-	'gpio5_config' => 'GPIO5 Funktion',
+	'gpiox_config' => 'GPIO:x Funktion',
+	'gpiox_level' => 'GPIO:x Level',
+	'gpio_config.title_config' => 'GPIO-Einstellungen',
+	'gpio_config.title_control' => 'GPIO-Status',
 	'gpio_config.off' => 'Deaktiviert',
 	'gpio_config.off_2' => 'UART Tx Debuggen',
 	'gpio_config.out_initial0' => 'Output (Anfangslevel 0)',
 	'gpio_config.out_initial1' => 'Output (Anfangslevel 1)',
 	'gpio_config.in_pull' => 'Input (pull-up)',
 	'gpio_config.in_nopull' => 'Input (floating)',
+	'gpio_config.explain' => // FIXME google translate
+		'Klicken Sie auf die Anzeigen, um die Ausgangspin-Ebenen umzuschalten.
+		Informationen zur GPIO-API finden Sie auf der Hilfeseite.',
 
 	// Generic button / dialog labels
 

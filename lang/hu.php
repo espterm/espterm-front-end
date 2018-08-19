@@ -10,6 +10,7 @@ return [
 	'menu.cfg_system' => 'Rendszer beállítások',
 	'menu.cfg_wifi_conn' => 'Csatlakozás a hálózathoz',
 	'menu.settings' => 'Beállítások',
+	'menu.cfg_gpio' => 'GPIO vezérlése',
 
 	// Terminal page
 
@@ -267,15 +268,21 @@ return [
 		',
 	'hwtuning.overclock' => 'Órajel emelése 160MHz-re',
 
-	'gpio2_config' => 'GPIO2 function', // TODO translate
-	'gpio4_config' => 'GPIO4 function',
-	'gpio5_config' => 'GPIO5 function',
-	'gpio_config.off' => 'Disabled',
+	// FIXME google translate
+	'gpiox_config' => 'GPIO:x funkciója',
+	'gpiox_level' => 'GPIO:x értéket',
+	'gpio_config.title_config' => 'GPIO beállítások',
+	'gpio_config.title_control' => 'GPIO állapot',
+	'gpio_config.off' => 'Nincs funkció',
 	'gpio_config.off_2' => 'Debug UART Tx',
-	'gpio_config.out_initial0' => 'Output (initial 0)',
-	'gpio_config.out_initial1' => 'Output (initial 1)',
-	'gpio_config.in_pull' => 'Input (pull-up)',
-	'gpio_config.in_nopull' => 'Input (floating)',
+	'gpio_config.out_initial0' => 'Kimenet (kezdeti 0)',
+	'gpio_config.out_initial1' => 'Kimenet (kezdeti 1)',
+	'gpio_config.in_pull' => 'Bemenet (pull-up)',
+	'gpio_config.in_nopull' => 'Bemenet (úszó)',
+	'gpio_config.explain' =>
+		'Kattintson a mutatókra a kimeneti tűszintek váltásához.
+		Lásd a súgó oldalt a GPIO API-ról.
+		',
 
 	// Generic button / dialog labels
 

@@ -37,6 +37,7 @@ pg('write_defaults',   'api', '', '/cfg/system/write_defaults');
 pg('restore_defaults', 'api', '', '/cfg/system/restore_defaults');
 pg('restore_hard',     'api', '', '/cfg/system/restore_hard');
 
+pg('cfg_gpio',  'cfg',  'gpio', '/cfg/gpio');
 pg('help',  'cfg page-help',  'help', '/help');
 pg('about', 'cfg page-about', 'about', '/about');
 pg('term',  'term',           '', '/', 'title.term');
